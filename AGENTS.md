@@ -54,8 +54,18 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Frostbite apply | `sandbox/bin/frosty-modmanager.cmd` |
 | Godot editor | `sandbox/bin/godot.cmd` |
 | Godot PCK recover | `sandbox/bin/gdre.cmd` |
-| Fighting-game engine | `sandbox/bin/ikemen-go.cmd` |
+| Fighting-game engine | `sandbox/bin/ikemen-go.cmd` and `sandbox/bin/openbor.cmd` |
+| Sprite and move toolset | `sandbox/bin/fighter-factory.cmd` (x64 `ffs.exe`) |
 | Pixel art | `sandbox/bin/pixelorama.cmd` |
+| Level editor | `sandbox/bin/ldtk.cmd` |
+| Archives | `sandbox/bin/7z.cmd` |
+| Helldivers 2 runtime | `sandbox/tools/hd2-runtime`, `hd2-runtime-sdk`, `hd2-runtime-examples`, `hd2-runtime-template` |
+| Helldivers 2 builder | `sandbox/bin/hd2-modbuilder.cmd` |
+| Helldivers 2 community SDK | `sandbox/tools/hd2-sdk-community` |
+| Helldivers 2 loader | `sandbox/tools/bingus-shared-loader` |
+| Risk of Rain 2 API | `sandbox/tools/r2api` |
+| Sleeping Dogs engine source | `sandbox/tools/theoryengine` |
+| Sleeping Dogs SDK | `sandbox/tools/sleeping-dogs-sdk` and `sandbox/tools/sleeping-dogs-sdk-playground` |
 
 Ghidra's shims set `JAVA_HOME` to the JDK the installer recorded. Do not use a Java 8 that happens to be on `PATH`.
 
@@ -89,7 +99,7 @@ Use those for the workflow. Use this repo for the tools on disk.
 
 ## Safety
 
-Single-player, offline, or a server the user runs. Do not attach a debugger, scanner, Frida, or injector to a game with anti-cheat. Do not publish game files or decompiled output.
+Do not commit or publish game files or decompiled output. The kit does not contain game executables. TheoryEngine and the Sleeping Dogs SDK are source. HD2 and R2API are the public mod tools. Whether a mod can be published is the user's call.
 
 ## When a tool fails
 

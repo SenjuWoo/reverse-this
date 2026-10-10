@@ -12,7 +12,10 @@ METHODS = {
     "renderdoc-stable-zip",
     "dotnet-tool",
     "pip-venv",
+    "github-archive",
+    "virtualltek-portable",
 }
+UNPACK = {None, "7z", "msi-admin", "nsis-app64"}
 
 
 def load(name):
@@ -88,6 +91,16 @@ def main():
             errors.append("{0} needs a package".format(tid))
         if "repo" in tool and tool["repo"].count("/") != 1:
             errors.append("{0} repo is not owner/name".format(tid))
+        if tool.get("unpack") not in UNPACK:
+            errors.append("{0} has unknown unpack".format(tid))
+        if tool.get("unpack") == "msi-admin" and tid != "7zip":
+            errors.append("{0} is not allowed to extract an MSI".format(tid))
+        if tool.get("unpack") == "nsis-app64" and tid != "ldtk":
+            errors.append("{0} is not allowed to unpack an app-64 installer".format(tid))
+        if tool["method"] == "github-archive" and tool.get("ref") not in (None, "release"):
+            errors.append("{0} archive ref must be release or omitted".format(tid))
+        if tool["method"] == "virtualltek-portable" and tid != "fighter-factory":
+            errors.append("{0} is not the Fighter Factory portable".format(tid))
 
     if len(ids) != len(set(ids)):
         errors.append("duplicate tool ids")
@@ -113,6 +126,18 @@ def main():
     ue = next(tool for tool in catalog["tools"] if tool["id"] == "ue4ss")
     if release_api(ue["repo"], ue["release"]).endswith("/releases/latest"):
         errors.append("ue4ss must not track the stable latest release")
+
+    ff_download = (ROOT / "tests/fixtures/fighter-factory-download.html").read_text(encoding="utf-8")
+    ff_topic = (ROOT / "tests/fixtures/fighter-factory-topic.html").read_text(encoding="utf-8")
+    ff_expect = "https://virtualltek.com/wp-content/uploads/wpforo/default_attachments/1/1707418391-375_windows_port.zip"
+    ff_topic_match = re.search(r'href="(/community/[^"]*winport[^"]*)"', ff_download)
+    if ff_topic_match is None or not re.fullmatch(r"/community/[A-Za-z0-9][A-Za-z0-9./_-]*winport/?", ff_topic_match.group(1)):
+        errors.append("fighter factory download fixture did not resolve a portable topic")
+    elif ff_download.find("ff-375-win\"") > ff_download.find("ff-375-winport"):
+        errors.append("fighter factory fixture no longer puts the installer topic first")
+    ff_urls = list(dict.fromkeys(re.findall(r"https://virtualltek\.com/wp-content/uploads/[A-Za-z0-9_./-]+\.zip", ff_topic)))
+    if ff_urls != [ff_expect]:
+        errors.append("fighter factory topic fixture resolved {0}".format(ff_urls))
 
     if errors:
         print("\n".join(errors))

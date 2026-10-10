@@ -29,6 +29,13 @@ The installer resolves the current official release at install time. This page i
 - GDRE Tools' Windows zip, for packed Godot games.
 - IKEMEN Go's Windows zip. Not the Android, Linux, or macOS zips.
 - Pixelorama's Windows 64-bit zip. Not the 32-bit zip and not the setup exe.
+- 7-Zip's current x64 MSI. `msiexec /a` extracts it into `sandbox/tools/7zip`. It is not installed for the machine. Not the arm64 build, not the 32-bit package, not the exe installer. `7z.exe` plus `7z.dll` is what unpacks the two tools below.
+- LDtk's current Windows installer. 7-Zip extracts the 64-bit `app-64.7z` payload only. The installer is not executed. Not the 32-bit payload, not the macOS or Ubuntu zips.
+- OpenBOR's current Windows rar. Not the Android apk and not the Linux AppImages.
+- Fighter Factory's current official Windows portable zip. The download page is read at install time and the first Windows portable topic is the one that is downloaded. The shim is x64 `ffs.exe`. Not `ffs.qt4.exe`, not the 32-bit build, and not the installer topic.
+- HD2Runtime's current SDK, runtime, example projects, and mod template zips, as four separate tools. HD2Runtime ModBuilder's current Windows x64 zip. The shim is `HD2RuntimeModBuilder.exe`, not the `HD2RuntimeGUI.exe` compatibility copy. The community SDK zip. Bingus Shared Loader's loader zip, not its source zip.
+- R2API source for the current release tag. That repository publishes source, not a bench executable.
+- Sleeping Dogs TheoryEngine source, SDK source (the repository's default branch), and the SDK playground examples. These trees contain no game executable.
 
 ## Left out
 
@@ -39,19 +46,21 @@ The installer resolves the current official release at install time. This page i
 - `cpp2il-2022-binary`: Cpp2IL's last published binary is the 2022 release. The source repository has continued and has not published a replacement binary. Use `il2cppdumper`.
 - `ue4ss-stable`: the stable UE4SS tag lags the experimental release. The kit installs `ue4ss` from `experimental-latest`.
 - `bepinex6-pre2`: BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader. The UnityExplorer BepInEx 6 plugin is included for a game that already has that loader.
-- `cheat-engine-download`: the Cheat Engine GitHub release ships no Windows binary. The kit does not download the website installer. A portable copy can be placed in `sandbox/manual/cheat-engine/` by hand.
-- `reclass-rar`: ReClass.NET's published asset is an old rar. The kit does not unpack rars.
-- `3dmigoto-tag`: the tagged 3Dmigoto release is years behind the repository. It is not part of the one-click set.
+- `cheat-engine-download`: the Cheat Engine GitHub release ships no Windows binary. The website installer bundles offers. The kit does not download it. A portable copy can be placed in `sandbox/manual/cheat-engine/` by hand.
+- `reclass-rar`: ReClass.NET's only published binary is the 2019 v1.2 rar. The source kept changing through 2024 and published no newer binary. The kit can unpack a current rar. This one is stale. A portable copy can be placed in `sandbox/manual/reclass/` by hand.
+- `3dmigoto-tag`: the tagged 3Dmigoto release is from 2018, the repository has continued, and that one release attaches every historical zip. A pattern cannot select a single current file. It is not part of the one-click set.
 - `sinai-unityexplorer`: `sinai-dev/UnityExplorer` is archived. The kit uses the yukieiji builds.
 - `frosty-rewrite`: `FrostyToolsuite/FrostyToolsuite` publishes no release. Use `frosty-editor` and `frosty-modmanager`.
-- `ldtk-installer`: LDtk's Windows asset is an installer. A portable copy can be placed in `sandbox/manual/ldtk/` by hand.
-- `openbor-rar`: OpenBOR's Windows asset is a rar. The kit does not unpack rars. A portable copy can be placed in `sandbox/manual/openbor/` by hand.
-- `fighter-factory-installer`: the dump only has an installer. A portable copy can be placed in `sandbox/manual/fighter-factory/` by hand.
+- `ldtk-installer`: the old id for LDtk's installer. The installed tool is `ldtk`.
+- `openbor-rar`: the old id for OpenBOR's rar. The installed tool is `openbor`.
+- `fighter-factory-installer`: the old id for the dump's installer. The installed tool is `fighter-factory`.
 
 Also not unpacked, because they install into their own directories or are not redistributable here: ReShade, NVIDIA Nsight, PIX, RTX Remix, and paid shader packs.
 
+The Sleeping Dogs game executable and its PDB are not downloaded. TheoryEngine's README points at a file host for "Game Executable" and "Debug Symbols (PDB)". Those are the game, not a tool. The public GitHub source trees are what the kit installs.
+
 The dump's other new folders are not a second kit. `GoDot/LimboAi` is another Godot editor build, not the LimboAI addon. IKEMEN Forge is a Claude Code plugin (`nategarelik/ikemen-forge`), not a bench executable. `UE-Modding-Tools` is a link list: the commonly used packers are already `repak`, `retoc`, FModel and UAssetGUI. ZenTools is deprecated upstream in favor of retoc. kismet-analyzer publishes no release binary. QuickBMS and the old UnrealPak rar are not unpacked.
 
-Helldivers 2 runtimes, SDKs and ModBuilder stay out. That game has anti-cheat. Sleeping Dogs TheoryEngine, its SDK, and `sdhdship.exe` are game-owned. R2API is a Risk of Rain 2 library tree, not a bench executable. None of those are downloaded.
+Helldivers 2's public runtime, SDKs, ModBuilder, and loader are installed. Sleeping Dogs TheoryEngine, its SDK, and the SDK playground are installed from their public source archives. R2API is installed from the current release tag's source archive. None of those downloads include a game executable.
 
 Duplicate trees of the same UE4SS build (`zDEV` next to the release) are not installed. One copy is enough.

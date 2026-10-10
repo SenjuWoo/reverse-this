@@ -297,6 +297,144 @@
       "repo": "Orama-Interactive/Pixelorama",
       "asset_pattern": "^Pixelorama-Windows-64bit\\.zip$",
       "shims": [{"name": "pixelorama", "exe_glob": "Pixelorama.exe"}]
+    },
+    {
+      "id": "7zip",
+      "name": "7-Zip",
+      "job": "Archive tool. Also unpacks the LDtk installer and the OpenBOR rar into the sandbox.",
+      "method": "github-release",
+      "repo": "ip7z/7zip",
+      "asset_pattern": "^7z[0-9]+-x64\\.msi$",
+      "unpack": "msi-admin",
+      "shims": [{"name": "7z", "exe_glob": "7z.exe"}]
+    },
+    {
+      "id": "ldtk",
+      "name": "LDtk",
+      "job": "2D level editor. The Windows installer is unpacked. It is not run.",
+      "method": "github-release",
+      "repo": "deepnight/ldtk",
+      "asset_pattern": "^LDtk-.+-installer\\.exe$",
+      "unpack": "nsis-app64",
+      "shims": [{"name": "ldtk", "exe_glob": "LDtk.exe"}]
+    },
+    {
+      "id": "openbor",
+      "name": "OpenBOR",
+      "job": "Open Beats of Rage engine. The Windows rar is unpacked.",
+      "method": "github-release",
+      "repo": "DCurrent/openbor",
+      "asset_pattern": "^OpenBOR\\.v.+\\.rar$",
+      "unpack": "7z",
+      "shims": [{"name": "openbor", "exe_glob": "OpenBOR.exe"}]
+    },
+    {
+      "id": "fighter-factory",
+      "name": "Fighter Factory",
+      "job": "Sprite and fighting-game toolset. Official Windows portable, x64 build.",
+      "method": "virtualltek-portable",
+      "shims": [{
+        "name": "fighter-factory",
+        "exe_glob": "ffs.exe",
+        "prefer_path": "\\\\x64\\\\",
+        "require_path": "\\\\x64\\\\ffs\\.exe$"
+      }]
+    },
+    {
+      "id": "hd2-runtime-sdk",
+      "name": "HD2Runtime SDK",
+      "job": "Helldivers 2 runtime SDK drop-in.",
+      "method": "github-release",
+      "repo": "SkyeShade/HD2Runtime",
+      "asset_pattern": "^HD2Runtime-.+-sdk\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "hd2-runtime",
+      "name": "HD2Runtime",
+      "job": "Helldivers 2 runtime drop-in.",
+      "method": "github-release",
+      "repo": "SkyeShade/HD2Runtime",
+      "asset_pattern": "^HD2Runtime-.+-runtime\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "hd2-runtime-examples",
+      "name": "HD2Runtime example projects",
+      "job": "Helldivers 2 runtime example projects.",
+      "method": "github-release",
+      "repo": "SkyeShade/HD2Runtime",
+      "asset_pattern": "^HD2Runtime-.+-example-projects\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "hd2-runtime-template",
+      "name": "HD2Runtime mod template",
+      "job": "Helldivers 2 mod template.",
+      "method": "github-release",
+      "repo": "SkyeShade/HD2Runtime",
+      "asset_pattern": "^HD2Runtime-ModTemplate-.+\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "hd2-modbuilder",
+      "name": "HD2Runtime ModBuilder",
+      "job": "Helldivers 2 gameplay mod builder.",
+      "method": "github-release",
+      "repo": "SkyeShade/HD2Runtime-ModBuilder",
+      "asset_pattern": "^HD2Runtime-ModBuilder-.+-win-x64\\.zip$",
+      "shims": [{"name": "hd2-modbuilder", "exe_glob": "HD2RuntimeModBuilder.exe"}]
+    },
+    {
+      "id": "hd2-sdk-community",
+      "name": "HD2 SDK Community Edition",
+      "job": "Helldivers 2 community SDK.",
+      "method": "github-release",
+      "repo": "Boxofbiscuits97/HD2SDK-CommunityEdition",
+      "asset_pattern": "^HD2SDK-CommunityEditionV.+\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "bingus-shared-loader",
+      "name": "Bingus Shared Loader",
+      "job": "Loader required by HD2Runtime. No executable. Copy it into the game when a mod needs it.",
+      "method": "github-release",
+      "repo": "CowboyBingus/BingusSharedLoader",
+      "asset_pattern": "^Bingus-Shared-Loader-.+\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "r2api",
+      "name": "R2API",
+      "job": "Risk of Rain 2 mod API source from the current release tag.",
+      "method": "github-archive",
+      "repo": "risk-of-thunder/R2API",
+      "ref": "release",
+      "shims": []
+    },
+    {
+      "id": "theoryengine",
+      "name": "TheoryEngine",
+      "job": "Sleeping Dogs Definitive Edition engine source. Not the game executable.",
+      "method": "github-archive",
+      "repo": "SDmodding/TheoryEngine",
+      "shims": []
+    },
+    {
+      "id": "sleeping-dogs-sdk",
+      "name": "Sleeping Dogs SDK",
+      "job": "Sleeping Dogs Definitive Edition dev-kit plugin source. Not the game executable.",
+      "method": "github-archive",
+      "repo": "SDmodding/SDK",
+      "shims": []
+    },
+    {
+      "id": "sleeping-dogs-sdk-playground",
+      "name": "Sleeping Dogs SDK playground",
+      "job": "Example projects for the Sleeping Dogs SDK.",
+      "method": "github-archive",
+      "repo": "SDmodding/SDK-Playground",
+      "shims": []
     }
   ],
   "retired": [
@@ -308,12 +446,12 @@
     {"id": "ue4ss-stable", "instead": "ue4ss", "why": "The stable UE4SS tag lags the experimental release. The kit installs experimental-latest."},
     {"id": "bepinex6-pre2", "instead": "melonloader", "why": "BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader."},
     {"id": "cheat-engine-download", "instead": null, "why": "The Cheat Engine GitHub release ships no binary. The kit does not download the bundled website installer."},
-    {"id": "reclass-rar", "instead": null, "why": "ReClass.NET's published asset is an old rar. The kit does not unpack rars."},
-    {"id": "3dmigoto-tag", "instead": null, "why": "The tagged 3Dmigoto release is years behind the repository. It is not part of the one-click set."},
+    {"id": "reclass-rar", "instead": null, "why": "ReClass.NET's only published binary is the 2019 v1.2 rar. The source kept changing through 2024 and published no newer binary."},
+    {"id": "3dmigoto-tag", "instead": null, "why": "The tagged 3Dmigoto release is from 2018, the repository has continued, and that release attaches every historical zip so one pattern cannot select a current file."},
     {"id": "sinai-unityexplorer", "instead": "unityexplorer-bepinex5", "why": "sinai-dev/UnityExplorer is archived. The kit uses the yukieiji fork."},
     {"id": "frosty-rewrite", "instead": "frosty-editor", "why": "FrostyToolsuite/FrostyToolsuite publishes no release. The kit installs the stable Editor and Mod Manager zips."},
-    {"id": "ldtk-installer", "instead": null, "why": "LDtk's Windows asset is an installer. The kit does not download it."},
-    {"id": "openbor-rar", "instead": null, "why": "OpenBOR's Windows asset is a rar. The kit does not unpack rars."},
-    {"id": "fighter-factory-installer", "instead": null, "why": "The dump only has an installer. The kit does not download it."}
+    {"id": "ldtk-installer", "instead": "ldtk", "why": "LDtk's Windows file is an installer. The kit unpacks it with 7-Zip and does not run it."},
+    {"id": "openbor-rar", "instead": "openbor", "why": "OpenBOR's Windows file is a rar. The kit unpacks it with 7-Zip."},
+    {"id": "fighter-factory-installer", "instead": "fighter-factory", "why": "The old dump only had an installer. The kit downloads the official Windows portable zip."}
   ]
 }
