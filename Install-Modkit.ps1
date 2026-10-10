@@ -262,10 +262,10 @@ function Find-JdkHome {
         $homes += @(Get-Item -Path "C:\Program Files\Java\jdk-$n*" -ErrorAction SilentlyContinue)
         $homes += @(Get-Item -Path (Join-Path $env:LOCALAPPDATA "Programs\Eclipse Adoptium\jdk-$n*") -ErrorAction SilentlyContinue)
     }
-    foreach ($home in $homes) {
-        $exe = Join-Path $home.FullName 'bin\java.exe'
+    foreach ($jdkDir in $homes) {
+        $exe = Join-Path $jdkDir.FullName 'bin\java.exe'
         if ((Test-Path -LiteralPath $exe) -and (Get-JavaMajor $exe) -ge $Major) {
-            return $home.FullName
+            return $jdkDir.FullName
         }
     }
     return $null

@@ -50,6 +50,12 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
 | DDS | `sandbox/bin/texconv.cmd` |
+| Frostbite edit | `sandbox/bin/frosty-editor.cmd` |
+| Frostbite apply | `sandbox/bin/frosty-modmanager.cmd` |
+| Godot editor | `sandbox/bin/godot.cmd` |
+| Godot PCK recover | `sandbox/bin/gdre.cmd` |
+| Fighting-game engine | `sandbox/bin/ikemen-go.cmd` |
+| Pixel art | `sandbox/bin/pixelorama.cmd` |
 
 Ghidra's shims set `JAVA_HOME` to the JDK the installer recorded. Do not use a Java 8 that happens to be on `PATH`.
 
@@ -68,11 +74,16 @@ The installer will not download them. Do not work around it. Reasons and the rep
 - `reclass-rar`
 - `3dmigoto-tag`
 - `sinai-unityexplorer`
+- `frosty-rewrite` (no published binary; `frosty-editor` and `frosty-modmanager` are installed)
+- `ldtk-installer`
+- `openbor-rar`
+- `fighter-factory-installer`
 
 ## Companions
 
 - Mod loop, field notes, asset and capture CLIs: https://github.com/rehan-remade/universal-modder
 - Agent skills and MCP stack: https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle
+- IKEMEN Go project workflow (Claude plugin, not a binary in this kit): https://github.com/nategarelik/ikemen-forge
 
 Use those for the workflow. Use this repo for the tools on disk.
 

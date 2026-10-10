@@ -42,6 +42,12 @@ Native: Ghidra (GUI and `analyzeHeadless`), ImHex, Detect It Easy (`diec`), x64d
 
 Unreal: FModel, repak, retoc, UAssetGUI, and the UE4SS experimental release (the stable tag is older; it is not what gets installed).
 
+Frostbite: Frosty Editor and Frosty Mod Manager.
+
+Godot: the current stable mono editor (`godot`, console build) and GDRE Tools for packed games.
+
+Fighting games and pixel art: IKEMEN Go and Pixelorama.
+
 Textures: `texconv`, `texassemble`, `texdiag`.
 
 Drop-in loaders stay in `sandbox/tools/<id>`. Copy them into a game folder when a mod needs them. Do not point them at a game with anti-cheat.

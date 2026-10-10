@@ -243,6 +243,60 @@
       "method": "pip-venv",
       "package": "frida-tools",
       "shims": [{"name": "frida", "exe_glob": "frida.exe"}]
+    },
+    {
+      "id": "frosty-editor",
+      "name": "Frosty Editor",
+      "job": "Frostbite mod editor. The stable release, not the rewrite.",
+      "method": "github-release",
+      "repo": "CadeEvs/FrostyToolsuite",
+      "asset_pattern": "^FrostyEditor\\.zip$",
+      "shims": [{"name": "frosty-editor", "exe_glob": "FrostyEditor.exe"}]
+    },
+    {
+      "id": "frosty-modmanager",
+      "name": "Frosty Mod Manager",
+      "job": "Apply Frostbite mods.",
+      "method": "github-release",
+      "repo": "CadeEvs/FrostyToolsuite",
+      "asset_pattern": "^FrostyModManager\\.zip$",
+      "shims": [{"name": "frosty-modmanager", "exe_glob": "FrostyModManager.exe"}]
+    },
+    {
+      "id": "godot",
+      "name": "Godot",
+      "job": "Godot editor, current stable mono win64, console build.",
+      "method": "github-release",
+      "repo": "godotengine/godot",
+      "asset_pattern": "^Godot_v.+-stable_mono_win64\\.zip$",
+      "shims": [{"name": "godot", "exe_glob": "*_console.exe"}]
+    },
+    {
+      "id": "gdre",
+      "name": "GDRE Tools",
+      "job": "Extract and recover packed Godot games.",
+      "method": "github-release",
+      "repo": "GDRETools/gdsdecomp",
+      "asset_pattern": "^GDRE_tools-.+-windows\\.zip$",
+      "shims": [{"name": "gdre", "exe_glob": "gdre_tools.exe"}]
+    },
+    {
+      "id": "ikemen-go",
+      "name": "IKEMEN Go",
+      "job": "Open-source fighting-game engine.",
+      "method": "github-release",
+      "repo": "ikemen-engine/Ikemen-GO",
+      "asset_pattern": "^Ikemen_GO-.+-windows\\.zip$",
+      "shims": [{"name": "ikemen-go", "exe_glob": "Ikemen_GO.exe"}]
+    },
+    {
+      "id": "pixelorama",
+      "name": "Pixelorama",
+      "job": "Pixel art editor.",
+      "method": "github-release",
+      "repo": "Orama-Interactive/Pixelorama",
+      "asset_pattern": "^Pixelorama-Windows-64bit\\.zip$",
+      "shims": [{"name": "pixelorama", "exe_glob": "Pixelorama.exe"}]
     }
   ],
   "retired": [
@@ -256,6 +310,10 @@
     {"id": "cheat-engine-download", "instead": null, "why": "The Cheat Engine GitHub release ships no binary. The kit does not download the bundled website installer."},
     {"id": "reclass-rar", "instead": null, "why": "ReClass.NET's published asset is an old rar. The kit does not unpack rars."},
     {"id": "3dmigoto-tag", "instead": null, "why": "The tagged 3Dmigoto release is years behind the repository. It is not part of the one-click set."},
-    {"id": "sinai-unityexplorer", "instead": "unityexplorer-bepinex5", "why": "sinai-dev/UnityExplorer is archived. The kit uses the yukieiji fork."}
+    {"id": "sinai-unityexplorer", "instead": "unityexplorer-bepinex5", "why": "sinai-dev/UnityExplorer is archived. The kit uses the yukieiji fork."},
+    {"id": "frosty-rewrite", "instead": "frosty-editor", "why": "FrostyToolsuite/FrostyToolsuite publishes no release. The kit installs the stable Editor and Mod Manager zips."},
+    {"id": "ldtk-installer", "instead": null, "why": "LDtk's Windows asset is an installer. The kit does not download it."},
+    {"id": "openbor-rar", "instead": null, "why": "OpenBOR's Windows asset is a rar. The kit does not unpack rars."},
+    {"id": "fighter-factory-installer", "instead": null, "why": "The dump only has an installer. The kit does not download it."}
   ]
 }

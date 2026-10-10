@@ -24,6 +24,11 @@ The installer resolves the current official release at install time. This page i
 - RenderDoc's stable portable x64 zip from `renderdoc.org`, using the version of the current GitHub release tag. Not the nightly. Not the MSI.
 - MinHook's bin zip, for C. SafetyHook's amalgamated Zydis sources, for new C++.
 - Frida tools in a venv under `sandbox/tools/frida`.
+- Frosty Editor and Frosty Mod Manager from the current stable release (`FrostyEditor.zip` and `FrostyModManager.zip`). Not the bundled prereq installers. Those stay inside the unpacked zip and are not shims.
+- Godot's current stable mono win64 zip. The shim is the console executable. Not the win32 zip, not the arm64 zip, not the non-mono `.exe.zip`.
+- GDRE Tools' Windows zip, for packed Godot games.
+- IKEMEN Go's Windows zip. Not the Android, Linux, or macOS zips.
+- Pixelorama's Windows 64-bit zip. Not the 32-bit zip and not the setup exe.
 
 ## Left out
 
@@ -38,7 +43,15 @@ The installer resolves the current official release at install time. This page i
 - `reclass-rar`: ReClass.NET's published asset is an old rar. The kit does not unpack rars.
 - `3dmigoto-tag`: the tagged 3Dmigoto release is years behind the repository. It is not part of the one-click set.
 - `sinai-unityexplorer`: `sinai-dev/UnityExplorer` is archived. The kit uses the yukieiji builds.
+- `frosty-rewrite`: `FrostyToolsuite/FrostyToolsuite` publishes no release. Use `frosty-editor` and `frosty-modmanager`.
+- `ldtk-installer`: LDtk's Windows asset is an installer. A portable copy can be placed in `sandbox/manual/ldtk/` by hand.
+- `openbor-rar`: OpenBOR's Windows asset is a rar. The kit does not unpack rars. A portable copy can be placed in `sandbox/manual/openbor/` by hand.
+- `fighter-factory-installer`: the dump only has an installer. A portable copy can be placed in `sandbox/manual/fighter-factory/` by hand.
 
-Also not unpacked, because they install into their own directories or are not redistributable here: ReShade, Frosty, NVIDIA Nsight, PIX, RTX Remix, paid shader packs, and leaked or game-owned SDKs. They are not "replaced". They just do not fit a stable sandbox path.
+Also not unpacked, because they install into their own directories or are not redistributable here: ReShade, NVIDIA Nsight, PIX, RTX Remix, and paid shader packs.
+
+The dump's other new folders are not a second kit. `GoDot/LimboAi` is another Godot editor build, not the LimboAI addon. IKEMEN Forge is a Claude Code plugin (`nategarelik/ikemen-forge`), not a bench executable. `UE-Modding-Tools` is a link list: the commonly used packers are already `repak`, `retoc`, FModel and UAssetGUI. ZenTools is deprecated upstream in favor of retoc. kismet-analyzer publishes no release binary. QuickBMS and the old UnrealPak rar are not unpacked.
+
+Helldivers 2 runtimes, SDKs and ModBuilder stay out. That game has anti-cheat. Sleeping Dogs TheoryEngine, its SDK, and `sdhdship.exe` are game-owned. R2API is a Risk of Rain 2 library tree, not a bench executable. None of those are downloaded.
 
 Duplicate trees of the same UE4SS build (`zDEV` next to the release) are not installed. One copy is enough.

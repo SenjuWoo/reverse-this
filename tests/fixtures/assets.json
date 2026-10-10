@@ -158,5 +158,54 @@
       "texdiag.exe",
       "texdiag_arm64.exe"
     ]
+  },
+  "frosty-editor": {
+    "assets": ["FrostyEditor.zip", "FrostyModManager.zip"],
+    "expect": "FrostyEditor.zip"
+  },
+  "frosty-modmanager": {
+    "assets": ["FrostyEditor.zip", "FrostyModManager.zip"],
+    "expect": "FrostyModManager.zip"
+  },
+  "godot": {
+    "assets": [
+      "Godot_v4.7.2-stable_android_editor.apk",
+      "Godot_v4.7.2-stable_mono_win32.zip",
+      "Godot_v4.7.2-stable_mono_win64.zip",
+      "Godot_v4.7.2-stable_mono_windows_arm64.zip",
+      "Godot_v4.7.2-stable_win64.exe.zip",
+      "Godot_v4.7.2-stable_windows_arm64.exe.zip"
+    ],
+    "expect": "Godot_v4.7.2-stable_mono_win64.zip"
+  },
+  "gdre": {
+    "assets": [
+      "GDRE_tools-v2.7.3-android.apk",
+      "GDRE_tools-v2.7.3-linux.zip",
+      "GDRE_tools-v2.7.3-macos.zip",
+      "GDRE_tools-v2.7.3-windows.zip"
+    ],
+    "expect": "GDRE_tools-v2.7.3-windows.zip"
+  },
+  "ikemen-go": {
+    "assets": [
+      "Ikemen_GO-v1.0.0-android.zip",
+      "Ikemen_GO-v1.0.0-linux.zip",
+      "Ikemen_GO-v1.0.0-macos.zip",
+      "Ikemen_GO-v1.0.0-windows.zip",
+      "SHA256SUMS.txt",
+      "work.zip"
+    ],
+    "expect": "Ikemen_GO-v1.0.0-windows.zip"
+  },
+  "pixelorama": {
+    "assets": [
+      "Pixelorama-Linux-64bit.tar.gz",
+      "Pixelorama-Windows-32bit.zip",
+      "Pixelorama-Windows-64bit.zip",
+      "Pixelorama.apk",
+      "Pixelorama_v1.2.3_setup.exe"
+    ],
+    "expect": "Pixelorama-Windows-64bit.zip"
   }
 }
