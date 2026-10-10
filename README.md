@@ -46,19 +46,25 @@ Frostbite: Frosty Editor and Frosty Mod Manager.
 
 Godot: the current stable mono editor (`godot`, console build) and GDRE Tools for packed games.
 
-Fighting games and pixel art: IKEMEN Go and Pixelorama.
+Fighting games and pixel art: IKEMEN Go, Pixelorama, OpenBOR, and Fighter Factory (official Windows portable, x64). LDtk is unpacked from its Windows installer with 7-Zip. The installer is not run. `7z` is on `sandbox/bin`.
+
+Helldivers 2: HD2Runtime SDK, runtime, example projects, and mod template; HD2Runtime ModBuilder; the community SDK; and Bingus Shared Loader.
+
+Risk of Rain 2: R2API source from the current release tag.
+
+Sleeping Dogs: TheoryEngine source, the SDK source, and the SDK example playground. The game executable and its PDB are not part of the kit.
 
 Textures: `texconv`, `texassemble`, `texdiag`.
 
-Drop-in loaders stay in `sandbox/tools/<id>`. Copy them into a game folder when a mod needs them. Do not point them at a game with anti-cheat.
+Drop-in loaders and SDKs stay in `sandbox/tools/<id>`. Copy a loader into a game folder when a mod needs it.
 
 ## What it refuses
 
-Archived or replaced tools, stale binaries, website installers that bundle offers, rars, paid shader packs, leaked game SDKs, and vendor GPU suites that install themselves into their own directories. The reasons are in [docs/currency.md](docs/currency.md). A portable tool you still want on the path, and that this kit will not download, goes in `sandbox/manual/<name>/`. The installer does not scan the rest of the disk.
+Archived or replaced tools, stale binaries, website installers that bundle offers, paid shader packs, leaked private SDKs, game executables, and vendor GPU suites that install themselves into their own directories. An official rar or installer that 7-Zip can unpack into `sandbox/tools` is installed. The reasons are in [docs/currency.md](docs/currency.md). A portable tool you still want on the path, and that this kit will not download, goes in `sandbox/manual/<name>/`. The installer does not scan the rest of the disk.
 
 ## Rules
 
-Single-player, offline, or a server you run. Do not attach a debugger, scanner or injector to a game with anti-cheat. Do not commit game files, decompiled output, or the unpacked tools. Those stay under `sandbox/`.
+Do not commit game files, decompiled output, or the unpacked tools. Those stay under `sandbox/`. The kit does not download game executables or private symbol files. Whether a mod can be published is your call.
 
 Each upstream tool keeps its own license. This repository is MIT.
 

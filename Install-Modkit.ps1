@@ -75,7 +75,44 @@ function Test-AllowedDownloadUrl {
     if ($uri.Host -eq 'objects.githubusercontent.com') { return $true }
     if ($uri.Host -eq 'release-assets.githubusercontent.com') { return $true }
     if ($uri.Host -eq 'renderdoc.org' -and $uri.AbsolutePath.StartsWith('/stable/')) { return $true }
+    if ($uri.Host -eq 'virtualltek.com') {
+        $path = $uri.AbsolutePath
+        if ($path -eq '/download' -or $path -eq '/download/') { return $true }
+        if ($path.StartsWith('/community/')) { return $true }
+        if ($path.StartsWith('/wp-content/uploads/') -and $path.EndsWith('.zip')) { return $true }
+        return $false
+    }
     return $false
+}
+
+function Get-GitHubArchiveUrl {
+    param([string]$Repo, [string]$Kind, [string]$Ref)
+    if ($Repo -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw "bad repo $Repo" }
+    if ($Ref -notmatch '^[A-Za-z0-9._+-]+$') { throw "bad ref $Ref" }
+    if ($Kind -eq 'tag') { return "https://github.com/$Repo/archive/refs/tags/$Ref.zip" }
+    if ($Kind -eq 'branch') { return "https://github.com/$Repo/archive/refs/heads/$Ref.zip" }
+    throw "bad archive kind $Kind"
+}
+
+function Resolve-FighterFactoryZipUrl {
+    param([string]$DownloadHtml, [string]$TopicHtml)
+    if (-not $DownloadHtml) {
+        $DownloadHtml = Get-WebText 'https://virtualltek.com/download/'
+    }
+    $topic = [regex]::Match($DownloadHtml, 'href="(/community/[^"]*winport[^"]*)"')
+    if (-not $topic.Success) { throw 'Fighter Factory download page has no Windows portable topic' }
+    $topicPath = $topic.Groups[1].Value
+    if ($topicPath -notmatch '^/community/[A-Za-z0-9][A-Za-z0-9./_-]*winport/?$') {
+        throw "Fighter Factory topic path rejected: $topicPath"
+    }
+    if (-not $TopicHtml) {
+        $TopicHtml = Get-WebText ('https://virtualltek.com' + $topicPath)
+    }
+    $found = [regex]::Matches($TopicHtml, 'https://virtualltek\.com/wp-content/uploads/[A-Za-z0-9_./-]+\.zip')
+    $urls = @($found | ForEach-Object { $_.Value } | Select-Object -Unique)
+    if ($urls.Count -ne 1) { throw "Fighter Factory portable zip count is $($urls.Count)" }
+    if (-not (Test-AllowedDownloadUrl $urls[0])) { throw "refusing download URL $($urls[0])" }
+    return [string]$urls[0]
 }
 
 function Select-OneAsset {
@@ -126,6 +163,31 @@ function Invoke-SelfTest {
     if ($api -notlike '*/releases/tags/experimental-latest') {
         $failed += "ue4ss api url is $api"
     }
+    $ffExpect = 'https://virtualltek.com/wp-content/uploads/wpforo/default_attachments/1/1707418391-375_windows_port.zip'
+    $ffDownload = Get-Content -LiteralPath (Join-Path $KitRoot 'tests\fixtures\fighter-factory-download.html') -Raw -Encoding UTF8
+    $ffTopic = Get-Content -LiteralPath (Join-Path $KitRoot 'tests\fixtures\fighter-factory-topic.html') -Raw -Encoding UTF8
+    try {
+        $ffZip = Resolve-FighterFactoryZipUrl -DownloadHtml $ffDownload -TopicHtml $ffTopic
+        if ($ffZip -ne $ffExpect) { $failed += "fighter factory zip is $ffZip" }
+    } catch {
+        $failed += "fighter factory $($_.Exception.Message)"
+    }
+    $archiveUrl = Get-GitHubArchiveUrl -Repo 'SDmodding/SDK' -Kind 'branch' -Ref 'theory'
+    if ($archiveUrl -ne 'https://github.com/SDmodding/SDK/archive/refs/heads/theory.zip') {
+        $failed += "archive url drifted: $archiveUrl"
+    }
+    $tagUrl = Get-GitHubArchiveUrl -Repo 'risk-of-thunder/R2API' -Kind 'tag' -Ref '4.4.0'
+    if ($tagUrl -ne 'https://github.com/risk-of-thunder/R2API/archive/refs/tags/4.4.0.zip') {
+        $failed += "tag archive url drifted: $tagUrl"
+    }
+    $badArchive = $false
+    try { Get-GitHubArchiveUrl -Repo 'SDmodding/SDK' -Kind 'branch' -Ref '../main' | Out-Null; $badArchive = $true } catch { }
+    if ($badArchive) { $failed += 'archive url builder accepted a bad ref' }
+    if (-not (Test-AllowedDownloadUrl $ffExpect)) { $failed += 'fighter factory zip was refused' }
+    if (-not (Test-AllowedDownloadUrl 'https://virtualltek.com/download/')) { $failed += 'virtualltek download page was refused' }
+    if (-not (Test-AllowedDownloadUrl 'https://virtualltek.com/community/3-7-5-studio/ff-375-winport')) { $failed += 'virtualltek topic was refused' }
+    if (Test-AllowedDownloadUrl 'https://virtualltek.com/wp-content/uploads/setup.exe') { $failed += 'virtualltek exe was allowed' }
+    if (Test-AllowedDownloadUrl 'https://mega.nz/file/game') { $failed += 'mega.nz was allowed' }
     if ($failed.Count -gt 0) {
         $failed | ForEach-Object { Write-Host "FAIL $_" }
         exit 1
@@ -177,15 +239,53 @@ function Get-Sha256Hex {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
-function Get-GitHubRelease {
-    param([string]$Repo, [string]$Release)
+function Get-GitHubHeaders {
     $headers = @{
         'User-Agent' = 'reverse-this'
         'Accept' = 'application/vnd.github+json'
         'X-GitHub-Api-Version' = '2022-11-28'
     }
+    if (-not $script:GitHubTokenChecked) {
+        $script:GitHubTokenChecked = $true
+        $script:GitHubToken = $null
+        $gh = Get-Command gh -ErrorAction SilentlyContinue
+        if ($gh) {
+            $prev = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            $tok = (& gh auth token 2>&1 | Out-String).Trim()
+            $code = $LASTEXITCODE
+            $ErrorActionPreference = $prev
+            if ($code -eq 0 -and $tok -match '^(gho_|github_pat_|ghp_)') {
+                $script:GitHubToken = $tok
+            }
+        }
+    }
+    if ($script:GitHubToken) { $headers.Authorization = 'Bearer ' + $script:GitHubToken }
+    return $headers
+}
+
+function Get-GitHubRelease {
+    param([string]$Repo, [string]$Release)
     $url = Get-ReleaseApiUrl -Repo $Repo -Release $Release
-    return Invoke-RestMethod -Headers $headers -Uri $url
+    return Invoke-RestMethod -Headers (Get-GitHubHeaders) -Uri $url
+}
+
+function Invoke-GitHubApi {
+    param([string]$ApiPath)
+    $url = 'https://api.github.com/' + $ApiPath.TrimStart('/')
+    return Invoke-RestMethod -Headers (Get-GitHubHeaders) -Uri $url
+}
+
+function Get-WebText {
+    param([string]$Url)
+    if (-not (Test-AllowedDownloadUrl $Url)) { throw "refusing download URL $Url" }
+    $dest = Join-Path $TmpDir ('page-' + [guid]::NewGuid().ToString('N') + '.html')
+    Save-Url -Url $Url -Dest $dest
+    try {
+        return (Get-Content -LiteralPath $dest -Raw -Encoding UTF8)
+    } finally {
+        Remove-Item -LiteralPath $dest -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Get-SingleBodyHash {
@@ -212,11 +312,32 @@ function Get-PublishedHash {
     return $null
 }
 
+function Move-FlattenedStage {
+    param([string]$Stage, [string]$Dest)
+    $fresh = Join-Path $TmpDir ('fresh-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $fresh | Out-Null
+    try {
+        $items = @(Get-ChildItem -LiteralPath $Stage -Force)
+        $dirs = @($items | Where-Object { $_.PSIsContainer })
+        $files = @($items | Where-Object { -not $_.PSIsContainer })
+        $source = $Stage
+        if ($dirs.Count -eq 1 -and $files.Count -eq 0) { $source = $dirs[0].FullName }
+        Get-ChildItem -LiteralPath $source -Force | ForEach-Object {
+            Move-Item -LiteralPath $_.FullName -Destination $fresh
+        }
+        $produced = @(Get-ChildItem -LiteralPath $fresh -Force -Recurse -File)
+        if ($produced.Count -eq 0) { throw 'extract produced no files' }
+        if (Test-Path -LiteralPath $Dest) { Remove-Item -LiteralPath $Dest -Recurse -Force }
+        Move-Item -LiteralPath $fresh -Destination $Dest
+    } finally {
+        if (Test-Path -LiteralPath $fresh) { Remove-Item -LiteralPath $fresh -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
 function Expand-FlattenedZip {
     param([string]$Zip, [string]$Dest)
     $stage = Join-Path $TmpDir ('stage-' + [guid]::NewGuid().ToString('N'))
-    $fresh = Join-Path $TmpDir ('fresh-' + [guid]::NewGuid().ToString('N'))
-    New-Item -ItemType Directory -Force -Path $stage, $fresh | Out-Null
+    New-Item -ItemType Directory -Force -Path $stage | Out-Null
     try {
         $tar = Join-Path $env:SystemRoot 'System32\tar.exe'
         if (-not (Test-Path -LiteralPath $tar)) { throw 'tar.exe is not in System32' }
@@ -226,19 +347,9 @@ function Expand-FlattenedZip {
         $code = $LASTEXITCODE
         $ErrorActionPreference = $prev
         if ($code -ne 0) { throw "tar extract failed ($code)" }
-        $items = @(Get-ChildItem -LiteralPath $stage -Force)
-        $dirs = @($items | Where-Object { $_.PSIsContainer })
-        $files = @($items | Where-Object { -not $_.PSIsContainer })
-        $source = $stage
-        if ($dirs.Count -eq 1 -and $files.Count -eq 0) { $source = $dirs[0].FullName }
-        Get-ChildItem -LiteralPath $source -Force | ForEach-Object {
-            Move-Item -LiteralPath $_.FullName -Destination $fresh
-        }
-        if (Test-Path -LiteralPath $Dest) { Remove-Item -LiteralPath $Dest -Recurse -Force }
-        Move-Item -LiteralPath $fresh -Destination $Dest
+        Move-FlattenedStage -Stage $stage -Dest $Dest
     } finally {
         if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }
-        if (Test-Path -LiteralPath $fresh) { Remove-Item -LiteralPath $fresh -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
 
@@ -381,6 +492,7 @@ function New-State {
 }
 
 $script:JavaHome = $null
+$script:ExtraInstalled = @()
 
 function Install-Shims {
     param($Tool, [string]$Dest)
@@ -393,6 +505,9 @@ function Install-Shims {
         }
         $java = $null
         if ($Tool.needs_jdk) { $java = $script:JavaHome }
+        if ($shim.require_path -and ($file.FullName -notmatch $shim.require_path)) {
+            throw "$($Tool.id) shim $($shim.name) resolved to $($file.FullName)"
+        }
         $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java
         $made[$shim.name] = Get-RelativeKitPath $cmd
     }
@@ -426,7 +541,12 @@ function Install-GitHubZipTool {
         $hashSource = $published.source
         Write-Log "hash ok $($Tool.id) $hashSource"
     }
-    Expand-FlattenedZip -Zip $zip -Dest $dest
+    switch ([string]$Tool.unpack) {
+        'msi-admin' { Expand-MsiAdmin -Msi $zip -Dest $dest }
+        'nsis-app64' { Expand-NsisApp64 -Installer $zip -Dest $dest }
+        '7z' { Expand-WithSevenZip -Archive $zip -Dest $dest }
+        default { Expand-FlattenedZip -Zip $zip -Dest $dest }
+    }
     Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
     $shims = Install-Shims -Tool $Tool -Dest $dest
     Write-Marker -Dest $dest -Marker $marker
@@ -572,6 +692,178 @@ function Install-PipVenv {
     }
 }
 
+function New-SpacelessDirectory {
+    $bases = @()
+    if ($env:TEMP -and $env:TEMP -notmatch ' ') { $bases += $env:TEMP }
+    $winTemp = Join-Path $env:SystemRoot 'Temp'
+    if ($winTemp -notmatch ' ') { $bases += $winTemp }
+    foreach ($base in $bases) {
+        $dir = Join-Path $base ('rt7z' + [guid]::NewGuid().ToString('N'))
+        try {
+            New-Item -ItemType Directory -Force -Path $dir | Out-Null
+            return $dir
+        } catch { }
+    }
+    throw '7-Zip installer needs a temp directory with no spaces'
+}
+
+function Invoke-SevenZip {
+    param([string]$SevenZip, [string[]]$ArgumentList)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & $SevenZip @ArgumentList
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $prev
+    if ($code -ne 0) { throw "7z failed ($code)" }
+}
+
+function Expand-MsiAdmin {
+    param([string]$Msi, [string]$Dest)
+    $stage = New-SpacelessDirectory
+    $extract = Join-Path $stage 'out'
+    $localMsi = Join-Path $stage 'pkg.msi'
+    New-Item -ItemType Directory -Force -Path $extract | Out-Null
+    Copy-Item -LiteralPath $Msi -Destination $localMsi
+    try {
+        $msiexec = Join-Path $env:SystemRoot 'System32\msiexec.exe'
+        $prev = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $proc = Start-Process -FilePath $msiexec -ArgumentList @('/a', $localMsi, '/qn', ('TARGETDIR=' + $extract)) -Wait -PassThru
+        $code = $proc.ExitCode
+        $ErrorActionPreference = $prev
+        if ($code -ne 0 -and $code -ne 3010) { throw "msiexec /a failed ($code)" }
+        $payload = Join-Path $extract 'Files\7-Zip'
+        if (-not (Test-Path -LiteralPath (Join-Path $payload '7z.exe')) -or -not (Test-Path -LiteralPath (Join-Path $payload '7z.dll'))) {
+            throw '7-Zip MSI did not contain 7z.exe and 7z.dll'
+        }
+        Move-FlattenedStage -Stage $payload -Dest $Dest
+    } finally {
+        if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function Get-SevenZip {
+    $exe = Join-Path $ToolsDir '7zip\7z.exe'
+    $dll = Join-Path $ToolsDir '7zip\7z.dll'
+    if ((Test-Path -LiteralPath $exe) -and (Test-Path -LiteralPath $dll)) { return $exe }
+    $catalog = Get-Catalog
+    $tool = ConvertTo-Array $catalog.tools | Where-Object { $_.id -eq '7zip' } | Select-Object -First 1
+    if (-not $tool) { throw 'catalog has no 7zip tool' }
+    if ([string]$tool.unpack -ne 'msi-admin') { throw '7zip tool must unpack with msi-admin' }
+    $row = Install-GitHubZipTool $tool
+    if ($row) { $script:ExtraInstalled += @($row) }
+    if (-not (Test-Path -LiteralPath $exe) -or -not (Test-Path -LiteralPath $dll)) {
+        throw '7zip install did not produce 7z.exe and 7z.dll'
+    }
+    return $exe
+}
+
+function Expand-WithSevenZip {
+    param([string]$Archive, [string]$Dest)
+    $seven = Get-SevenZip
+    $stage = Join-Path $TmpDir ('stage-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $stage | Out-Null
+    try {
+        Invoke-SevenZip -SevenZip $seven -ArgumentList @('x', '-y', "-o$stage", $Archive)
+        Move-FlattenedStage -Stage $stage -Dest $Dest
+    } finally {
+        if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function Expand-NsisApp64 {
+    param([string]$Installer, [string]$Dest)
+    $seven = Get-SevenZip
+    $outer = Join-Path $TmpDir ('nsis-' + [guid]::NewGuid().ToString('N'))
+    $innerStage = Join-Path $TmpDir ('app64-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $outer, $innerStage | Out-Null
+    try {
+        Invoke-SevenZip -SevenZip $seven -ArgumentList @('e', '-y', "-o$outer", $Installer, '$PLUGINSDIR\app-64.7z')
+        $packed = @(Get-ChildItem -LiteralPath $outer -Filter 'app-64.7z' -File)
+        if ($packed.Count -ne 1) { throw "nsis app-64.7z count $($packed.Count)" }
+        Invoke-SevenZip -SevenZip $seven -ArgumentList @('x', '-y', "-o$innerStage", $packed[0].FullName)
+        $payload = @(Get-ChildItem -LiteralPath $innerStage -Filter 'LDtk.exe' -File)
+        if ($payload.Count -ne 1) { throw "LDtk.exe count $($payload.Count)" }
+        Move-FlattenedStage -Stage $innerStage -Dest $Dest
+    } finally {
+        if (Test-Path -LiteralPath $outer) { Remove-Item -LiteralPath $outer -Recurse -Force -ErrorAction SilentlyContinue }
+        if (Test-Path -LiteralPath $innerStage) { Remove-Item -LiteralPath $innerStage -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function Install-GitHubArchive {
+    param($Tool)
+    $repo = [string]$Tool.repo
+    if ($Tool.ref -eq 'release') {
+        $release = Get-GitHubRelease -Repo $repo -Release $Tool.release
+        $refName = [string]$release.tag_name
+        $url = Get-GitHubArchiveUrl -Repo $repo -Kind 'tag' -Ref $refName
+        $marker = 'tag|' + $refName
+        $version = $refName
+    } else {
+        $meta = Invoke-GitHubApi -ApiPath ("repos/" + $repo)
+        $branch = [string]$meta.default_branch
+        if (-not $branch) { throw "$($Tool.id) has no default branch" }
+        $commit = Invoke-GitHubApi -ApiPath ("repos/" + $repo + "/commits/" + $branch)
+        $sha = [string]$commit.sha
+        if ($sha -notmatch '^[0-9a-f]{40}$') { throw "$($Tool.id) commit sha was not a sha" }
+        $url = Get-GitHubArchiveUrl -Repo $repo -Kind 'branch' -Ref $branch
+        $marker = 'commit|' + $sha
+        $version = $sha.Substring(0, 12)
+    }
+    $dest = Join-Path $ToolsDir $Tool.id
+    if (Test-AlreadyInstalled -Dest $dest -Marker $marker) {
+        Write-Log "skip $($Tool.id) $marker"
+        return
+    }
+    $zip = Join-Path $TmpDir ($Tool.id + '-src.zip')
+    Write-Log "get $($Tool.id) $url"
+    Save-Url -Url $url -Dest $zip
+    $actual = Get-Sha256Hex $zip
+    Expand-FlattenedZip -Zip $zip -Dest $dest
+    Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+    $shims = Install-Shims -Tool $Tool -Dest $dest
+    Write-Marker -Dest $dest -Marker $marker
+    return [pscustomobject]@{
+        id = $Tool.id
+        version = $version
+        asset = $url
+        sha256 = $actual
+        hash_source = 'computed'
+        dir = Get-RelativeKitPath $dest
+        shims = $shims
+    }
+}
+
+function Install-FighterFactory {
+    param($Tool)
+    $url = Resolve-FighterFactoryZipUrl
+    $name = [IO.Path]::GetFileName(([Uri]$url).AbsolutePath)
+    if ($name -notmatch '^[A-Za-z0-9._-]+\.zip$') { throw "bad fighter factory file name $name" }
+    $dest = Join-Path $ToolsDir $Tool.id
+    if (Test-AlreadyInstalled -Dest $dest -Marker $url) {
+        Write-Log "skip $($Tool.id) $url"
+        return
+    }
+    $zip = Join-Path $TmpDir $name
+    Write-Log "get fighter-factory $url"
+    Save-Url -Url $url -Dest $zip
+    $actual = Get-Sha256Hex $zip
+    Expand-FlattenedZip -Zip $zip -Dest $dest
+    Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+    $shims = Install-Shims -Tool $Tool -Dest $dest
+    Write-Marker -Dest $dest -Marker $url
+    return [pscustomobject]@{
+        id = $Tool.id
+        version = $name
+        asset = $url
+        sha256 = $actual
+        hash_source = 'computed'
+        dir = Get-RelativeKitPath $dest
+        shims = $shims
+    }
+}
+
 function Install-One {
     param($Tool)
     switch ($Tool.method) {
@@ -580,8 +872,20 @@ function Install-One {
         'renderdoc-stable-zip' { return Install-RenderDocTool $Tool }
         'dotnet-tool' { return Install-DotNetTool $Tool }
         'pip-venv' { return Install-PipVenv $Tool }
+        'github-archive' { return Install-GitHubArchive $Tool }
+        'virtualltek-portable' { return Install-FighterFactory $Tool }
         default { throw "unknown method $($Tool.method)" }
     }
+}
+
+function Merge-ExtraInstalled {
+    param($State)
+    foreach ($extra in @($script:ExtraInstalled)) {
+        if ($extra -and $extra.id) {
+            $State.tools | Add-Member -NotePropertyName $extra.id -NotePropertyValue $extra -Force
+        }
+    }
+    $script:ExtraInstalled = @()
 }
 
 $catalog = Get-Catalog
@@ -606,11 +910,13 @@ foreach ($tool in $selected) {
             $state.tools | Add-Member -NotePropertyName $tool.id -NotePropertyValue $row -Force
         }
         if ($script:JavaHome) { $state.java_home = $script:JavaHome }
+        Merge-ExtraInstalled $state
         Save-State $state
         $ok += $tool.id
     } catch {
         Write-Log "FAIL $($tool.id): $($_.Exception.Message)"
         $bad += $tool.id
+        Merge-ExtraInstalled $state
         Save-State $state
     }
 }

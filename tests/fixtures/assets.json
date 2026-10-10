@@ -207,5 +207,101 @@
       "Pixelorama_v1.2.3_setup.exe"
     ],
     "expect": "Pixelorama-Windows-64bit.zip"
+  },
+  "7zip": {
+    "assets": [
+      "7z2604-arm.exe",
+      "7z2604-arm64.exe",
+      "7z2604-extra.7z",
+      "7z2604-x64.exe",
+      "7z2604-x64.msi",
+      "7z2604.exe",
+      "7z2604.msi",
+      "7zr.exe"
+    ],
+    "expect": "7z2604-x64.msi"
+  },
+  "ldtk": {
+    "assets": [
+      "latest.yml",
+      "LDtk-1.5.3-installer.exe",
+      "LDtk-1.5.3-installer.exe.blockmap",
+      "mac-distribution.zip",
+      "ubuntu-distribution.zip"
+    ],
+    "expect": "LDtk-1.5.3-installer.exe"
+  },
+  "openbor": {
+    "assets": [
+      "OpenBOR-Android.v4.0.Build.7533.apk",
+      "OpenBOR-Linux-x64-v4.0.Build.7533.AppImage",
+      "OpenBOR-Linux-x86-v4.0.Build.7533.AppImage",
+      "OpenBOR.v4.0.Build.7533.rar"
+    ],
+    "expect": "OpenBOR.v4.0.Build.7533.rar"
+  },
+  "hd2-runtime-sdk": {
+    "assets": [
+      "HD2Runtime-0.30.3-example-projects.zip",
+      "HD2Runtime-0.30.3-runtime.zip",
+      "HD2Runtime-0.30.3-sdk.zip",
+      "HD2Runtime-ModTemplate-0.30.3.zip",
+      "SHA256SUMS.txt"
+    ],
+    "expect": "HD2Runtime-0.30.3-sdk.zip"
+  },
+  "hd2-runtime": {
+    "assets": [
+      "HD2Runtime-0.30.3-example-projects.zip",
+      "HD2Runtime-0.30.3-runtime.zip",
+      "HD2Runtime-0.30.3-sdk.zip",
+      "HD2Runtime-ModTemplate-0.30.3.zip",
+      "SHA256SUMS.txt"
+    ],
+    "expect": "HD2Runtime-0.30.3-runtime.zip"
+  },
+  "hd2-runtime-examples": {
+    "assets": [
+      "HD2Runtime-0.30.3-example-projects.zip",
+      "HD2Runtime-0.30.3-runtime.zip",
+      "HD2Runtime-0.30.3-sdk.zip",
+      "HD2Runtime-ModTemplate-0.30.3.zip",
+      "SHA256SUMS.txt"
+    ],
+    "expect": "HD2Runtime-0.30.3-example-projects.zip"
+  },
+  "hd2-runtime-template": {
+    "assets": [
+      "HD2Runtime-0.30.3-example-projects.zip",
+      "HD2Runtime-0.30.3-runtime.zip",
+      "HD2Runtime-0.30.3-sdk.zip",
+      "HD2Runtime-ModTemplate-0.30.3.zip",
+      "SHA256SUMS.txt"
+    ],
+    "expect": "HD2Runtime-ModTemplate-0.30.3.zip"
+  },
+  "hd2-modbuilder": {
+    "assets": [
+      "HD2Runtime-ModBuilder-v1.7.1-win-x64.zip",
+      "HD2Runtime-ModBuilder-v1.7.1-win-x64.zip.sha256",
+      "modbuilder-update-v2.json",
+      "modbuilder-update.json"
+    ],
+    "expect": "HD2Runtime-ModBuilder-v1.7.1-win-x64.zip"
+  },
+  "hd2-sdk-community": {
+    "assets": [
+      "HD2SDK-CommunityEdition-source.zip",
+      "HD2SDK-CommunityEditionV3-11-0.zip"
+    ],
+    "expect": "HD2SDK-CommunityEditionV3-11-0.zip"
+  },
+  "bingus-shared-loader": {
+    "assets": [
+      "Bingus-Shared-Loader-v19.zip",
+      "BingusSharedLoader-source-v19.zip",
+      "SHA256SUMS.txt"
+    ],
+    "expect": "Bingus-Shared-Loader-v19.zip"
   }
 }
