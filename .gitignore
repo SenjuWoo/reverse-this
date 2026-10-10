@@ -1,0 +1,10 @@
+sandbox/tools/
+sandbox/bin/
+sandbox/tmp/
+sandbox/log/
+sandbox/installed.json
+sandbox/manual/*
+!sandbox/manual/README.md
+__pycache__/
+*.pyc
+.venv/

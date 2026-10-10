@@ -1,0 +1,162 @@
+{
+  "ghidra": {
+    "assets": ["ghidra_12.1.4_PUBLIC_20260921.zip"],
+    "expect": "ghidra_12.1.4_PUBLIC_20260921.zip"
+  },
+  "imhex": {
+    "assets": [
+      "imhex-1.38.1-Windows-arm64.msi",
+      "imhex-1.38.1-Windows-Portable-arm64.zip",
+      "imhex-1.38.1-Windows-Portable-NoGPU-x86_64.zip",
+      "imhex-1.38.1-Windows-Portable-x86_64.zip",
+      "imhex-1.38.1-Windows-x86_64.msi"
+    ],
+    "expect": "imhex-1.38.1-Windows-Portable-x86_64.zip"
+  },
+  "die": {
+    "assets": [
+      "die_win32_portable_3.21_x86.zip",
+      "die_win64_portable_3.21_x64.zip",
+      "die_winxp_portable_3.21_x86.zip",
+      "die_mac_portable_3.21_x86_64.zip",
+      "die_sourcecode_3.21.tar.gz"
+    ],
+    "expect": "die_win64_portable_3.21_x64.zip"
+  },
+  "x64dbg": {
+    "assets": [
+      "snapshot_2026-05-27_12-11.zip",
+      "symbols-snapshot_2026-05-27_12-11.zip",
+      "x64dbg-pluginsdk.zip"
+    ],
+    "expect": "snapshot_2026-05-27_12-11.zip"
+  },
+  "pe-bear": {
+    "assets": [
+      "PE-bear_0.7.2_qt5_x64_win_vs17.zip",
+      "PE-bear_0.7.2_qt6_x64_macos.app.zip",
+      "PE-bear_0.7.2_qt6_x64_win_vs22.zip",
+      "PE-bear_0.7.2_qt6_x86_64_linux.AppImage"
+    ],
+    "expect": "PE-bear_0.7.2_qt6_x64_win_vs22.zip"
+  },
+  "dnspyex": {
+    "assets": ["dnSpy-net-win32.zip", "dnSpy-net-win64.zip", "dnSpy-netframework.zip"],
+    "expect": "dnSpy-net-win64.zip"
+  },
+  "ilspy": {
+    "assets": [
+      "ILSpy_windows_11.1.0.9782-arm64.zip",
+      "ILSpy_windows_11.1.0.9782-x64.zip",
+      "ILSpy_windows_selfcontained_11.1.0.9782-x64.zip"
+    ],
+    "expect": "ILSpy_windows_selfcontained_11.1.0.9782-x64.zip"
+  },
+  "assetripper": {
+    "assets": ["AssetRipper_win_arm64.zip", "AssetRipper_win_x64.zip", "AssetRipper_linux_x64.tar.xz"],
+    "expect": "AssetRipper_win_x64.zip"
+  },
+  "il2cppdumper": {
+    "assets": [
+      "Il2CppDumper-net6-v6.7.46.zip",
+      "Il2CppDumper-net6-win-v6.7.46.zip",
+      "Il2CppDumper-net7-win-v6.7.46.zip",
+      "Il2CppDumper-win-v6.7.46.zip"
+    ],
+    "expect": "Il2CppDumper-win-v6.7.46.zip"
+  },
+  "fmodel": {
+    "assets": ["FModel.zip"],
+    "expect": "FModel.zip"
+  },
+  "repak": {
+    "assets": [
+      "repak_cli-x86_64-pc-windows-msvc.msi",
+      "repak_cli-x86_64-pc-windows-msvc.zip",
+      "repak_cli-x86_64-pc-windows-msvc.zip.sha256"
+    ],
+    "expect": "repak_cli-x86_64-pc-windows-msvc.zip"
+  },
+  "retoc": {
+    "assets": [
+      "retoc_cli-x86_64-pc-windows-msvc.zip",
+      "retoc_cli-x86_64-pc-windows-msvc.zip.sha256",
+      "retoc_cli-installer.ps1"
+    ],
+    "expect": "retoc_cli-x86_64-pc-windows-msvc.zip"
+  },
+  "uabea": {
+    "assets": ["uabea-ubuntu.zip", "uabea-windows.zip"],
+    "expect": "uabea-windows.zip"
+  },
+  "bepinex5": {
+    "assets": [
+      "BepInEx_linux_x64_5.4.23.5.zip",
+      "BepInEx_Patcher_5.4.23.5.zip",
+      "BepInEx_win_x64_5.4.23.5.zip",
+      "BepInEx_win_x86_5.4.23.5.zip"
+    ],
+    "expect": "BepInEx_win_x64_5.4.23.5.zip"
+  },
+  "melonloader": {
+    "assets": ["MelonLoader.Installer.exe", "MelonLoader.x64.zip", "MelonLoader.x86.zip"],
+    "expect": "MelonLoader.x64.zip"
+  },
+  "unityexplorer-bepinex5": {
+    "assets": [
+      "UnityExplorer.BepInEx5.Mono.zip",
+      "UnityExplorer.BepInEx6.Mono.zip",
+      "UnityExplorer.MelonLoader.IL2CPP.zip",
+      "UnityExplorer.MelonLoader.IL2CPP.net6preview.zip",
+      "UnityExplorer.Standalone.Mono.zip"
+    ],
+    "expect": "UnityExplorer.BepInEx5.Mono.zip"
+  },
+  "unityexplorer-bepinex6": {
+    "assets": [
+      "UnityExplorer.BepInEx5.Mono.zip",
+      "UnityExplorer.BepInEx6.Mono.zip",
+      "UnityExplorer.MelonLoader.IL2CPP.zip"
+    ],
+    "expect": "UnityExplorer.BepInEx6.Mono.zip"
+  },
+  "unityexplorer-melon-il2cpp": {
+    "assets": [
+      "UnityExplorer.BepInEx5.Mono.zip",
+      "UnityExplorer.MelonLoader.IL2CPP.zip",
+      "UnityExplorer.MelonLoader.IL2CPP.net6preview.zip",
+      "UnityExplorer.MelonLoader.Mono.zip"
+    ],
+    "expect": "UnityExplorer.MelonLoader.IL2CPP.zip"
+  },
+  "ue4ss": {
+    "assets": [
+      "UE4SS_v3.0.1-1164-g5e627997.zip",
+      "zCustomGameConfigs.zip",
+      "zDEV-UE4SS_v3.0.1-1164-g5e627997.zip",
+      "zMapGenBP.zip"
+    ],
+    "expect": "UE4SS_v3.0.1-1164-g5e627997.zip"
+  },
+  "minhook": {
+    "assets": ["MinHook_134_bin.zip", "MinHook_134_lib.zip"],
+    "expect": "MinHook_134_bin.zip"
+  },
+  "safetyhook": {
+    "assets": ["safetyhook-amalgamated-zydis.zip", "safetyhook-amalgamated.zip"],
+    "expect": "safetyhook-amalgamated-zydis.zip"
+  },
+  "uassetgui": {
+    "assets": ["UAssetGUI.exe"]
+  },
+  "directxtex": {
+    "assets": [
+      "texassemble.exe",
+      "texassemble_arm64.exe",
+      "texconv.exe",
+      "texconv_arm64.exe",
+      "texdiag.exe",
+      "texdiag_arm64.exe"
+    ]
+  }
+}

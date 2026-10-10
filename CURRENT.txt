@@ -1,0 +1,4 @@
+installed: sandbox/installed.json
+bin: sandbox/bin
+pointer: %LOCALAPPDATA%\ReverseThis\kit.json
+log: sandbox/log/modkit.log

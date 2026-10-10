@@ -1,0 +1,261 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "id": "ghidra",
+      "name": "Ghidra",
+      "job": "Native decompiler. Headless and GUI.",
+      "method": "github-release",
+      "repo": "NationalSecurityAgency/ghidra",
+      "asset_pattern": "^ghidra_.+_PUBLIC_.+\\.zip$",
+      "needs_jdk": 25,
+      "shims": [
+        {"name": "ghidra", "exe_glob": "ghidraRun.bat"},
+        {"name": "analyzeHeadless", "exe_glob": "analyzeHeadless.bat"}
+      ]
+    },
+    {
+      "id": "imhex",
+      "name": "ImHex",
+      "job": "Hex editor with patterns and a CLI.",
+      "method": "github-release",
+      "repo": "WerWolv/ImHex",
+      "asset_pattern": "^imhex-.+-Windows-Portable-x86_64\\.zip$",
+      "shims": [{"name": "imhex", "exe_glob": "imhex.exe"}]
+    },
+    {
+      "id": "die",
+      "name": "Detect It Easy",
+      "job": "Identify compilers, packers and file types. diec is the CLI.",
+      "method": "github-release",
+      "repo": "horsicq/DIE-engine",
+      "asset_pattern": "^die_win64_portable_.+_x64\\.zip$",
+      "shims": [{"name": "diec", "exe_glob": "diec.exe"}]
+    },
+    {
+      "id": "x64dbg",
+      "name": "x64dbg",
+      "job": "Windows user-mode debugger.",
+      "method": "github-release",
+      "repo": "x64dbg/x64dbg",
+      "asset_pattern": "^snapshot_[0-9].+\\.zip$",
+      "shims": [{"name": "x64dbg", "exe_glob": "x64dbg.exe", "prefer_path": "\\\\x64\\\\"}]
+    },
+    {
+      "id": "pe-bear",
+      "name": "PE-bear",
+      "job": "PE header viewer and editor.",
+      "method": "github-release",
+      "repo": "hasherezade/pe-bear",
+      "asset_pattern": "^PE-bear_.+_qt6_x64_win_.+\\.zip$",
+      "shims": [{"name": "pe-bear", "exe_glob": "PE-bear.exe"}]
+    },
+    {
+      "id": "dnspyex",
+      "name": "dnSpyEx",
+      "job": ".NET debugger and assembly editor.",
+      "method": "github-release",
+      "repo": "dnSpyEx/dnSpy",
+      "asset_pattern": "^dnSpy-net-win64\\.zip$",
+      "shims": [{"name": "dnspy", "exe_glob": "dnSpy.exe"}]
+    },
+    {
+      "id": "ilspy",
+      "name": "ILSpy",
+      "job": ".NET decompiler GUI, self-contained.",
+      "method": "github-release",
+      "repo": "icsharpcode/ILSpy",
+      "asset_pattern": "^ILSpy_windows_selfcontained_.+-x64\\.zip$",
+      "shims": [{"name": "ilspy", "exe_glob": "ILSpy.exe"}]
+    },
+    {
+      "id": "ilspycmd",
+      "name": "ilspycmd",
+      "job": ".NET decompiler CLI. This is what an agent should run.",
+      "method": "dotnet-tool",
+      "package": "ilspycmd",
+      "shims": [{"name": "ilspycmd", "exe_glob": "ilspycmd.exe"}]
+    },
+    {
+      "id": "assetripper",
+      "name": "AssetRipper",
+      "job": "Unity extractor.",
+      "method": "github-release",
+      "repo": "AssetRipper/AssetRipper",
+      "asset_pattern": "^AssetRipper_win_x64\\.zip$",
+      "shims": [{"name": "assetripper", "exe_glob": "AssetRipper*.exe", "prefer_path": "CLI"}]
+    },
+    {
+      "id": "il2cppdumper",
+      "name": "Il2CppDumper",
+      "job": "Unity IL2CPP metadata dumper.",
+      "method": "github-release",
+      "repo": "Perfare/Il2CppDumper",
+      "asset_pattern": "^Il2CppDumper-win-.+\\.zip$",
+      "shims": [{"name": "il2cppdumper", "exe_glob": "Il2CppDumper.exe"}]
+    },
+    {
+      "id": "fmodel",
+      "name": "FModel",
+      "job": "Unreal pak and IoStore browser.",
+      "method": "github-release",
+      "repo": "4sval/FModel",
+      "asset_pattern": "^FModel\\.zip$",
+      "shims": [{"name": "fmodel", "exe_glob": "FModel.exe"}]
+    },
+    {
+      "id": "repak",
+      "name": "repak",
+      "job": "Unreal .pak CLI.",
+      "method": "github-release",
+      "repo": "trumank/repak",
+      "asset_pattern": "^repak_cli-x86_64-pc-windows-msvc\\.zip$",
+      "shims": [{"name": "repak", "exe_glob": "repak.exe"}]
+    },
+    {
+      "id": "retoc",
+      "name": "retoc",
+      "job": "Unreal IoStore .utoc/.ucas CLI.",
+      "method": "github-release",
+      "repo": "trumank/retoc",
+      "asset_pattern": "^retoc_cli-x86_64-pc-windows-msvc\\.zip$",
+      "shims": [{"name": "retoc", "exe_glob": "retoc.exe"}]
+    },
+    {
+      "id": "uassetgui",
+      "name": "UAssetGUI",
+      "job": "Unreal asset editor.",
+      "method": "github-files",
+      "repo": "atenfyr/UAssetGUI",
+      "files": ["UAssetGUI.exe"],
+      "shims": [{"name": "uassetgui", "exe_glob": "UAssetGUI.exe"}]
+    },
+    {
+      "id": "directxtex",
+      "name": "DirectXTex tools",
+      "job": "DDS convert, assemble and diagnose.",
+      "method": "github-files",
+      "repo": "microsoft/DirectXTex",
+      "files": ["texconv.exe", "texassemble.exe", "texdiag.exe"],
+      "shims": [
+        {"name": "texconv", "exe_glob": "texconv.exe"},
+        {"name": "texassemble", "exe_glob": "texassemble.exe"},
+        {"name": "texdiag", "exe_glob": "texdiag.exe"}
+      ]
+    },
+    {
+      "id": "uabea",
+      "name": "UABEA",
+      "job": "Surgical Unity asset and bundle edits. The build that ships a Windows zip.",
+      "method": "github-release",
+      "repo": "nesrak1/UABEA",
+      "asset_pattern": "^uabea-windows\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "bepinex5",
+      "name": "BepInEx 5",
+      "job": "Unity Mono plugin loader. Drop into a game folder.",
+      "method": "github-release",
+      "repo": "BepInEx/BepInEx",
+      "asset_pattern": "^BepInEx_win_x64_.+\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "melonloader",
+      "name": "MelonLoader",
+      "job": "Unity Mono and IL2CPP loader. Drop into a game folder.",
+      "method": "github-release",
+      "repo": "LavaGang/MelonLoader",
+      "asset_pattern": "^MelonLoader\\.x64\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "unityexplorer-bepinex5",
+      "name": "UnityExplorer for BepInEx 5 Mono",
+      "job": "In-game Unity inspector plugin.",
+      "method": "github-release",
+      "repo": "yukieiji/UnityExplorer",
+      "asset_pattern": "^UnityExplorer\\.BepInEx5\\.Mono\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "unityexplorer-bepinex6",
+      "name": "UnityExplorer for BepInEx 6 Mono",
+      "job": "In-game Unity inspector plugin for a BepInEx 6 Mono game.",
+      "method": "github-release",
+      "repo": "yukieiji/UnityExplorer",
+      "asset_pattern": "^UnityExplorer\\.BepInEx6\\.Mono\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "unityexplorer-melon-il2cpp",
+      "name": "UnityExplorer for MelonLoader IL2CPP",
+      "job": "In-game Unity inspector plugin for MelonLoader IL2CPP.",
+      "method": "github-release",
+      "repo": "yukieiji/UnityExplorer",
+      "asset_pattern": "^UnityExplorer\\.MelonLoader\\.IL2CPP\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "ue4ss",
+      "name": "UE4SS experimental",
+      "job": "Unreal Lua scripting and SDK dumper. Drop into a game folder.",
+      "method": "github-release",
+      "repo": "UE4SS-RE/RE-UE4SS",
+      "release": "experimental-latest",
+      "asset_pattern": "^UE4SS_.+\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "renderdoc",
+      "name": "RenderDoc",
+      "job": "Frame capture. renderdoccmd is the CLI.",
+      "method": "renderdoc-stable-zip",
+      "repo": "baldurk/renderdoc",
+      "shims": [
+        {"name": "renderdoccmd", "exe_glob": "renderdoccmd.exe"},
+        {"name": "qrenderdoc", "exe_glob": "qrenderdoc.exe"}
+      ]
+    },
+    {
+      "id": "minhook",
+      "name": "MinHook",
+      "job": "Small C detour library. Use SafetyHook for new C++.",
+      "method": "github-release",
+      "repo": "TsudaKageyu/minhook",
+      "asset_pattern": "^MinHook_.+_bin\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "safetyhook",
+      "name": "SafetyHook",
+      "job": "C++ hook library, amalgamated sources for new hooks.",
+      "method": "github-release",
+      "repo": "cursey/safetyhook",
+      "asset_pattern": "^safetyhook-amalgamated-zydis\\.zip$",
+      "shims": []
+    },
+    {
+      "id": "frida",
+      "name": "Frida",
+      "job": "Dynamic instrumentation CLI.",
+      "method": "pip-venv",
+      "package": "frida-tools",
+      "shims": [{"name": "frida", "exe_glob": "frida.exe"}]
+    }
+  ],
+  "retired": [
+    {"id": "assetstudio", "instead": "assetripper", "why": "The AssetStudio repository is archived."},
+    {"id": "dnspy", "instead": "dnspyex", "why": "The original dnSpy repository is archived."},
+    {"id": "uabe", "instead": "uabea", "why": "Original UABE is unsupported. UABEA is the build that still publishes a Windows zip."},
+    {"id": "umodel-ue4", "instead": "fmodel", "why": "UModel is not the UE4/UE5 browser. Use FModel, repak and retoc."},
+    {"id": "cpp2il-2022-binary", "instead": "il2cppdumper", "why": "Cpp2IL's last published binary is the 2022 release. The source has moved on and has not published a replacement binary."},
+    {"id": "ue4ss-stable", "instead": "ue4ss", "why": "The stable UE4SS tag lags the experimental release. The kit installs experimental-latest."},
+    {"id": "bepinex6-pre2", "instead": "melonloader", "why": "BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader."},
+    {"id": "cheat-engine-download", "instead": null, "why": "The Cheat Engine GitHub release ships no binary. The kit does not download the bundled website installer."},
+    {"id": "reclass-rar", "instead": null, "why": "ReClass.NET's published asset is an old rar. The kit does not unpack rars."},
+    {"id": "3dmigoto-tag", "instead": null, "why": "The tagged 3Dmigoto release is years behind the repository. It is not part of the one-click set."},
+    {"id": "sinai-unityexplorer", "instead": "unityexplorer-bepinex5", "why": "sinai-dev/UnityExplorer is archived. The kit uses the yukieiji fork."}
+  ]
+}
