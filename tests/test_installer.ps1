@@ -64,6 +64,10 @@ try {
     $stage = Join-Path $TmpDir 'good-stage'
     New-Item -ItemType Directory -Path $stage | Out-Null
     Write-Utf8 -Path (Join-Path $stage 'probe.cmd') -Text "@echo off`r`nexit /b 0`r`n"
+    $helperDir = Join-Path $stage 'x86'
+    New-Item -ItemType Directory -Path $helperDir | Out-Null
+    Write-Utf8 -Path (Join-Path $helperDir 'probe.cmd') -Text 'other architecture helper'
+    Assert-True ((Find-ToolFile -Root $stage -Glob 'probe.cmd').FullName -eq (Join-Path $stage 'probe.cmd')) 'A nested architecture helper displaced the main executable'
     Move-FlattenedStage -Stage $stage -Dest $dest | Out-Null
     Assert-True (Test-Path -LiteralPath (Join-Path $dest 'probe.cmd')) 'A valid payload was not installed'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $dest 'old.txt'))) 'An update merged stale files into the new payload'
@@ -336,6 +340,78 @@ try {
         $Force = $false
         $env:PATH = $savedPath
         $env:RT_NPM_VERSION = $savedNpmVersion
+    }
+
+    $savedRelease = ${function:Get-GitHubRelease}
+    $savedCatalog = ${function:Get-Catalog}
+    $savedArchive = ${function:Install-GitHubArchive}
+    $savedPip = ${function:Install-PipVenv}
+    $savedExtra = $script:ExtraInstalled
+    try {
+        function Get-GitHubRelease { return [pscustomobject]@{ tag_name = 'v99.2.3' } }
+        function Get-Catalog {
+            return [pscustomobject]@{ tools = @(
+                [pscustomobject]@{ id = 'capa-rules'; method = 'github-archive'; shims = @() }
+                [pscustomobject]@{ id = 'capa-source'; method = 'github-archive'; shims = @() }
+            ) }
+        }
+        $script:CapaDependencies = @()
+        $script:ExtraInstalled = @()
+        function Install-GitHubArchive {
+            param($Tool)
+            $script:CapaDependencies += [pscustomobject]@{ id = $Tool.id; tag = $Tool.release }
+            $dependencyDir = Join-Path $ToolsDir $Tool.id
+            New-Item -ItemType Directory -Path $dependencyDir -Force | Out-Null
+            Write-Utf8 -Path (Join-Path $dependencyDir 'fixture.txt') -Text $Tool.release
+            return [pscustomobject]@{ id = $Tool.id; version = $Tool.release; shims = @{}; dir = Get-RelativeKitPath $dependencyDir }
+        }
+        function Install-PipVenv {
+            param($Tool)
+            $script:CapaPackageVersion = $Tool.package_version
+            $packageDir = Join-Path $ToolsDir $Tool.id
+            $scripts = Join-Path $packageDir 'Scripts'
+            $metadata = Join-Path $packageDir ('Lib\site-packages\flare_capa-' + $Tool.package_version + '.dist-info')
+            New-Item -ItemType Directory -Path $scripts, $metadata -Force | Out-Null
+            Write-Utf8 -Path (Join-Path $scripts 'python.exe') -Text 'fixture interpreter, never executed'
+            Write-Utf8 -Path (Join-Path $scripts 'capa.cmd') -Text "@echo off`r`nexit /b 0`r`n"
+            Write-Utf8 -Path (Join-Path $metadata 'METADATA') -Text ('Version: ' + $Tool.package_version)
+            $made = Install-Shims -Tool $Tool -Dest $packageDir
+            Write-Marker -Dest $packageDir -Marker 'present'
+            return [pscustomobject]@{ id = $Tool.id; version = $Tool.package_version; shims = $made; dir = Get-RelativeKitPath $packageDir }
+        }
+        $capaTool = [pscustomobject]@{
+            id = 'capa'; method = 'pip-venv'; package = 'flare-capa'; requires = @('capa-rules', 'capa-source')
+            shims = @([pscustomobject]@{ name = 'capa'; exe_glob = 'capa.cmd' })
+        }
+        $capaRecord = Install-One $capaTool
+        Assert-True ($script:CapaDependencies.Count -eq 2) 'capa did not install both rule and signature dependencies'
+        Assert-True (@($script:CapaDependencies | Where-Object { $_.tag -ne 'v99.2.3' }).Count -eq 0) 'capa dependencies did not use the exact package release tag'
+        Assert-True ($script:CapaPackageVersion -eq '99.2.3' -and $capaRecord.version -eq '99.2.3') 'capa package version did not match its rule and signature release'
+        $pipSpecAssignment = $ast.Find({
+            param($node)
+            $node -is [System.Management.Automation.Language.AssignmentStatementAst] -and $node.Left.Extent.Text -eq '$packageSpec'
+        }, $true)
+        Assert-True ($null -ne $pipSpecAssignment) 'The pip package version specification is missing'
+        $spec = & {
+            param($Tool, $Assignment)
+            Invoke-Expression $Assignment
+            $packageSpec
+        } $capaTool $pipSpecAssignment.Extent.Text
+        Assert-True ($spec -eq 'flare-capa==99.2.3') 'The pip package specification did not pin the matching capa version'
+        $capaDest = Join-Path $ToolsDir 'capa'
+        $capaRecord.version = '99.1.0'
+        Write-AtomicJson -Path (Join-Path $capaDest '.kit-record.json') -Text ($capaRecord | ConvertTo-Json -Depth 8)
+        $script:CurrentTool = $capaTool
+        Assert-True (-not (Test-AlreadyInstalled -Dest $capaDest -Marker 'present')) 'An old capa package was reused with a newer rule release'
+        $capaRecord.version = '99.2.3'
+        Write-AtomicJson -Path (Join-Path $capaDest '.kit-record.json') -Text ($capaRecord | ConvertTo-Json -Depth 8)
+        Assert-True (Test-AlreadyInstalled -Dest $capaDest -Marker 'present') 'A matching capa package was not reusable'
+    } finally {
+        Set-Item Function:\Get-GitHubRelease -Value $savedRelease
+        Set-Item Function:\Get-Catalog -Value $savedCatalog
+        Set-Item Function:\Install-GitHubArchive -Value $savedArchive
+        Set-Item Function:\Install-PipVenv -Value $savedPip
+        $script:ExtraInstalled = $savedExtra
     }
     Write-Host 'installer regression checks ok'
 } finally {

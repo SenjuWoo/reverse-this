@@ -461,6 +461,9 @@ function Find-ToolFile {
         if ($preferred.Count -eq 1) { return $preferred[0] }
         if ($preferred.Count -gt 1) { throw "ambiguous executable $Glob under $Root" }
     }
+    # Portable archives can also contain helpers for another architecture.
+    $direct = @($hits | Where-Object { $_.DirectoryName -eq (Get-Item -LiteralPath $Root).FullName })
+    if ($direct.Count -eq 1) { return $direct[0] }
     if ($hits.Count -gt 1) { throw "ambiguous executable $Glob under $Root" }
     return $hits[0]
 }
@@ -524,6 +527,7 @@ function Test-AlreadyInstalled {
         $row = $script:InstallState.tools.($script:CurrentTool.id)
     }
     if (-not $row -or $row.id -ne $script:CurrentTool.id) { return $false }
+    if ($script:CurrentTool.method -eq 'github-archive' -and $row.asset -like '*/archive/refs/heads/*') { return $false }
     if ($script:CurrentTool.package_version -and $row.version -ne $script:CurrentTool.package_version) { return $false }
     try { Assert-ToolPayload -Tool $script:CurrentTool -Dest $Dest } catch { return $false }
     $row.shims = Install-Shims -Tool $script:CurrentTool -Dest $Dest
@@ -551,12 +555,14 @@ function Save-State {
     param($State)
     $json = $State | ConvertTo-Json -Depth 8
     Write-AtomicJson -Path $StatePath -Text $json
-    $pointer = [ordered]@{
-        kit_root = $KitRoot
-        installed_json = $StatePath
-        bin = $BinDir
-        java_home = $State.java_home
+    $pointer = [pscustomobject]@{}
+    if (Test-Path -LiteralPath $PointerPath) {
+        $pointer = Get-Content -LiteralPath $PointerPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $backup = $PointerPath + '.pre-' + $kitVersion
+        if (-not (Test-Path -LiteralPath $backup)) { Copy-Item -LiteralPath $PointerPath -Destination $backup }
     }
+    $owned = @{ kit_root = $KitRoot; installed_json = $StatePath; bin = $BinDir; java_home = $State.java_home }
+    foreach ($key in $owned.Keys) { $pointer | Add-Member -NotePropertyName $key -NotePropertyValue $owned[$key] -Force }
     Write-AtomicJson -Path $PointerPath -Text ($pointer | ConvertTo-Json -Depth 4)
 }
 
