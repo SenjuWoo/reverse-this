@@ -107,3 +107,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -Plan
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_installer.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_isolation.ps1
 ```
+
+After installing the app/format tools, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_tool_smoke.ps1` from a source checkout for generated-sample checks. Results/logs stay under `sandbox/work/runtime-smoke`. APK rebuilding, graphical tools and game compatibility still need a real target test.
