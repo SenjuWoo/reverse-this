@@ -1,6 +1,8 @@
 # Reverse THIS! agent contract
 
-You are in a modkit. The tools are already unpacked, or one command unpacks them. Do not search the disk.
+You are in a reverse-engineering and modding workbench. Check the installed manifest; catalog entries alone do not prove tools are installed. Do not search the disk.
+
+The `sandbox` directory is not process isolation. Tools and targets inherit the launching account's permissions. Inspect unknown targets in a separate VM or Windows Sandbox when isolation is needed; do not claim this folder provides it.
 
 ## Find the kit
 
@@ -10,7 +12,7 @@ You are in a modkit. The tools are already unpacked, or one command unpacks them
 4. If you were not started inside the kit, read `%LOCALAPPDATA%\ReverseThis\kit.json`. It has `kit_root`, `installed_json` and `bin`. Then follow those paths.
 5. Stop if none of those exist. Ask for the kit root. Do not scan `Program Files`, Downloads, or a personal tools dump.
 
-`Install-Modkit.ps1 -Plan` prints the catalog and downloads nothing. `-Force` updates an existing kit. A normal run skips tools that are already unpacked.
+`Install-Modkit.ps1 -Plan` prints the catalog and downloads nothing. Release tools resolve the current release on each run and reuse matching payloads; package tools reuse installed versions until `-Force`, except capa, which tracks its release with matching rules/signatures. `-Force` also reinstalls matching release payloads. `-Doctor` checks installed records and required files without downloading, not runtime behavior. Add `-DebugLog` to a repair run when detailed package/archive output is needed.
 
 ## Paths
 
@@ -18,8 +20,9 @@ You are in a modkit. The tools are already unpacked, or one command unpacks them
 |---|---|
 | `sandbox/bin` | Every CLI. This is the stable path. |
 | `sandbox/tools/<id>` | Unpacked files, including loaders you copy into a game |
-| `sandbox/work/<game>` | Decomp, dumps, captures, notes |
+| `sandbox/work/<target>` | Decomp, dumps, captures, notes |
 | `sandbox/log/modkit.log` | Installer failures |
+| `sandbox/backups/<id>-<unique-id>` | Replaced payloads retained for rollback |
 | `%LOCALAPPDATA%\ReverseThis\kit.json` | Absolute kit root on this machine |
 
 Put the game's decomp and extracts in `sandbox/work`. Do not commit that directory, game files, or `sandbox/tools`.
@@ -49,6 +52,14 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Hook, new C++ | `sandbox/tools/safetyhook` |
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
+| Android / Java decompile | `sandbox/bin/jadx.cmd` or `sandbox/bin/jadx-gui.cmd` |
+| Executable capability triage | `sandbox/bin/capa.cmd` (Python package, rules in `sandbox/tools/capa-rules`, signatures in `sandbox/tools/capa-source/sigs`) |
+| Binary format parser generation | `sandbox/bin/kaitai-struct-compiler.cmd` |
+| PyInstaller extraction | `sandbox/bin/pyinstxtractor-ng.cmd` |
+| APK resource/smali decode and rebuild | `sandbox/bin/apktool.cmd` |
+| Electron ASAR archives | `sandbox/bin/asar.cmd` |
+| WebAssembly modules and components | `sandbox/bin/wasm-tools.cmd` |
+| Programmatic binary parsing/patching | `sandbox/tools/lief/Scripts/python.exe` with `import lief` |
 | DDS | `sandbox/bin/texconv.cmd` |
 | Frostbite edit | `sandbox/bin/frosty-editor.cmd` |
 | Frostbite apply | `sandbox/bin/frosty-modmanager.cmd` |
@@ -67,11 +78,13 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Sleeping Dogs engine source | `sandbox/tools/theoryengine` |
 | Sleeping Dogs SDK | `sandbox/tools/sleeping-dogs-sdk` and `sandbox/tools/sleeping-dogs-sdk-playground` |
 
-Ghidra's shims set `JAVA_HOME` to the JDK the installer recorded. Do not use a Java 8 that happens to be on `PATH`.
+Ghidra, JADX, Apktool and Kaitai shims set `JAVA_HOME` to the JDK the installer recorded. Use their shims. ASAR needs Node 22.12+ and npm; capa needs Python 3.10+, LIEF 3.9+. capa uses `flare-capa` in a venv, with released `capa-rules` and the signature-bearing `capa-source` archive installed automatically even for `-Only capa`; its shim supplies the rules and signature directories. The source archive excludes the separate malware testfiles submodule. JADX does not guarantee complete decompilation; PyInstaller extraction produces files and bytecode, not automatically readable source. Confirm capa matches against actual code or observed behavior.
 
-## Do not fetch these
+Consult `docs/coverage.md` for optional tools and missing domains. `Start-IsolatedLab.ps1 -Plan` previews Windows Sandbox settings without writing files. Actual launch requires that Windows feature on a supported Pro/Enterprise/Education edition; Windows Home needs a separate VM. The launcher maps tools/input read-only, disables networking and other host integration, and only shares `sandbox/work/isolated` writable. It never starts a target. Host JDK/.NET/Python/Node prerequisites are not copied, so verify each guest tool before claiming it works there.
 
-The installer will not download them. Do not work around it. Reasons and the replacement, when there is one, are in `docs/currency.md`.
+## Retired automatic routes
+
+The installer does not download these ids. Use the replacement or target-specific manual route documented in `docs/currency.md`; do not silently substitute an old artifact.
 
 - `assetstudio`
 - `dnspy` (the archived original; `dnspyex` is the one installed)
@@ -95,12 +108,14 @@ The installer will not download them. Do not work around it. Reasons and the rep
 - Agent skills and MCP stack: https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle
 - IKEMEN Go project workflow (Claude plugin, not a binary in this kit): https://github.com/nategarelik/ikemen-forge
 
-Use those for the workflow. Use this repo for the tools on disk.
+Use those for the workflow. Use this repo for the tools on disk. The current Starter Bundle already supplies `um` and the shared Universal Modder skill; reuse them. This installer does not register upstream fal MCP/hooks, edit provider configuration or change project trust. Keep credentials out of target work folders and output.
 
 ## Safety
 
 Do not commit or publish game files or decompiled output. The kit does not contain game executables. TheoryEngine and the Sleeping Dogs SDK are source. HD2 and R2API are the public mod tools. Whether a mod can be published is the user's call.
 
+Distinguish recovery from reimplementation: native decompilers output approximations, extracted bytecode may not decompile, and absent source/assets/build systems cannot be invented. Reverse engineering does not grant permission to relicense third-party code as open source. Record provenance and license separately from technical findings, and keep target files and private analysis out of releases.
+
 ## When a tool fails
 
-Read `sandbox/log/modkit.log`. Fix the failed id, or re-run with `-Only <id>`. A missing shim means that tool's archive did not contain the expected executable; use `sandbox/installed.json` and the unpacked directory instead of guessing another install on the machine.
+Read `sandbox/log/modkit.log`. Fix the failed id, or re-run with `-Only <id> -DebugLog`. A missing shim means that tool's archive did not contain the expected executable; use `sandbox/installed.json` and the unpacked directory instead of guessing another install on the machine. Replaced payloads are retained under `sandbox/backups`; the pre-update manifest is `sandbox/installed.json.pre-<kit-version>.json`. Keep those until the new target workflow works, and do not publish them.

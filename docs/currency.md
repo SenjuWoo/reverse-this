@@ -24,6 +24,14 @@ The installer resolves the current official release at install time. This page i
 - RenderDoc's stable portable x64 zip from `renderdoc.org`, using the version of the current GitHub release tag. Not the nightly. Not the MSI.
 - MinHook's bin zip, for C. SafetyHook's amalgamated Zydis sources, for new C++.
 - Frida tools in a venv under `sandbox/tools/frida`.
+- [JADX](https://github.com/skylot/jadx)'s cross-platform `jadx-<version>.zip`, containing both CLI and GUI batch launchers. The separate Windows GUI zip would omit the CLI. Upstream requires Java 11+; this kit shares its JDK 25. Apache-2.0.
+- [capa](https://github.com/mandiant/capa)'s official `flare-capa` Python package in its own venv, Python 3.10+. [Released capability rules](https://github.com/mandiant/capa-rules) install as `capa-rules`; capa's release source archive installs as `capa-source` to supply `sigs/`. Both dependencies install even with `-Only capa`; the shim supplies `-r` and `-s` with those directories. The source archive does not include the separate malware testfiles submodule. This follows the [upstream package installation route](https://github.com/mandiant/capa/blob/master/doc/installation.md), rather than using the packed standalone executable. capa and its rules are Apache-2.0. Matches are leads to confirm, not proof that code executes a behavior.
+- [Kaitai Struct compiler](https://github.com/kaitai-io/kaitai_struct_compiler)'s universal `kaitai-struct-compiler-<version>.zip`, including the Windows batch launcher. Upstream requires Java 8+; this kit shares its JDK 25. GPL-3.0-or-later compiler; generated parsers need the target language's separate runtime with its own license.
+- [pyinstxtractor-ng](https://github.com/pyinstxtractor/pyinstxtractor-ng)'s standalone Windows `pyinstxtractor-ng.exe`. No local Python installation or matching target Python version is required for extraction. Decompiling extracted bytecode is a separate, version-dependent task. GPL-3.0.
+- [wasm-tools](https://github.com/bytecodealliance/wasm-tools)'s `wasm-tools-<version>-x86_64-windows.zip`. One self-contained CLI for inspection, validation, text/binary conversion and component work. Triple licensed under Apache-2.0, Apache-2.0 with LLVM exception, and MIT.
+- [Apktool](https://github.com/iBotPeaches/Apktool)'s `apktool_<version>.jar`, stored without extraction and launched with `java -jar`. Upstream requires Java 8+; this kit shares its JDK 25. Apache-2.0. Android signing and device tools are separate.
+- [Electron ASAR](https://github.com/electron/asar)'s `@electron/asar` npm package under `sandbox/tools/asar`, without lifecycle scripts or a global installation. Node 22.12+ and npm are required. MIT.
+- [LIEF](https://github.com/lief-project/LIEF)'s `lief` Python package in its own venv under `sandbox/tools/lief`. Python 3.9+ is required. Use that environment's Python to import the library; there is no LIEF CLI shim. Apache-2.0.
 - Frosty Editor and Frosty Mod Manager from the current stable release (`FrostyEditor.zip` and `FrostyModManager.zip`). Not the bundled prereq installers. Those stay inside the unpacked zip and are not shims.
 - Godot's current stable mono win64 zip. The shim is the console executable. Not the win32 zip, not the arm64 zip, not the non-mono `.exe.zip`.
 - GDRE Tools' Windows zip, for packed Godot games.
@@ -42,7 +50,7 @@ The installer resolves the current official release at install time. This page i
 - `assetstudio`: the AssetStudio repository is archived. Use `assetripper`.
 - `dnspy`: the original dnSpy repository is archived. Use `dnspyex`.
 - `uabe`: original UABE is unsupported. Use `uabea`. UABEANext is the active source tree and publishes no release binary, so it is not unpacked.
-- `umodel-ue4`: UModel is not the UE4/UE5 browser. Use `fmodel`, `repak` and `retoc`. UModel still matters for much older Unreal, and it is not in the one-click set.
+- `umodel-ue4`: [UE Viewer / UModel](https://www.gildor.org/en/projects/umodel) supports older Unreal engines and many UE4 games. It remains a manual, target-specific route; `fmodel`, `repak` and `retoc` are this kit's modern defaults. The official page says its license is not determined, so the kit does not redistribute it or label it unsupported across UE4.
 - `cpp2il-2022-binary`: Cpp2IL's last published binary is the 2022 release. The source repository has continued and has not published a replacement binary. Use `il2cppdumper`.
 - `ue4ss-stable`: the stable UE4SS tag lags the experimental release. The kit installs `ue4ss` from `experimental-latest`.
 - `bepinex6-pre2`: BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader. The UnityExplorer BepInEx 6 plugin is included for a game that already has that loader.
@@ -64,3 +72,9 @@ The dump's other new folders are not a second kit. `GoDot/LimboAi` is another Go
 Helldivers 2's public runtime, SDKs, ModBuilder, and loader are installed. Sleeping Dogs TheoryEngine, its SDK, and the SDK playground are installed from their public source archives. R2API is installed from the current release tag's source archive. None of those downloads include a game executable.
 
 Duplicate trees of the same UE4SS build (`zDEV` next to the release) are not installed. One copy is enough.
+
+## Coverage audit, 2026-10-11
+
+The eight app/format additions above fill gaps in the existing game-oriented catalog; capa also adds rules and signature-source dependencies. Their official latest releases/packages were checked: JADX v1.5.6 (2026-07-10), flare-capa 9.4.0 with capa/capa-rules v9.4.0 (2026-04-01), Kaitai 0.11 (2025-09-07), pyinstxtractor-ng 2026.07.03, wasm-tools v1.261.0 (2026-10-02), Apktool v3.0.3 (2026-07-20), Electron ASAR 4.3.1 on npm, and LIEF 1.0.0 on PyPI. The asset fixture records the five GitHub tools' exact binary/JAR filenames; capa rules and signatures use release source archives. These are dated observations, not permanent version pins or runtime certification.
+
+The [coverage map](coverage.md) separates installed tools from optional/manual routes. Universal Modder provides workflows and the Starter Bundle provides agent tooling; neither makes every reverse-engineering binary present. The current Starter Bundle already includes `um`, so no second Universal Modder install is needed through this kit.
