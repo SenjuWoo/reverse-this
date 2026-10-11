@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1
+
+- Roll back capa's matched package, rules and signatures together when an update fails; reject incomplete support payloads.
+- Route full and support-only capa installs through the same transaction; retry transient Windows JSON replacement failures without deleting good state.
+- Preserve batch exit codes, literal punctuation in command paths and deeply nested pointer extensions.
+- Provision the .NET 10 SDK/runtime required by current ilspycmd, including alongside older Starter Bundle prerequisites.
+- Test the real batch entrypoint, failed backups and dependency updates; build, modify and rebuild an owned APK and statically scan capa's own launcher.
+- Correct the Cpp2IL retirement rationale and document its current preview as a manual analysis route.
+
 ## 1.2.0
 
 - Add Android/Java decompilation and APK rebuilding, Electron ASAR, PyInstaller extraction, static capability triage, Kaitai format parsers, WebAssembly tools and LIEF binary analysis.

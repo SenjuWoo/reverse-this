@@ -1,6 +1,6 @@
 # Reverse THIS! state
 
-Version: 1.2.0
+Version: 1.2.1
 
 Owner: the existing reverse-this checkout; `sandbox/` contains machine-owned installed state and private work.
 
@@ -12,6 +12,8 @@ Validation: see VALIDATION.md. Local contracts/regressions pass in PowerShell 5.
 
 Resume ledger: the original checkout is migrated. All 57 catalog entries install/repair successfully; Doctor passes and all eight new-tool smoke checks pass there. The four malformed rows are normalized, immutable source archives replace legacy branch downloads, and old payload/state backups are retained. No game installation, provider settings or private target files were modified.
 
-Release identity: v1.2.0. Publication evidence is the exact tag/check state at https://github.com/SenjuWoo/reverse-this/releases/tag/v1.2.0 and the local receipt `sandbox/work/release-validation.json`. The receipt records the pushed SHA, check conclusions, alert counts and downloaded asset hashes once the release gate completes; its absence is not success.
+Second audit: v1.2.0 is published and its bytes/checks are verified. The owner repair to 1.2.1 completed 55/55 transactions covering all 57 records, Doctor passes and 40 shims exist. Matched capa package/rules/signatures now update and roll back together, including full-catalog and support-only selections. Support checks reject missing signatures/rules. The installer preserves failed-backup originals, nested pointer extensions and batch punctuation/exit status; bounded retries handle safe transient Windows JSON replacement failures without deleting good state. Current ilspycmd uses a selected .NET 10 host, provisioned when absent, and explicit framework selection works when the caller pins SDK 8. All 13 offline checks pass across PowerShell 5.1/7 and Python; generated APK build/decode/modify/rebuild and full static capa analysis pass. Keep the v1.2.0 source/package/state as the restorable baseline.
+
+Release tracking: GitHub's v1.2.1 release/tag identifies the published source. The ignored `sandbox/work/release-validation.json` receipt records the final SHA, CI/alert results, extracted-artifact checks and redownloaded asset hashes after publication. The retained `release-validation-1.2.0.json` describes the previous release. Never infer publication from this source file alone.
 
 Release gate: run local tests, push, verify exact-SHA CI and repository alerts, package the installer, extract and smoke-test that exact artifact, publish, then download and compare size/SHA-256. Do not treat a static test or catalog entry as target compatibility proof.

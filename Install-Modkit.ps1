@@ -330,6 +330,17 @@ function Assert-ToolPayload {
         $metadata = @(Get-ChildItem -Path (Join-Path $Dest 'Lib\site-packages') -Directory -Filter (($Tool.package -replace '-', '_') + '-*.dist-info') -ErrorAction SilentlyContinue)
         if (-not $metadata.Count) { throw "$($Tool.id) missing package metadata" }
     }
+    if ($Tool.id -eq 'capa-source') {
+        $signatures = @(Get-ChildItem -LiteralPath (Join-Path $Dest 'sigs') -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Length -gt 0 -and $_.Name -match '\.(sig|pat|pat\.gz)$' } | Select-Object -First 1)
+        if (-not $signatures.Count) { throw 'capa-source missing library signatures under sigs' }
+    } elseif ($Tool.id -eq 'capa-rules') {
+        $rules = @(Get-ChildItem -LiteralPath $Dest -Recurse -File -Force -Filter '*.yml' | Where-Object {
+            $relative = $_.FullName.Substring($Dest.TrimEnd('\').Length).TrimStart('\')
+            $_.Length -gt 0 -and $relative -match '^[^\\]+\\' -and $relative -notmatch '(^|\\)\.'
+        } | Select-Object -First 1)
+        if (-not $rules.Count) { throw 'capa-rules missing capability rules under category directories' }
+    }
     foreach ($shim in (ConvertTo-Array $Tool.shims)) {
         $file = Find-ToolFile -Root $Dest -Glob $shim.exe_glob -Prefer $shim.prefer_path
         if (-not $file) { throw "$($Tool.id) missing required executable $($shim.exe_glob)" }
@@ -479,7 +490,8 @@ function Write-Shim {
         [string]$Name,
         [string]$Target,
         [string]$JavaHome,
-        [bool]$JavaJar = $false
+        [bool]$JavaJar = $false,
+        [string]$DotNetHome
     )
     $rel = (Resolve-Path -LiteralPath $Target).Path
     $from = (Resolve-Path -LiteralPath $BinDir).Path
@@ -487,12 +499,18 @@ function Write-Shim {
     $base = New-Object System.Uri $from
     $to = New-Object System.Uri $rel
     $relative = [Uri]::UnescapeDataString($base.MakeRelativeUri($to).ToString()) -replace '/', '\'
-    $lines = @('@echo off', 'setlocal')
+    $relative = $relative.Replace('%', '%%')
+    $lines = @('@echo off', 'setlocal DisableDelayedExpansion')
     if ($JavaHome) {
-        $lines += 'set "JAVA_HOME=' + $JavaHome + '"'
+        $lines += 'set "JAVA_HOME=' + $JavaHome.Replace('%', '%%') + '"'
         $lines += 'set "PATH=%JAVA_HOME%\bin;%PATH%"'
     }
-    $call = if ([IO.Path]::GetExtension($Target) -in @('.bat', '.cmd')) { 'call ' } else { '' }
+    if ($DotNetHome) {
+        $lines += 'set "DOTNET_ROOT=' + $DotNetHome.Replace('%', '%%') + '"'
+        $lines += 'set "DOTNET_ROOT_X64=%DOTNET_ROOT%"'
+    }
+    # Chain batch targets directly; CALL expands percent signs in paths a second time.
+    $call = ''
     if ($JavaJar) { $call = '"%JAVA_HOME%\bin\java.exe" -jar ' }
     $arguments = if ($Name -eq 'capa') { '-r "%~dp0..\tools\capa-rules" -s "%~dp0..\tools\capa-source\sigs" %*' } else { '%*' }
     $lines += $call + '"%~dp0' + $relative + '" ' + $arguments
@@ -537,7 +555,8 @@ function Test-AlreadyInstalled {
         $row.version = (& $pythonExe -c "import importlib.metadata; print(importlib.metadata.version('$($script:CurrentTool.package)'))" | Out-String).Trim()
         if ($LASTEXITCODE -ne 0 -or -not $row.version) { return $false }
     } elseif ($row.version -eq 'dotnet-tool') {
-        $packageRows = @(& dotnet tool list --tool-path $Dest)
+        if (-not $script:DotNetExe) { Initialize-DotNet10 | Out-Null }
+        $packageRows = @(& $script:DotNetExe tool list --tool-path $Dest)
         $versionRows = @($packageRows | Where-Object { $_ -match ('^' + [regex]::Escape($script:CurrentTool.package) + '\s+') })
         if ($LASTEXITCODE -ne 0 -or $versionRows.Count -ne 1) { return $false }
         $row.version = ($versionRows[0] -split '\s+')[1]
@@ -563,7 +582,7 @@ function Save-State {
     }
     $owned = @{ kit_root = $KitRoot; installed_json = $StatePath; bin = $BinDir; java_home = $State.java_home }
     foreach ($key in $owned.Keys) { $pointer | Add-Member -NotePropertyName $key -NotePropertyValue $owned[$key] -Force }
-    Write-AtomicJson -Path $PointerPath -Text ($pointer | ConvertTo-Json -Depth 4)
+    Write-AtomicJson -Path $PointerPath -Text ($pointer | ConvertTo-Json -Depth 100)
 }
 
 function Write-AtomicJson {
@@ -571,8 +590,25 @@ function Write-AtomicJson {
     $Text | ConvertFrom-Json | Out-Null
     $temp = $Path + '.new'
     Write-Utf8 -Path $temp -Text $Text
-    if (Test-Path -LiteralPath $Path) { [IO.File]::Replace($temp, $Path, [NullString]::Value) }
-    else { [IO.File]::Move($temp, $Path) }
+    $replacing = Test-Path -LiteralPath $Path
+    for ($attempt = 0; $attempt -lt 6; $attempt++) {
+        try {
+            if ($replacing) { [IO.File]::Replace($temp, $Path, [NullString]::Value) }
+            else { [IO.File]::Move($temp, $Path) }
+            return
+        } catch {
+            $ioError = $_.Exception
+            while ($ioError -and $ioError -isnot [IO.IOException]) { $ioError = $ioError.InnerException }
+            $win32 = if ($ioError) { $ioError.HResult -band 0xFFFF } else { 0 }
+            # Sharing/lock violations and ReplaceFile's unchanged-files error are safe to retry.
+            # Errors 1176/1177 can move the old file; never retry those or delete the good target.
+            if ($attempt -eq 5 -or $win32 -notin @(32, 33, 1175) -or
+                -not (Test-Path -LiteralPath $temp) -or
+                ($replacing -and -not (Test-Path -LiteralPath $Path))) { throw }
+            Write-Log -Detail "atomic JSON retry $($attempt + 1)/5: Win32=$win32 path=$Path"
+            Start-Sleep -Milliseconds (100 * ($attempt + 1))
+        }
+    }
 }
 
 function New-State {
@@ -610,10 +646,11 @@ function Install-Shims {
         }
         $java = $null
         if ($Tool.needs_jdk) { $java = $script:JavaHome }
+        $dotnet = if ($Tool.method -eq 'dotnet-tool') { $script:DotNetHome } else { $null }
         if ($shim.require_path -and ($file.FullName -notmatch $shim.require_path)) {
             throw "$($Tool.id) shim $($shim.name) resolved to $($file.FullName)"
         }
-        $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java -JavaJar ([bool]$shim.java_jar)
+        $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java -JavaJar ([bool]$shim.java_jar) -DotNetHome $dotnet
         $made[$shim.name] = Get-RelativeKitPath $cmd
     }
     return $made
@@ -746,9 +783,60 @@ function Install-RenderDocTool {
     }
 }
 
+function Test-DotNet10 {
+    param([string]$Executable)
+    if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) { return $false }
+    $prev = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $sdks = @(& $Executable --list-sdks 2>&1)
+        if ($LASTEXITCODE -ne 0 -or -not ($sdks -match '^10\.\d+\.\d+\s+\[')) { return $false }
+        $runtimes = @(& $Executable --list-runtimes 2>&1)
+        return ($LASTEXITCODE -eq 0 -and [bool]($runtimes -match '^Microsoft\.NETCore\.App 10\.\d+\.\d+\s+\['))
+    } catch { return $false }
+    finally { $ErrorActionPreference = $prev }
+}
+
+function Find-DotNet10 {
+    $candidates = @()
+    foreach ($root in @($env:DOTNET_ROOT_X64, $env:DOTNET_ROOT)) {
+        if ($root) { $candidates += Join-Path $root 'dotnet.exe' }
+    }
+    $command = Get-Command dotnet -CommandType Application -ErrorAction SilentlyContinue
+    if ($command) { $candidates += $command.Source }
+    foreach ($root in @($env:ProgramW6432, $env:ProgramFiles)) {
+        if ($root) { $candidates += Join-Path $root 'dotnet\dotnet.exe' }
+    }
+    foreach ($candidate in @($candidates | Select-Object -Unique)) {
+        if (Test-DotNet10 $candidate) { return $candidate }
+    }
+    return $null
+}
+
+function Initialize-DotNet10 {
+    $found = Find-DotNet10
+    if (-not $found) {
+        $winget = Get-Command winget -CommandType Application -ErrorAction SilentlyContinue
+        if (-not $winget) { throw 'This kit requires a .NET 10 SDK and runtime for ilspycmd; winget is unavailable. Install Microsoft.DotNet.SDK.10, then rerun the installer.' }
+        Write-Log 'installing Microsoft.DotNet.SDK.10 via winget'
+        $prev = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            & $winget.Source install --id Microsoft.DotNet.SDK.10 -e --accept-package-agreements --accept-source-agreements --disable-interactivity | ForEach-Object { Write-Log -Detail "winget: $_" }
+            $code = $LASTEXITCODE
+        } finally { $ErrorActionPreference = $prev }
+        if ($code -ne 0) { throw "winget Microsoft.DotNet.SDK.10 failed ($code)" }
+        $found = Find-DotNet10
+        if (-not $found) { throw 'Microsoft.DotNet.SDK.10 completed but a stable .NET 10 SDK and runtime were not found. Check its installation and rerun.' }
+    }
+    $script:DotNetExe = $found
+    $script:DotNetHome = Split-Path -Parent $found
+    return $found
+}
+
 function Install-DotNetTool {
     param($Tool)
-    if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw '.NET SDK is missing; install the Starter Bundle runtime prerequisites first' }
+    $dotnet = Initialize-DotNet10
     $dest = Join-Path $ToolsDir $Tool.id
     New-Item -ItemType Directory -Force -Path $dest | Out-Null
     if ((Test-AlreadyInstalled -Dest $dest -Marker 'present') -and (Get-ChildItem -LiteralPath $dest -Filter ($Tool.shims[0].exe_glob) -Recurse -ErrorAction SilentlyContinue)) {
@@ -756,15 +844,17 @@ function Install-DotNetTool {
         return $script:CachedRecord
     }
     $prev = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    & dotnet tool install $Tool.package --tool-path $dest | ForEach-Object { Write-Log -Detail "dotnet: $_" }
-    if ($LASTEXITCODE -ne 0) {
-        & dotnet tool update $Tool.package --tool-path $dest | ForEach-Object { Write-Log -Detail "dotnet: $_" }
-    }
-    $code = $LASTEXITCODE
-    $ErrorActionPreference = $prev
+    try {
+        $ErrorActionPreference = 'Continue'
+        & $dotnet tool install $Tool.package --tool-path $dest --framework net10.0 | ForEach-Object { Write-Log -Detail "dotnet: $_" }
+        if ($LASTEXITCODE -ne 0) {
+            & $dotnet tool update $Tool.package --tool-path $dest --framework net10.0 | ForEach-Object { Write-Log -Detail "dotnet: $_" }
+        }
+        $code = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $prev }
     if ($code -ne 0) { throw "dotnet tool $($Tool.package) failed ($code)" }
-    $packageRows = @(& dotnet tool list --tool-path $dest)
+    $packageRows = @(& $dotnet tool list --tool-path $dest)
+    if ($LASTEXITCODE -ne 0) { throw "dotnet tool list failed ($LASTEXITCODE): $($Tool.package)" }
     $versionRow = @($packageRows | Where-Object { $_ -match ('^' + [regex]::Escape($Tool.package) + '\s+') })
     if ($versionRow.Count -ne 1) { throw "cannot read installed version: $($Tool.package)" }
     $packageVersion = ($versionRow[0] -split '\s+')[1]
@@ -1019,6 +1109,20 @@ function Install-FighterFactory {
     }
 }
 
+function Select-InstallTools {
+    param($Selected, $Catalog)
+    $groupIds = @('capa-rules', 'capa-source', 'capa')
+    $groupAdded = $false
+    foreach ($tool in (ConvertTo-Array $Selected)) {
+        if ($tool.id -notin $groupIds) { $tool; continue }
+        if ($groupAdded) { continue }
+        $parent = @(ConvertTo-Array $Catalog.tools | Where-Object { $_.id -eq 'capa' })
+        if ($parent.Count -ne 1) { throw 'The capa dependency group requires exactly one capa catalog entry.' }
+        $parent[0]
+        $groupAdded = $true
+    }
+}
+
 function Install-One {
     param($Tool)
     $capaTag = $null
@@ -1027,14 +1131,6 @@ function Install-One {
         if ($capaTag -notmatch '^v\d+\.\d+\.\d+$') { throw "invalid capa release version: $capaTag" }
         $Tool | Add-Member -NotePropertyName package_version -NotePropertyValue $capaTag.Substring(1) -Force
     }
-    foreach ($id in (ConvertTo-Array $Tool.requires)) {
-        $dependency = @(ConvertTo-Array (Get-Catalog).tools | Where-Object { $_.id -eq $id })
-        if ($dependency.Count -ne 1) { throw "unknown dependency: $id" }
-        if ($capaTag) { $dependency[0] | Add-Member -NotePropertyName release -NotePropertyValue $capaTag -Force }
-        $script:ExtraInstalled += @(Install-One $dependency[0])
-    }
-    $script:CurrentTool = $Tool
-    $script:CachedRecord = $null
     $dest = Join-Path $ToolsDir $Tool.id
     Write-Log -Detail "resolved $($Tool.id): method=$($Tool.method) directory=$dest force=$Force"
     Assert-OwnedToolPath $dest
@@ -1044,18 +1140,43 @@ function Install-One {
         $shimPath = Join-Path $BinDir ($shim.name + '.cmd')
         $savedShims[$shimPath] = if (Test-Path -LiteralPath $shimPath) { [IO.File]::ReadAllBytes($shimPath) } else { $null }
     }
-    $script:PromotedBackup = $null
     $packageBackup = $null
+    $parentStarted = $false
+    $dependencyChanges = @()
+    $previousExtra = @($script:ExtraInstalled)
+    try {
+    foreach ($id in (ConvertTo-Array $Tool.requires)) {
+        $dependency = @(ConvertTo-Array (Get-Catalog).tools | Where-Object { $_.id -eq $id })
+        if ($dependency.Count -ne 1) { throw "unknown dependency: $id" }
+        $change = $null
+        if ($capaTag) {
+            $dependency[0] | Add-Member -NotePropertyName release -NotePropertyValue $capaTag -Force
+            $change = [pscustomobject]@{
+                dir = Join-Path $ToolsDir $id
+                existed = Test-Path -LiteralPath (Join-Path $ToolsDir $id)
+                backup = $null
+            }
+            $dependencyChanges += $change
+        }
+        $script:PromotedBackup = $null
+        try { $script:ExtraInstalled += @(Install-One $dependency[0]) }
+        finally { if ($change) { $change.backup = $script:PromotedBackup } }
+    }
+    $script:CurrentTool = $Tool
+    $script:CachedRecord = $null
+    $script:PromotedBackup = $null
+    $parentStarted = $true
+    if ($Tool.method -eq 'dotnet-tool') { Initialize-DotNet10 | Out-Null }
     if ($Tool.method -in @('pip-venv', 'dotnet-tool', 'npm-tool') -and (Test-Path -LiteralPath $dest)) {
         if (Test-AlreadyInstalled -Dest $dest -Marker 'present') {
             Write-AtomicJson -Path (Join-Path $dest '.kit-record.json') -Text ($script:CachedRecord | ConvertTo-Json -Depth 8)
             return $script:CachedRecord
         }
-        $packageBackup = Join-Path $Sandbox ('backups/' + $Tool.id + '-' + [guid]::NewGuid().ToString('N'))
-        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $packageBackup) | Out-Null
-        Copy-Item -LiteralPath $dest -Destination $packageBackup -Recurse
+        $backupCandidate = Join-Path $Sandbox ('backups/' + $Tool.id + '-' + [guid]::NewGuid().ToString('N'))
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $backupCandidate) | Out-Null
+        Copy-Item -LiteralPath $dest -Destination $backupCandidate -Recurse
+        $packageBackup = $backupCandidate
     }
-    try {
     $row = switch ($Tool.method) {
         'github-release' { Install-GitHubZipTool $Tool }
         'github-files' { Install-GitHubFilesTool $Tool }
@@ -1072,18 +1193,38 @@ function Install-One {
     Write-AtomicJson -Path (Join-Path $dest '.kit-record.json') -Text ($row | ConvertTo-Json -Depth 8)
     return $row
     } catch {
-        $rollback = if ($packageBackup) { $packageBackup } else { $script:PromotedBackup }
-        if ($rollback -and (Test-Path -LiteralPath $rollback)) {
-            Assert-OwnedToolPath $dest
-            if (Test-Path -LiteralPath $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
-            Move-Item -LiteralPath $rollback -Destination $dest
-            Write-Log "restored last-good $($Tool.id)"
+        $failure = $_
+        $rollbackErrors = @()
+        if ($capaTag) { $script:ExtraInstalled = $previousExtra }
+        $rollback = if ($packageBackup) { $packageBackup } elseif ($parentStarted) { $script:PromotedBackup } else { $null }
+        try {
+            if ($rollback -and (Test-Path -LiteralPath $rollback)) {
+                Assert-OwnedToolPath $dest
+                if (Test-Path -LiteralPath $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
+                Move-Item -LiteralPath $rollback -Destination $dest
+                Write-Log "restored last-good $($Tool.id)"
+            }
+        } catch { $rollbackErrors += $_.Exception.Message }
+        for ($index = $dependencyChanges.Count - 1; $index -ge 0; $index--) {
+            $change = $dependencyChanges[$index]
+            try {
+                Assert-OwnedToolPath $change.dir
+                if ($change.backup -and (Test-Path -LiteralPath $change.backup)) {
+                    if (Test-Path -LiteralPath $change.dir) { Remove-Item -LiteralPath $change.dir -Recurse -Force }
+                    Move-Item -LiteralPath $change.backup -Destination $change.dir
+                } elseif (-not $change.existed -and (Test-Path -LiteralPath $change.dir)) {
+                    Remove-Item -LiteralPath $change.dir -Recurse -Force
+                }
+            } catch { $rollbackErrors += $_.Exception.Message }
         }
         foreach ($shimPath in $savedShims.Keys) {
-            if ($null -ne $savedShims[$shimPath]) { [IO.File]::WriteAllBytes($shimPath, $savedShims[$shimPath]) }
-            elseif (Test-Path -LiteralPath $shimPath) { Remove-Item -LiteralPath $shimPath -Force }
+            try {
+                if ($null -ne $savedShims[$shimPath]) { [IO.File]::WriteAllBytes($shimPath, $savedShims[$shimPath]) }
+                elseif (Test-Path -LiteralPath $shimPath) { Remove-Item -LiteralPath $shimPath -Force }
+            } catch { $rollbackErrors += $_.Exception.Message }
         }
-        throw
+        if ($rollbackErrors.Count) { throw "Install failed: $($failure.Exception.Message). Rollback incomplete: $($rollbackErrors -join '; ')" }
+        throw $failure
     }
 }
 
@@ -1133,6 +1274,7 @@ if ($Doctor) {
     exit 0
 }
 
+$selected = @(Select-InstallTools -Selected $selected -Catalog $catalog)
 New-Item -ItemType Directory -Force -Path $BinDir, $ToolsDir, $TmpDir, $LogDir, $PointerDir | Out-Null
 $lockPath = Join-Path $Sandbox '.install.lock'
 try { $lock = [IO.File]::Open($lockPath, 'OpenOrCreate', 'ReadWrite', 'None') }

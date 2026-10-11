@@ -537,7 +537,7 @@
     {"id": "dnspy", "instead": "dnspyex", "why": "The original dnSpy repository is archived."},
     {"id": "uabe", "instead": "uabea", "why": "Original UABE is unsupported. UABEA is the build that still publishes a Windows zip."},
     {"id": "umodel-ue4", "instead": "fmodel", "why": "UE Viewer/UModel supports older Unreal and many UE4 games. Keep it as a target-specific manual route; FModel, repak and retoc are the default modern Unreal toolset here."},
-    {"id": "cpp2il-2022-binary", "instead": "il2cppdumper", "why": "Cpp2IL's last published binary is the 2022 release. The source has moved on and has not published a replacement binary."},
+    {"id": "cpp2il-2022-binary", "instead": "il2cppdumper", "why": "Cpp2IL's latest stable binary is 2022.0.7, but active preview binaries are published. Keep Il2CppDumper as this kit's default and use the documented target-specific Cpp2IL preview route when needed."},
     {"id": "ue4ss-stable", "instead": "ue4ss", "why": "The stable UE4SS tag lags the experimental release. The kit installs experimental-latest."},
     {"id": "bepinex6-pre2", "instead": "melonloader", "why": "BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader."},
     {"id": "cheat-engine-download", "instead": null, "why": "The Cheat Engine GitHub release ships no binary. The kit does not download the bundled website installer."},

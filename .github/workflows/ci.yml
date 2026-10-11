@@ -43,6 +43,10 @@ jobs:
         run: ./tests/test_installer.ps1
       - name: isolation configuration contract
         run: ./tests/test_isolation.ps1
+      - name: real batch entrypoint regression checks
+        run: ./tests/test_entrypoint.ps1
+      - name: dotnet prerequisite regression checks
+        run: ./tests/test_dotnet_prerequisite.ps1
 
   installer:
     runs-on: ubuntu-latest

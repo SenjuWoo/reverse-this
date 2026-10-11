@@ -10,7 +10,7 @@ The installer resolves the current official release at install time. This page i
 - x64dbg's current snapshot zip, the x64 debugger. Not the symbols zip.
 - PE-bear's Qt 6 x64 Windows zip.
 - dnSpyEx's `dnSpy-net-win64` zip. Not the .NET Framework build.
-- ILSpy's self-contained Windows x64 zip, plus the `ilspycmd` dotnet tool.
+- ILSpy's self-contained Windows x64 zip, plus the [`ilspycmd` dotnet tool](https://www.nuget.org/packages/ilspycmd). Current ilspycmd 11.1 targets .NET 10; its installer checks for the SDK/runtime and uses the official `Microsoft.DotNet.SDK.10` winget package when absent. Older UABS .NET prerequisites alone do not satisfy this tool.
 - AssetRipper's Windows x64 zip.
 - Il2CppDumper's Windows zip (`Il2CppDumper-win-`), not the net6 or net7 framework-dependent zips.
 - FModel's current zip.
@@ -29,7 +29,7 @@ The installer resolves the current official release at install time. This page i
 - [Kaitai Struct compiler](https://github.com/kaitai-io/kaitai_struct_compiler)'s universal `kaitai-struct-compiler-<version>.zip`, including the Windows batch launcher. Upstream requires Java 8+; this kit shares its JDK 25. GPL-3.0-or-later compiler; generated parsers need the target language's separate runtime with its own license.
 - [pyinstxtractor-ng](https://github.com/pyinstxtractor/pyinstxtractor-ng)'s standalone Windows `pyinstxtractor-ng.exe`. No local Python installation or matching target Python version is required for extraction. Decompiling extracted bytecode is a separate, version-dependent task. GPL-3.0.
 - [wasm-tools](https://github.com/bytecodealliance/wasm-tools)'s `wasm-tools-<version>-x86_64-windows.zip`. One self-contained CLI for inspection, validation, text/binary conversion and component work. Triple licensed under Apache-2.0, Apache-2.0 with LLVM exception, and MIT.
-- [Apktool](https://github.com/iBotPeaches/Apktool)'s `apktool_<version>.jar`, stored without extraction and launched with `java -jar`. Upstream requires Java 8+; this kit shares its JDK 25. Apache-2.0. Android signing and device tools are separate.
+- [Apktool](https://github.com/iBotPeaches/Apktool)'s `apktool_<version>.jar`, stored without extraction and launched with `java -jar`. Java 8+ is confirmed by the [v3.0.3 build configuration](https://github.com/iBotPeaches/Apktool/blob/v3.0.3/build.gradle.kts) and the released JAR's Java 8 class version; this kit shares its JDK 25. Apache-2.0. See the current [decode/build CLI options](https://apktool.org/docs/cli-parameters/); Android signing and device tools are separate.
 - [Electron ASAR](https://github.com/electron/asar)'s `@electron/asar` npm package under `sandbox/tools/asar`, without lifecycle scripts or a global installation. Node 22.12+ and npm are required. MIT.
 - [LIEF](https://github.com/lief-project/LIEF)'s `lief` Python package in its own venv under `sandbox/tools/lief`. Python 3.9+ is required. Use that environment's Python to import the library; there is no LIEF CLI shim. Apache-2.0.
 - Frosty Editor and Frosty Mod Manager from the current stable release (`FrostyEditor.zip` and `FrostyModManager.zip`). Not the bundled prereq installers. Those stay inside the unpacked zip and are not shims.
@@ -51,7 +51,7 @@ The installer resolves the current official release at install time. This page i
 - `dnspy`: the original dnSpy repository is archived. Use `dnspyex`.
 - `uabe`: original UABE is unsupported. Use `uabea`. UABEANext is the active source tree and publishes no release binary, so it is not unpacked.
 - `umodel-ue4`: [UE Viewer / UModel](https://www.gildor.org/en/projects/umodel) supports older Unreal engines and many UE4 games. It remains a manual, target-specific route; `fmodel`, `repak` and `retoc` are this kit's modern defaults. The official page says its license is not determined, so the kit does not redistribute it or label it unsupported across UE4.
-- `cpp2il-2022-binary`: Cpp2IL's last published binary is the 2022 release. The source repository has continued and has not published a replacement binary. Use `il2cppdumper`.
+- `cpp2il-2022-binary`: Cpp2IL's latest stable binary is 2022.0.7, but [2022.1.0-pre-release.21](https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21) published Windows binaries on 2026-02-22. Its version prefix is not its publication year. Keep `il2cppdumper` as the automatic default; the current Cpp2IL preview is a manual alternative for targets needing its newer metadata support.
 - `ue4ss-stable`: the stable UE4SS tag lags the experimental release. The kit installs `ue4ss` from `experimental-latest`.
 - `bepinex6-pre2`: BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader. The UnityExplorer BepInEx 6 plugin is included for a game that already has that loader.
 - `cheat-engine-download`: the Cheat Engine GitHub release ships no Windows binary. The website installer bundles offers. The kit does not download it. A portable copy can be placed in `sandbox/manual/cheat-engine/` by hand.

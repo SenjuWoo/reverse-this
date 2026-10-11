@@ -5,8 +5,9 @@
 .DESCRIPTION
   Run after installing the eight app/format additions. Samples, configuration,
   logs and results stay under sandbox/work/runtime-smoke in a fresh run folder.
-  Apktool checks version/help only, Kaitai checks compilation/generated syntax,
-  and capa checks version only. No sample is executed. Environment is restored.
+  Apktool rebuilds generated resources, Kaitai checks generated parser syntax,
+  and capa statically scans its own Python launcher. No sample is executed.
+  Environment is restored.
 #>
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -29,14 +30,15 @@ function Assert-True {
     if (-not $Condition) { throw $Message }
 }
 function Run {
-    param([string]$Executable, [string[]]$Arguments)
+    param([string]$Executable, [string[]]$Arguments, [string]$ErrorLog)
     Assert-True (Test-Path -LiteralPath $Executable -PathType Leaf) "Missing executable/shim: $Executable"
     $preference = $ErrorActionPreference
     try {
         # PS5.1 wraps native stderr as errors; the process exit code decides success.
         $ErrorActionPreference = 'Continue'
         $global:LASTEXITCODE = $null
-        $lines = & $Executable @Arguments 2>&1
+        if ($ErrorLog) { $lines = & $Executable @Arguments 2> $ErrorLog }
+        else { $lines = & $Executable @Arguments 2>&1 }
         $code = $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $preference
@@ -146,11 +148,35 @@ print(json.dumps({'lief': lief.__version__, 'format': 'PE', 'machine': str(binar
         Assert-True (($version -join "`n") -match $expected) 'Apktool runtime version differs from its installed record.'
         $help = Run (Join-Path $bin 'apktool.cmd') @('--help')
         Assert-True (($help -join "`n") -match 'apktool d\|decode') 'Apktool decode help missing.'
+        New-Item -ItemType Directory -Force -Path 'apk-project\res\values', 'apk-project\assets' | Out-Null
+        # Minimal metadata follows Apktool's own decoded-project test fixture schema.
+        $metadata = "version: $($installed.tools.apktool.version -replace '^v','')`napkFileName: owned.apk`nusesFramework:`n  ids:`n  - 1`nresourcesInfo:`n  packageId: 127`nversionInfo:`n  versionCode: 1`n  versionName: 1.0`n"
+        [IO.File]::WriteAllText((Join-Path $work 'apk-project\apktool.yml'), $metadata)
+        [IO.File]::WriteAllText((Join-Path $work 'apk-project\AndroidManifest.xml'), '<manifest package="com.reversethis.smoke" xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="@string/marker"/></manifest>')
+        [IO.File]::WriteAllText((Join-Path $work 'apk-project\res\values\strings.xml'), '<resources><string name="marker">ReverseThis owned original</string></resources>')
+        [IO.File]::WriteAllBytes((Join-Path $work 'apk-project\assets\bytes.bin'), [byte[]](0,1,127,128,255))
+        Run (Join-Path $bin 'apktool.cmd') @('b', 'apk-project', '-p', 'apk-framework', '-o', 'owned.apk') | Out-Null
+        Run (Join-Path $bin 'apktool.cmd') @('d', 'owned.apk', '-p', 'apk-framework', '-o', 'apk-decoded') | Out-Null
+        $stringsPath = Join-Path $work 'apk-decoded\res\values\strings.xml'
+        $strings = Get-Content -LiteralPath $stringsPath -Raw
+        Assert-True ($strings -match 'ReverseThis owned original') 'Apktool did not decode the generated resource.'
+        [IO.File]::WriteAllText($stringsPath, $strings.Replace('ReverseThis owned original', 'ReverseThis owned modified'))
+        Run (Join-Path $bin 'apktool.cmd') @('b', 'apk-decoded', '-p', 'apk-framework', '-o', 'rebuilt.apk') | Out-Null
+        Run (Join-Path $bin 'apktool.cmd') @('d', 'rebuilt.apk', '-p', 'apk-framework', '-o', 'apk-rebuilt-decoded') | Out-Null
+        Assert-True ((Get-Content -LiteralPath 'apk-rebuilt-decoded\res\values\strings.xml' -Raw) -match 'ReverseThis owned modified') 'Modified APK resource did not survive rebuilding.'
+        Assert-True ((Get-Content -LiteralPath 'apk-rebuilt-decoded\AndroidManifest.xml' -Raw) -match 'com\.reversethis\.smoke') 'APK package identity changed.'
+        Assert-True ((Get-FileHash -LiteralPath 'apk-project\assets\bytes.bin').Hash -eq (Get-FileHash -LiteralPath 'apk-rebuilt-decoded\assets\bytes.bin').Hash) 'APK asset bytes changed.'
     }
     Check 'capa' {
         $version = Run (Join-Path $bin 'capa.cmd') @('--version')
         $expected = [regex]::Escape(($installed.tools.capa.version -replace '^v', ''))
         Assert-True (($version -join "`n") -match $expected) 'capa runtime version differs from its installed record.'
+        $sample = Join-Path $root 'sandbox\tools\capa\Scripts\python.exe'
+        $analysis = (Run (Join-Path $bin 'capa.cmd') @('-q', '-j', $sample) -ErrorLog (Join-Path $work 'capa-stderr.log')) -join "`n"
+        [IO.File]::WriteAllText((Join-Path $work 'capa-analysis.json'), $analysis)
+        $report = $analysis | ConvertFrom-Json
+        Assert-True ($report.meta.sample.sha256 -eq (Get-FileHash -LiteralPath $sample -Algorithm SHA256).Hash.ToLowerInvariant()) 'capa analyzed a different sample.'
+        Assert-True ($report.meta.version -eq ($installed.tools.capa.version -replace '^v','')) 'capa analysis version differs from its record.'
     }
 } finally {
     Pop-Location
@@ -163,6 +189,6 @@ print(json.dumps({'lief': lief.__version__, 'format': 'PE', 'machine': str(binar
     }
     [IO.File]::WriteAllText((Join-Path $work 'results.json'), ($results | ConvertTo-Json -Depth 4))
     Write-Host "Evidence: $work"
-    Write-Host 'Scope: Apktool version/help; Kaitai compile/syntax; capa version; no samples executed.'
+    Write-Host 'Scope: generated APK resource rebuild; Kaitai compile/syntax; static capa scan of its own Python launcher; no samples executed or APKs installed.'
 }
 Assert-True ($results.Count -eq 8 -and @($results | Where-Object status -eq 'failed').Count -eq 0) 'Installed-tool smoke failed; inspect results.json and smoke.log.'

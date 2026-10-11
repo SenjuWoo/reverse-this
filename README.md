@@ -21,9 +21,9 @@ Windows x64, PowerShell 5.1+. The installer targets Windows 10/11; individual to
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1
 ```
 
-Release tools resolve the current release each run and reuse a matching installed payload. Package tools reuse the installed version until `-Force`, except capa, which tracks its current release with matching rules/signatures. `-Force` also reinstalls matching release payloads. `-Plan` prints the catalog and downloads nothing. Install or repair one route with `-Only jadx`, for example.
+Release tools resolve the current release each run and reuse a matching installed payload. Package tools reuse the installed version until `-Force`, except capa, which tracks its current release with matching rules/signatures. Selecting `capa`, `capa-rules` or `capa-source` installs the entire matched group together. `-Force` also reinstalls matching release payloads. `-Plan` prints the catalog and downloads nothing. Install or repair one route with `-Only jadx`, for example.
 
-Ghidra, JADX, Apktool and Kaitai share JDK 25. If no suitable JDK exists, the installer uses winget package `Microsoft.OpenJDK.25` and points their shims at that home. .NET decompilation uses the installed `dotnet` SDK. Frida, capa and LIEF use `py -3` in separate venvs; capa requires Python 3.10+, LIEF 3.9+. Electron ASAR requires Node 22.12+ and npm, and installs under its own prefix with lifecycle scripts disabled. The tool payloads live in the workspace; missing JDK setup can change the machine.
+Ghidra, JADX, Apktool and Kaitai share JDK 25. If no suitable JDK exists, the installer uses winget package `Microsoft.OpenJDK.25` and points their shims at that home. This kit uses a stable .NET 10 SDK/runtime for current ilspycmd; the installer uses `Microsoft.DotNet.SDK.10` when it is missing, including on Starter Bundle machines with older .NET versions. Frida, capa and LIEF use `py -3` in separate venvs; capa requires Python 3.10+, LIEF 3.9+. Electron ASAR requires Node 22.12+ and npm, and installs under its own prefix with lifecycle scripts disabled. The tool payloads live in the workspace; missing JDK/.NET setup can change the machine.
 
 Check the installed records and required files without downloading:
 
@@ -108,6 +108,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -SelfTe
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -Plan
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_installer.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_isolation.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_entrypoint.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_dotnet_prerequisite.ps1
 ```
 
-After installing the app/format tools, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_tool_smoke.ps1` from a source checkout for generated-sample checks. Results/logs stay under `sandbox/work/runtime-smoke`. APK rebuilding, graphical tools and game compatibility still need a real target test.
+After installing the app/format tools, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_tool_smoke.ps1` from a source checkout for generated-sample checks, including APK resource modification/rebuilding and a static capa scan. Results/logs stay under `sandbox/work/runtime-smoke`. APK signing/device installation, graphical tools and game compatibility still need a real target test.
