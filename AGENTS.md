@@ -82,6 +82,8 @@ Ghidra, JADX, Apktool and Kaitai shims set `JAVA_HOME` to the JDK the installer 
 
 Consult `docs/coverage.md` for optional tools and missing domains. `Start-IsolatedLab.ps1 -Plan` previews Windows Sandbox settings without writing files. Actual launch requires that Windows feature on a supported Pro/Enterprise/Education edition; Windows Home needs a separate VM. The launcher maps tools/input read-only, disables networking and other host integration, and only shares `sandbox/work/isolated` writable. It never starts a target. Host JDK/.NET/Python/Node prerequisites are not copied, so verify each guest tool before claiming it works there.
 
+ilspycmd uses a stable .NET 10 SDK/runtime, provisioned through winget when missing. Its shim binds the selected runtime without changing the caller's environment. Installing any of `capa`, `capa-rules` or `capa-source` updates the matched group together; Plan and Doctor still show individual entries.
+
 ## Retired automatic routes
 
 The installer does not download these ids. Use the replacement or target-specific manual route documented in `docs/currency.md`; do not silently substitute an old artifact.

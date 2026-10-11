@@ -90,22 +90,29 @@ try {
         '@echo off'
         '> "%RT_TEST_RESULT%" echo argument=%~1'
         '>> "%RT_TEST_RESULT%" echo duringjava=%JAVA_HOME%'
+        '>> "%RT_TEST_RESULT%" echo duringdotnet=%DOTNET_ROOT%'
+        '>> "%RT_TEST_RESULT%" echo duringdotnetx64=%DOTNET_ROOT_X64%'
         '>> "%RT_TEST_RESULT%" echo duringcwd=%CD%'
         'if exist relative-input.txt >> "%RT_TEST_RESULT%" echo relative=present'
         'exit /b 7'
     ) -join "`r`n")
-    $java = Join-Path $testRoot 'fake jdk'
-    $shim = Write-Shim -Name 'probe' -Target $target -JavaHome $java
+    $java = Join-Path $testRoot 'fake jdk!%RT_KIT_MARKER%'
+    $dotnetHome = Join-Path $testRoot 'fake dotnet!%RT_KIT_MARKER%'
+    $shim = Write-Shim -Name 'probe' -Target $target -JavaHome $java -DotNetHome $dotnetHome
     $parent = Join-Path $TmpDir 'shim-caller.cmd'
     Write-Utf8 -Path $parent -Text (@(
         '@echo off'
         'set "JAVA_HOME=caller-java"'
+        'set "DOTNET_ROOT=caller-dotnet"'
+        'set "DOTNET_ROOT_X64=caller-dotnet-x64"'
         ('set "RT_TEST_RESULT=' + $result + '"')
         ('cd /d "' + $caller + '"')
         ('call "' + $shim + '" "argument with spaces"')
         'set "RT_TEST_EXIT=%ERRORLEVEL%"'
         '>> "%RT_TEST_RESULT%" echo aftercwd=%CD%'
         '>> "%RT_TEST_RESULT%" echo afterjava=%JAVA_HOME%'
+        '>> "%RT_TEST_RESULT%" echo afterdotnet=%DOTNET_ROOT%'
+        '>> "%RT_TEST_RESULT%" echo afterdotnetx64=%DOTNET_ROOT_X64%'
         '>> "%RT_TEST_RESULT%" echo exit=%RT_TEST_EXIT%'
         'exit /b 0'
     ) -join "`r`n")
@@ -114,10 +121,12 @@ try {
     $lines = @(Get-Content -LiteralPath $result)
     Assert-True ($lines -contains 'argument=argument with spaces') 'A shim damaged quoted arguments'
     Assert-True ($lines -contains ('duringjava=' + $java)) 'A shim did not set its private JDK'
+    Assert-True ($lines -contains ('duringdotnet=' + $dotnetHome) -and $lines -contains ('duringdotnetx64=' + $dotnetHome)) 'A shim did not set its private .NET runtime'
     Assert-True ($lines -contains ('duringcwd=' + $caller)) 'A CLI shim changed the working directory used for relative input paths'
     Assert-True ($lines -contains 'relative=present') 'A CLI shim could not see an input file relative to its caller'
     Assert-True ($lines -contains ('aftercwd=' + $caller)) 'A shim changed its caller working directory'
     Assert-True ($lines -contains 'afterjava=caller-java') 'A shim leaked environment changes into its caller'
+    Assert-True ($lines -contains 'afterdotnet=caller-dotnet' -and $lines -contains 'afterdotnetx64=caller-dotnet-x64') 'A shim leaked .NET runtime settings into its caller'
     Assert-True ($lines -contains 'exit=7') 'A shim lost the tool exit code'
 
     $record = [pscustomobject]@{
@@ -165,6 +174,76 @@ try {
     Assert-True ((Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'new') 'Atomic state replacement did not write the new document'
     Assert-True (-not (Test-Path -LiteralPath ($atomic + '.new'))) 'Atomic state replacement left a temporary document behind'
 
+    # Use a real Windows handle denying delete sharing, then release it independently.
+    Add-Type -TypeDefinition @'
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+public static class AtomicJsonLockFixture {
+    public static Task Hold(string path, int milliseconds) {
+        var handle = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return Task.Run(() => { try { Thread.Sleep(milliseconds); } finally { handle.Dispose(); } });
+    }
+    public static IOException Error(int code) {
+        return new IOException("Injected Win32 " + code, unchecked((int)0x80070000) | code);
+    }
+}
+'@
+    $releaseLock = [AtomicJsonLockFixture]::Hold($atomic, 400)
+    try {
+        Write-AtomicJson -Path $atomic -Text '{"phase":"lock-released"}'
+        Assert-True ((Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'lock-released') 'Atomic replacement did not recover after a real sharing lock released'
+        Assert-True (-not (Test-Path -LiteralPath ($atomic + '.new'))) 'A recovered sharing lock left the new document uncommitted'
+    } finally { $releaseLock.Wait() }
+    $heldLock = [IO.File]::Open($atomic, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    try {
+        $failure = $null
+        try { Write-AtomicJson -Path $atomic -Text '{"phase":"pending"}' } catch { $failure = $_.Exception }
+        while ($failure -and $failure -isnot [IO.IOException]) { $failure = $failure.InnerException }
+        Assert-True ($null -ne $failure -and ($failure.HResult -band 0xFFFF) -eq 32) 'An exhausted real sharing lock did not surface its IOException'
+        Assert-True ((Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'lock-released') 'An exhausted sharing lock changed the good target'
+        Assert-True ((Get-Content -LiteralPath ($atomic + '.new') -Raw | ConvertFrom-Json).phase -eq 'pending') 'An exhausted sharing lock lost the pending replacement'
+    } finally { $heldLock.Dispose() }
+
+    # Inject only the native replace boundary to deterministically cover Win32 1175 and bounds.
+    $savedAtomicWriter = ${function:Write-AtomicJson}
+    try {
+        $probeBody = $savedAtomicWriter.ToString().Replace(
+            '[IO.File]::Replace($temp, $Path, [NullString]::Value)',
+            'Invoke-AtomicReplaceFixture -Source $temp -Target $Path')
+        Assert-True ($probeBody -ne $savedAtomicWriter.ToString()) 'Atomic replace fixture did not intercept the native boundary'
+        Set-Item Function:\Write-AtomicJson -Value ([scriptblock]::Create($probeBody))
+        function Invoke-AtomicReplaceFixture {
+            param([string]$Source, [string]$Target)
+            $script:AtomicAttempts++
+            if ($script:AtomicAttempts -le $script:AtomicFailures) { throw [AtomicJsonLockFixture]::Error($script:AtomicErrorCode) }
+            [IO.File]::Replace($Source, $Target, [NullString]::Value)
+        }
+        $script:AtomicAttempts = 0
+        $script:AtomicFailures = 2
+        $script:AtomicErrorCode = 1175
+        Write-AtomicJson -Path $atomic -Text '{"phase":"retry-success"}'
+        Assert-True ($script:AtomicAttempts -eq 3 -and (Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'retry-success') 'An unchanged-files Win32 1175 failure was not retried successfully'
+        foreach ($code in @(1175, 5, 1176, 1177)) {
+            $script:AtomicAttempts = 0
+            $script:AtomicFailures = 99
+            $script:AtomicErrorCode = $code
+            $failure = $null
+            try { Write-AtomicJson -Path $atomic -Text '{"phase":"pending-failure"}' } catch { $failure = $_.Exception }
+            while ($failure -and $failure -isnot [IO.IOException]) { $failure = $failure.InnerException }
+            $expectedAttempts = if ($code -eq 1175) { 6 } else { 1 }
+            Assert-True ($script:AtomicAttempts -eq $expectedAttempts -and $failure -and ($failure.HResult -band 0xFFFF) -eq $code) ('Atomic replacement did not bound or surface Win32 ' + $code)
+            Assert-True ((Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'retry-success') ('A failed Win32 ' + $code + ' update damaged the good target')
+            Assert-True ((Get-Content -LiteralPath ($atomic + '.new') -Raw | ConvertFrom-Json).phase -eq 'pending-failure') ('A failed Win32 ' + $code + ' update lost its new document')
+        }
+    } finally {
+        Set-Item Function:\Write-AtomicJson -Value $savedAtomicWriter
+        Remove-Item Function:\Invoke-AtomicReplaceFixture
+    }
+    Write-AtomicJson -Path $atomic -Text '{"phase":"final-recovery"}'
+    Assert-True ((Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'final-recovery') 'A later atomic write did not recover after lock exhaustion'
+
     $savedRelease = ${function:Get-GitHubRelease}
     $savedJdk = ${function:Install-Jdk}
     $savedDownload = ${function:Save-Url}
@@ -187,7 +266,7 @@ try {
         Assert-True ($recovered.Count -eq 1 -and $recovered[0].id -eq 'probe') 'A missing global state lost the recoverable per-tool record'
         Assert-True (Test-Path -LiteralPath $shim) 'A missing global state prevented cached shim repair'
         Assert-True ($script:JavaHome -eq $java) 'A cached Java tool did not repair its JDK selection'
-        Assert-True ((Get-Content -LiteralPath $shim -Raw).Contains('set "JAVA_HOME=' + $java + '"')) 'A repaired Java shim omitted its selected JDK'
+        Assert-True ((Get-Content -LiteralPath $shim -Raw).Contains('set "JAVA_HOME=' + $java.Replace('%', '%%') + '"')) 'A repaired Java shim omitted its selected JDK'
     } finally {
         Set-Item Function:\Get-GitHubRelease -Value $savedRelease
         Set-Item Function:\Install-Jdk -Value $savedJdk
@@ -267,6 +346,66 @@ try {
     try { Assert-ToolPayload -Tool $libraryTool -Dest $libraryDest } catch { $threw = $true }
     Assert-True $threw 'A Python library without its interpreter passed payload validation'
 
+    $supportRoot = Join-Path $TmpDir 'support-validation'
+    $signatureDir = Join-Path $supportRoot 'source'
+    New-Item -ItemType Directory -Path (Join-Path $signatureDir 'sigs') -Force | Out-Null
+    Write-Utf8 -Path (Join-Path $signatureDir 'README.md') -Text 'documentation only'
+    $sourceTool = [pscustomobject]@{ id = 'capa-source'; method = 'github-archive'; shims = @() }
+    $threw = $false
+    try { Assert-ToolPayload -Tool $sourceTool -Dest $signatureDir } catch { $threw = $true }
+    Assert-True $threw 'capa source documentation passed validation without signatures'
+    Write-Utf8 -Path (Join-Path $signatureDir 'sigs\fixture.sig') -Text ''
+    $threw = $false
+    try { Assert-ToolPayload -Tool $sourceTool -Dest $signatureDir } catch { $threw = $true }
+    Assert-True $threw 'An empty capa signature passed validation'
+    Write-Utf8 -Path (Join-Path $signatureDir 'sigs\fixture.sig') -Text 'signature fixture'
+    Assert-ToolPayload -Tool $sourceTool -Dest $signatureDir
+    $rulesDir = Join-Path $supportRoot 'rules'
+    New-Item -ItemType Directory -Path (Join-Path $rulesDir '.github\workflows'), (Join-Path $rulesDir 'collection\.hidden') -Force | Out-Null
+    Write-Utf8 -Path (Join-Path $rulesDir '.github\workflows\ci.yml') -Text 'workflow, not a capability rule'
+    Write-Utf8 -Path (Join-Path $rulesDir 'collection\.hidden\fixture.yml') -Text 'hidden fixture'
+    $rulesTool = [pscustomobject]@{ id = 'capa-rules'; method = 'github-archive'; shims = @() }
+    $threw = $false
+    try { Assert-ToolPayload -Tool $rulesTool -Dest $rulesDir } catch { $threw = $true }
+    Assert-True $threw 'Workflow or hidden YAML passed validation as capa capability rules'
+    Write-Utf8 -Path (Join-Path $rulesDir 'collection\fixture.yml') -Text ''
+    $threw = $false
+    try { Assert-ToolPayload -Tool $rulesTool -Dest $rulesDir } catch { $threw = $true }
+    Assert-True $threw 'An empty capa capability rule passed validation'
+    Write-Utf8 -Path (Join-Path $rulesDir 'collection\fixture.yml') -Text 'rule fixture'
+    Assert-ToolPayload -Tool $rulesTool -Dest $rulesDir
+
+    $oldBinDir = $BinDir
+    $savedBangResult = $env:RT_BANG_RESULT
+    $savedKitMarker = $env:RT_KIT_MARKER
+    try {
+        $env:RT_KIT_MARKER = 'wrong-expanded-path'
+        foreach ($kitName in @('kit! literal & (lab)', 'kit%RT_KIT_MARKER%')) {
+        $bangRoot = Join-Path $testRoot $kitName
+        $BinDir = Join-Path $bangRoot 'bin'
+        $bangTools = Join-Path $bangRoot 'tools'
+        New-Item -ItemType Directory -Path $BinDir, $bangTools -Force | Out-Null
+        $bangTarget = Join-Path $bangTools 'probe.cmd'
+        $env:RT_BANG_RESULT = Join-Path $TmpDir 'bang-result.txt'
+        Write-Utf8 -Path $bangTarget -Text "@echo off`r`n> `"%RT_BANG_RESULT%`" echo reached`r`nexit /b 0`r`n"
+        Write-Shim -Name 'probe' -Target $bangTarget | Out-Null
+        Push-Location -LiteralPath $BinDir
+        try { & $env:ComSpec /d /v:on /c probe.cmd } finally { Pop-Location }
+        Assert-True ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $env:RT_BANG_RESULT)) 'A shim inherited delayed expansion and damaged a path containing !'
+        Remove-Item -LiteralPath $env:RT_BANG_RESULT -Force
+        }
+    } finally {
+        $BinDir = $oldBinDir
+        $env:RT_BANG_RESULT = $savedBangResult
+        $env:RT_KIT_MARKER = $savedKitMarker
+    }
+
+    $customPointer = '{"custom":{"a":{"b":{"c":{"d":{"e":{"keep":["nested","values"]}}}}}}}'
+    Write-AtomicJson -Path $PointerPath -Text $customPointer
+    Save-State $script:InstallState
+    $pointer = Get-Content -LiteralPath $PointerPath -Raw | ConvertFrom-Json
+    Assert-True (($pointer.custom.a.b.c.d.e.keep -join ',') -eq 'nested,values') 'Saving state truncated nested personal pointer fields'
+
     $savedRelease = ${function:Get-GitHubRelease}
     $savedDownload = ${function:Save-Url}
     try {
@@ -342,13 +481,48 @@ try {
         $env:RT_NPM_VERSION = $savedNpmVersion
     }
 
+    $savedNpmInstall = ${function:Install-NpmTool}
+    try {
+        $copyTool = [pscustomobject]@{
+            id = 'backup-copy'; method = 'npm-tool'; package = 'fixture'
+            shims = @([pscustomobject]@{ name = 'backup-copy'; exe_glob = 'probe.cmd' })
+        }
+        $copyDest = Join-Path $ToolsDir 'backup-copy'
+        New-Item -ItemType Directory -Path $copyDest | Out-Null
+        Write-Utf8 -Path (Join-Path $copyDest 'probe.cmd') -Text 'old executable'
+        Write-Utf8 -Path (Join-Path $copyDest 'keep.txt') -Text 'old complete payload'
+        $copyShim = Write-Shim -Name 'backup-copy' -Target (Join-Path $copyDest 'probe.cmd')
+        $copyShimText = Get-Content -LiteralPath $copyShim -Raw
+        function Copy-Item {
+            param([string]$LiteralPath, [string]$Destination, [switch]$Recurse)
+            New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+            Write-Utf8 -Path (Join-Path $Destination 'incomplete.txt') -Text 'partial backup'
+            throw 'Injected backup copy failure'
+        }
+        function Install-NpmTool { throw 'Package installation must not run after backup failure' }
+        $Force = $true
+        $copyFailure = $null
+        try { Install-One $copyTool | Out-Null } catch { $copyFailure = $_.Exception.Message }
+        Assert-True ($copyFailure -eq 'Injected backup copy failure') 'A partial backup copy failure was not propagated'
+        Assert-True ((Get-Content -LiteralPath (Join-Path $copyDest 'keep.txt') -Raw) -eq 'old complete payload') 'A partial backup replaced the intact previous payload'
+        Assert-True ((Get-Content -LiteralPath (Join-Path $copyDest 'probe.cmd') -Raw) -eq 'old executable') 'A partial backup lost the intact previous executable'
+        Assert-True ((Get-Content -LiteralPath $copyShim -Raw) -ceq $copyShimText) 'A backup copy failure changed the previous shim'
+    } finally {
+        $Force = $false
+        Remove-Item Function:\Copy-Item
+        Set-Item Function:\Install-NpmTool -Value $savedNpmInstall
+    }
+
     $savedRelease = ${function:Get-GitHubRelease}
     $savedCatalog = ${function:Get-Catalog}
     $savedArchive = ${function:Install-GitHubArchive}
     $savedPip = ${function:Install-PipVenv}
     $savedExtra = $script:ExtraInstalled
     try {
-        function Get-GitHubRelease { return [pscustomobject]@{ tag_name = 'v99.2.3' } }
+        $script:CapaTag = 'v99.2.3'
+        $script:FailCapaPackage = $false
+        $script:FailCapaDependency = $null
+        function Get-GitHubRelease { return [pscustomobject]@{ tag_name = $script:CapaTag } }
         function Get-Catalog {
             return [pscustomobject]@{ tools = @(
                 [pscustomobject]@{ id = 'capa-rules'; method = 'github-archive'; shims = @() }
@@ -361,8 +535,16 @@ try {
             param($Tool)
             $script:CapaDependencies += [pscustomobject]@{ id = $Tool.id; tag = $Tool.release }
             $dependencyDir = Join-Path $ToolsDir $Tool.id
-            New-Item -ItemType Directory -Path $dependencyDir -Force | Out-Null
-            Write-Utf8 -Path (Join-Path $dependencyDir 'fixture.txt') -Text $Tool.release
+            $stage = Join-Path $TmpDir ('capa-stage-' + [guid]::NewGuid().ToString('N'))
+            $category = if ($Tool.id -eq 'capa-rules') { 'collection' } else { 'sigs' }
+            $support = Join-Path $stage $category
+            New-Item -ItemType Directory -Path $support -Force | Out-Null
+            $name = if ($Tool.id -eq 'capa-rules') { 'fixture.yml' } else { 'fixture.sig' }
+            Write-Utf8 -Path (Join-Path $support $name) -Text $Tool.release
+            Write-Utf8 -Path (Join-Path $stage 'fixture.txt') -Text $Tool.release
+            Move-FlattenedStage -Stage $stage -Dest $dependencyDir
+            Write-Marker -Dest $dependencyDir -Marker ('tag|' + $Tool.release)
+            if ($script:FailCapaDependency -eq $Tool.id) { throw 'Injected later capa dependency failure' }
             return [pscustomobject]@{ id = $Tool.id; version = $Tool.release; shims = @{}; dir = Get-RelativeKitPath $dependencyDir }
         }
         function Install-PipVenv {
@@ -375,8 +557,10 @@ try {
             Write-Utf8 -Path (Join-Path $scripts 'python.exe') -Text 'fixture interpreter, never executed'
             Write-Utf8 -Path (Join-Path $scripts 'capa.cmd') -Text "@echo off`r`nexit /b 0`r`n"
             Write-Utf8 -Path (Join-Path $metadata 'METADATA') -Text ('Version: ' + $Tool.package_version)
+            Write-Utf8 -Path (Join-Path $packageDir 'package-version.txt') -Text $Tool.package_version
             $made = Install-Shims -Tool $Tool -Dest $packageDir
             Write-Marker -Dest $packageDir -Marker 'present'
+            if ($script:FailCapaPackage) { throw 'Injected capa package failure' }
             return [pscustomobject]@{ id = $Tool.id; version = $Tool.package_version; shims = $made; dir = Get-RelativeKitPath $packageDir }
         }
         $capaTool = [pscustomobject]@{
@@ -406,12 +590,126 @@ try {
         $capaRecord.version = '99.2.3'
         Write-AtomicJson -Path (Join-Path $capaDest '.kit-record.json') -Text ($capaRecord | ConvertTo-Json -Depth 8)
         Assert-True (Test-AlreadyInstalled -Dest $capaDest -Marker 'present') 'A matching capa package was not reusable'
+
+        $script:InstallState.tools | Add-Member -NotePropertyName capa -NotePropertyValue $capaRecord -Force
+        Merge-ExtraInstalled $script:InstallState
+        $beforeGroup = @{}
+        foreach ($id in @('capa', 'capa-rules', 'capa-source')) {
+            $groupDir = Join-Path $ToolsDir $id
+            $beforeGroup[$id] = (@(Get-ChildItem -LiteralPath $groupDir -Recurse -File -Force | ForEach-Object {
+                $_.FullName.Substring($groupDir.Length) + ':' + (Get-Sha256Hex $_.FullName)
+            } | Sort-Object) -join "`n")
+        }
+        $beforeCapaShim = Get-Content -LiteralPath (Join-Path $BinDir 'capa.cmd') -Raw
+        $sentinel = [pscustomobject]@{ id = 'unrelated'; version = 'keep' }
+        $script:CapaTag = 'v99.3.0'
+        foreach ($failurePoint in @('package', 'later-dependency')) {
+            $script:ExtraInstalled = @($sentinel)
+            $script:FailCapaPackage = $failurePoint -eq 'package'
+            $script:FailCapaDependency = if ($failurePoint -eq 'later-dependency') { 'capa-source' } else { $null }
+            $threw = $false
+            try { Install-One $capaTool | Out-Null } catch { $threw = $true }
+            Assert-True $threw ('The injected capa ' + $failurePoint + ' failure was accepted')
+            foreach ($id in @('capa', 'capa-rules', 'capa-source')) {
+                $groupDir = Join-Path $ToolsDir $id
+                $after = (@(Get-ChildItem -LiteralPath $groupDir -Recurse -File -Force | ForEach-Object {
+                    $_.FullName.Substring($groupDir.Length) + ':' + (Get-Sha256Hex $_.FullName)
+                } | Sort-Object) -join "`n")
+                Assert-True ($after -ceq $beforeGroup[$id]) ('A failed capa group update changed prior bytes or records: ' + $id)
+            }
+            Assert-True ((Get-Content -LiteralPath (Join-Path $BinDir 'capa.cmd') -Raw) -ceq $beforeCapaShim) 'A failed capa group update changed its prior shim'
+            Assert-True ($script:ExtraInstalled.Count -eq 1 -and $script:ExtraInstalled[0].id -eq 'unrelated') 'A failed capa group update advertised changed dependencies or lost unrelated progress'
+            Merge-ExtraInstalled $script:InstallState
+            Save-State $script:InstallState
+            $saved = New-State
+            Assert-True ($saved.tools.capa.version -eq '99.2.3' -and $saved.tools.'capa-rules'.version -eq 'v99.2.3' -and $saved.tools.'capa-source'.version -eq 'v99.2.3') 'A failed capa group update persisted mixed versions'
+        }
+        # Follow the production catalog order through the actual install selection helper.
+        $actualCatalog = Get-Content -LiteralPath (Join-Path $sourceRoot 'catalog\tools.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        $routingCatalog = [pscustomobject]@{ tools = @($actualCatalog.tools | Where-Object { $_.id -in @('capa-rules', 'capa-source', 'capa') } | ForEach-Object {
+            if ($_.id -eq 'capa') { $capaTool } else { $_ }
+        }) }
+        $installSelection = @(Select-InstallTools -Selected $routingCatalog.tools -Catalog $routingCatalog)
+        Assert-True ($installSelection.Count -eq 1 -and $installSelection[0].id -eq 'capa') 'Full catalog order installed capa support entries outside their parent transaction'
+        foreach ($supportId in @('capa-rules', 'capa-source')) {
+            $supportSelection = @($routingCatalog.tools | Where-Object { $_.id -eq $supportId })
+            $normalized = @(Select-InstallTools -Selected $supportSelection -Catalog $routingCatalog)
+            Assert-True ($normalized.Count -eq 1 -and $normalized[0].id -eq 'capa') ('An explicit support selection bypassed the matching capa group: ' + $supportId)
+        }
+        $unrelated = [pscustomobject]@{ id = 'unrelated' }
+        $normalized = @(Select-InstallTools -Selected @($unrelated) -Catalog $routingCatalog)
+        Assert-True ($normalized.Count -eq 1 -and $normalized[0] -eq $unrelated) 'Capa routing changed an unrelated selection'
+        $script:FailCapaDependency = $null
+        $script:FailCapaPackage = $true
+        $script:ExtraInstalled = @()
+        $groupFailures = 0
+        foreach ($selectedTool in $installSelection) {
+            try {
+                $row = Install-One $selectedTool
+                $script:InstallState.tools | Add-Member -NotePropertyName $selectedTool.id -NotePropertyValue $row -Force
+            } catch { $groupFailures++ }
+            Merge-ExtraInstalled $script:InstallState
+            Save-State $script:InstallState
+        }
+        Assert-True ($groupFailures -eq 1) 'The catalog-order fixture did not exercise its package failure'
+        $saved = New-State
+        Assert-True ($saved.tools.capa.version -eq '99.2.3' -and $saved.tools.'capa-rules'.version -eq 'v99.2.3' -and $saved.tools.'capa-source'.version -eq 'v99.2.3') 'The normalized full-install loop persisted a mixed capa group'
+        foreach ($id in @('capa', 'capa-rules', 'capa-source')) {
+            $groupDir = Join-Path $ToolsDir $id
+            $after = (@(Get-ChildItem -LiteralPath $groupDir -Recurse -File -Force | ForEach-Object {
+                $_.FullName.Substring($groupDir.Length) + ':' + (Get-Sha256Hex $_.FullName)
+            } | Sort-Object) -join "`n")
+            Assert-True ($after -ceq $beforeGroup[$id]) ('The normalized full-install loop changed prior capa group bytes: ' + $id)
+        }
+        $priorTools = $ToolsDir
+        try {
+            $ToolsDir = Join-Path $Sandbox 'fresh-tools'
+            New-Item -ItemType Directory -Path $ToolsDir | Out-Null
+            $script:FailCapaDependency = $null
+            $script:FailCapaPackage = $true
+            $script:ExtraInstalled = @()
+            $threw = $false
+            try { Install-One $capaTool | Out-Null } catch { $threw = $true }
+            Assert-True $threw 'A failing fresh capa install was accepted'
+            Assert-True (-not (Test-Path -LiteralPath (Join-Path $ToolsDir 'capa-rules')) -and -not (Test-Path -LiteralPath (Join-Path $ToolsDir 'capa-source'))) 'A failed fresh capa install left new support payloads behind'
+            Assert-True ($script:ExtraInstalled.Count -eq 0) 'A failed fresh capa install advertised dependencies'
+        } finally { $ToolsDir = $priorTools }
     } finally {
         Set-Item Function:\Get-GitHubRelease -Value $savedRelease
         Set-Item Function:\Get-Catalog -Value $savedCatalog
         Set-Item Function:\Install-GitHubArchive -Value $savedArchive
         Set-Item Function:\Install-PipVenv -Value $savedPip
         $script:ExtraInstalled = $savedExtra
+    }
+    # Exercise the real archive trust boundary before any extractor or promotion runs.
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zipDest = Join-Path $ToolsDir 'zip-probe'
+    New-Item -ItemType Directory -Path $zipDest | Out-Null
+    Write-Utf8 -Path (Join-Path $zipDest 'probe.cmd') -Text 'old executable'
+    Write-Utf8 -Path (Join-Path $zipDest 'keep.txt') -Text 'old payload'
+    $outsideSentinel = Join-Path $TmpDir 'zip-escape.txt'
+    Write-Utf8 -Path $outsideSentinel -Text 'external sentinel'
+    $script:CurrentTool = [pscustomobject]@{
+        id = 'zip-probe'; method = 'github-release'
+        shims = @([pscustomobject]@{ name = 'zip-probe'; exe_glob = 'probe.cmd' })
+    }
+    foreach ($kind in @('traversal', 'symlink')) {
+        $zip = Join-Path $TmpDir ($kind + '.zip')
+        $archive = [IO.Compression.ZipFile]::Open($zip, [IO.Compression.ZipArchiveMode]::Create)
+        try {
+            $entryName = if ($kind -eq 'traversal') { '../zip-escape.txt' } else { 'linked.txt' }
+            $entry = $archive.CreateEntry($entryName)
+            if ($kind -eq 'symlink') { $entry.ExternalAttributes = 0xA1FF -shl 16 }
+            $writer = New-Object IO.StreamWriter($entry.Open())
+            try { $writer.Write('../zip-escape.txt') } finally { $writer.Dispose() }
+        } finally { $archive.Dispose() }
+        $zipFailure = $null
+        try { Expand-FlattenedZip -Zip $zip -Dest $zipDest | Out-Null } catch { $zipFailure = $_.Exception.Message }
+        Assert-True ($zipFailure -like 'unsafe ZIP entry:*') ('An unsafe ZIP ' + $kind + ' entry was not rejected by validation')
+        Assert-True ((Get-Content -LiteralPath $outsideSentinel -Raw) -ceq 'external sentinel') ('ZIP ' + $kind + ' changed a file outside its stage')
+        Assert-True ((Get-Content -LiteralPath (Join-Path $zipDest 'probe.cmd') -Raw) -ceq 'old executable' -and
+            (Get-Content -LiteralPath (Join-Path $zipDest 'keep.txt') -Raw) -ceq 'old payload') ('ZIP ' + $kind + ' changed the prior payload')
     }
     Write-Host 'installer regression checks ok'
 } finally {

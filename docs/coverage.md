@@ -10,7 +10,7 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 |---|---|---|
 | Native PE, ELF and other supported executable formats | Ghidra, Detect It Easy, ImHex, PE-bear, capa | Decompiled C is an approximation; symbols, types and build details may be absent. Confirm capability-rule matches. |
 | Windows debugging and instrumentation | x64dbg, Frida, MinHook, SafetyHook | Architecture and target version matter; hooks require target-specific evidence. |
-| .NET and Unity Mono | ILSpy, ilspycmd, dnSpyEx, BepInEx 5 | Obfuscation, runtime changes and missing dependencies can prevent a rebuild. |
+| .NET and Unity Mono | ILSpy, ilspycmd, dnSpyEx, BepInEx 5 | Current [ilspycmd](https://www.nuget.org/packages/ilspycmd) targets .NET 10; the installer provisions its SDK when absent, including on UABS setups with only older .NET versions. Obfuscation, runtime changes and missing dependencies can prevent a rebuild. |
 | Unity IL2CPP and assets | Il2CppDumper, AssetRipper, UABEA, MelonLoader, UnityExplorer variants | Metadata does not recover native method bodies. Choose plugins for the actual loader/runtime. |
 | Android DEX/APK, Java bytecode | JADX CLI and GUI; Apktool | Source reconstruction is incomplete in some cases. Apktool decodes/rebuilds resources and smali; signing and device tooling are separate. |
 | PyInstaller-packaged Python | pyinstxtractor-ng | Extracts files and bytecode. It does not guarantee Python source decompilation or support arbitrary Nuitka/native extensions. |
@@ -34,9 +34,11 @@ The game-specific SDKs, fighting-game tools and art editors remain in the catalo
 | Kaitai compiler | [kaitai-io/kaitai_struct_compiler](https://github.com/kaitai-io/kaitai_struct_compiler), [runtime licenses](https://kaitai.io/#licensing) | GPL-3.0-or-later compiler; Java 8+ upstream, JDK 25 shared here. Generated parsers need the selected language runtime under its own license. |
 | pyinstxtractor-ng | [pyinstxtractor/pyinstxtractor-ng](https://github.com/pyinstxtractor/pyinstxtractor-ng) | GPL-3.0; standalone executable, no matching target Python version needed for extraction. |
 | wasm-tools | [bytecodealliance/wasm-tools](https://github.com/bytecodealliance/wasm-tools) | Triple licensed under Apache-2.0, Apache-2.0 with LLVM exception, and MIT; standalone Windows x64 zip. |
-| Apktool | [iBotPeaches/Apktool](https://github.com/iBotPeaches/Apktool), [installation guide](https://apktool.org/docs/install/) | Apache-2.0; Java 8+ upstream, JDK 25 shared here. Supply Android framework files if the target needs them. |
+| Apktool | [iBotPeaches/Apktool](https://github.com/iBotPeaches/Apktool), [installation guide](https://apktool.org/docs/install/), [decode/build options](https://apktool.org/docs/cli-parameters/) | Apache-2.0; Java 8+ confirmed for v3.0.3, JDK 25 shared here. Supply Android framework files if the target needs them. Case-distinct APK paths need a case-sensitive work directory; the installer does not change that Windows setting. |
 | Electron ASAR | [electron/asar](https://github.com/electron/asar) | MIT; `@electron/asar` requires Node 22.12+ and npm. Local prefix with package lifecycle scripts disabled. |
 | LIEF | [lief-project/LIEF](https://github.com/lief-project/LIEF), [Python package metadata](https://pypi.org/project/lief/) | Apache-2.0; Python 3.9+ in a separate venv. Use the installed version's API. |
+
+Selecting `capa`, `capa-rules` or `capa-source` for installation updates the entire matched capa group in one transaction. Plan and Doctor still list/check the individual catalog entries.
 
 `Install-Modkit.ps1 -Doctor` checks records and required files. It does not import every library or prove target compatibility. For LIEF, run `.\sandbox\tools\lief\Scripts\python.exe -c "import lief; print(lief.__version__)"` and then a small parse on a copied target. Java, Python, .NET and Node prerequisites on the host do not automatically become available in a Windows Sandbox guest.
 
@@ -49,6 +51,7 @@ These are primary upstream entry points checked on 2026-10-11. Resolve current v
 | Gap | Upstream route | Setup and scope |
 |---|---|---|
 | Android signing and device debugging | [Android SDK Build Tools](https://developer.android.com/tools/releases/build-tools), [SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) | Separate SDK installation and licenses; `apksigner` handles APK signing and `adb` handles device work. Apktool alone does not provide them. |
+| Newer Unity IL2CPP metadata or a second analysis route | [Cpp2IL preview 2022.1.0-pre-release.21](https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21) | MIT; preview binaries published 2026-02-22 include a Windows EXE and .NET Framework 4.7.2 ZIP. Choose the correct architecture/runtime and verify target metadata support. No preview is automatically installed. |
 | JVM decompiler alternative | [Vineflower](https://github.com/Vineflower/vineflower) | Apache-2.0; current 1.12.0 ships `vineflower-1.12.0.jar`, Java 17+. Useful when JADX's output needs comparison. |
 | JVM bytecode editing | [Recaf](https://github.com/Col-E/Recaf/releases/tag/4.0.0-alpha) | MIT; 4.x is explicitly a preview despite GitHub marking its tag as a normal release. Windows artifact `recaf-4x-alpha-win-86-x64.jar`, Java 22+. Do not relabel it stable. |
 | File, registry and process activity | [Microsoft Process Monitor](https://learn.microsoft.com/en-us/sysinternals/downloads/procmon) | Separate Sysinternals license and first-run acceptance; monitoring can require elevation and a driver. Current 4.11 requires Windows 11; it is not part of this kit's Windows 10 baseline. |

@@ -1,6 +1,6 @@
 # Reverse THIS! state
 
-Version: 1.2.0
+Version: 1.2.1 candidate
 
 Owner: the existing reverse-this checkout; `sandbox/` contains machine-owned installed state and private work.
 
@@ -12,6 +12,8 @@ Validation: see VALIDATION.md. Local contracts/regressions pass in PowerShell 5.
 
 Resume ledger: the original checkout is migrated. All 57 catalog entries install/repair successfully; Doctor passes and all eight new-tool smoke checks pass there. The four malformed rows are normalized, immutable source archives replace legacy branch downloads, and old payload/state backups are retained. No game installation, provider settings or private target files were modified.
 
-Release identity: v1.2.0. Publication evidence is the exact tag/check state at https://github.com/SenjuWoo/reverse-this/releases/tag/v1.2.0 and the local receipt `sandbox/work/release-validation.json`. The receipt records the pushed SHA, check conclusions, alert counts and downloaded asset hashes once the release gate completes; its absence is not success.
+Second audit: v1.2.0 is published and its bytes/checks are verified. A failing capa update could leave newer rules/signatures with an older restored package; v1.2.1 is correcting the whole matched group. The review also reproduced weak support-file checks, batch punctuation/exit-status errors and nested pointer truncation, and identified the .NET 10 prerequisite required by current ilspycmd beyond UABS's older defaults. Changes are under local verification; the owner install is still on v1.2.0. Generated APK build/decode/modify/rebuild and full static capa analysis pass. Keep the v1.2.0 source/package/state as the restorable baseline.
+
+Release identity: v1.2.1 candidate. Publish only after local tests, owner migration, exact-SHA CI/alerts and fresh extracted-artifact checks pass. The current `sandbox/work/release-validation.json` receipt still describes published v1.2.0; retain it under a versioned name before writing the new receipt.
 
 Release gate: run local tests, push, verify exact-SHA CI and repository alerts, package the installer, extract and smoke-test that exact artifact, publish, then download and compare size/SHA-256. Do not treat a static test or catalog entry as target compatibility proof.
