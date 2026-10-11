@@ -12,7 +12,7 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 4. If you were not started inside the kit, read `%LOCALAPPDATA%\ReverseThis\kit.json`. It has `kit_root`, `installed_json` and `bin`. Then follow those paths.
 5. Stop if none of those exist. Ask for the kit root. Do not scan `Program Files`, Downloads, or a personal tools dump.
 
-`Install-Modkit.ps1 -Plan` prints the catalog and downloads nothing. Release tools resolve the current release on each run and reuse matching payloads; package tools reuse installed versions until `-Force`. `-Force` also reinstalls matching release payloads. `-Doctor` checks installed records and required files without downloading, not runtime behavior. Add `-DebugLog` to a repair run when detailed package/archive output is needed.
+`Install-Modkit.ps1 -Plan` prints the catalog and downloads nothing. Release tools resolve the current release on each run and reuse matching payloads; package tools reuse installed versions until `-Force`, except capa, which tracks its release with matching rules/signatures. `-Force` also reinstalls matching release payloads. `-Doctor` checks installed records and required files without downloading, not runtime behavior. Add `-DebugLog` to a repair run when detailed package/archive output is needed.
 
 ## Paths
 

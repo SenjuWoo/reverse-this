@@ -21,7 +21,7 @@ Windows x64, PowerShell 5.1+. The installer targets Windows 10/11; individual to
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1
 ```
 
-Release tools resolve the current release each run and reuse a matching installed payload. Package tools reuse the installed version until `-Force`; that option also reinstalls matching release payloads. `-Plan` prints the catalog and downloads nothing. Install or repair one route with `-Only jadx`, for example.
+Release tools resolve the current release each run and reuse a matching installed payload. Package tools reuse the installed version until `-Force`, except capa, which tracks its current release with matching rules/signatures. `-Force` also reinstalls matching release payloads. `-Plan` prints the catalog and downloads nothing. Install or repair one route with `-Only jadx`, for example.
 
 Ghidra, JADX, Apktool and Kaitai share JDK 25. If no suitable JDK exists, the installer uses winget package `Microsoft.OpenJDK.25` and points their shims at that home. .NET decompilation uses the installed `dotnet` SDK. Frida, capa and LIEF use `py -3` in separate venvs; capa requires Python 3.10+, LIEF 3.9+. Electron ASAR requires Node 22.12+ and npm, and installs under its own prefix with lifecycle scripts disabled. The tool payloads live in the workspace; missing JDK setup can change the machine.
 
@@ -99,6 +99,8 @@ Do not commit game files, decompiled output, or the unpacked tools. Those stay u
 Each upstream tool keeps its own license. This repository is MIT.
 
 ## Development
+
+Run these checks from a source checkout:
 
 ```powershell
 python tests/test_catalog.py

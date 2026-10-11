@@ -23,7 +23,8 @@ jobs:
       - name: catalog contract
         run: python tests/test_catalog.py
 
-  installer:
+  installer-tests:
+    name: installer (${{ matrix.shell }})
     runs-on: windows-latest
     timeout-minutes: 10
     strategy:
@@ -42,3 +43,13 @@ jobs:
         run: ./tests/test_installer.ps1
       - name: isolation configuration contract
         run: ./tests/test_isolation.ps1
+
+  installer:
+    runs-on: ubuntu-latest
+    needs: installer-tests
+    if: always()
+    steps:
+      - name: require both PowerShell checks
+        env:
+          RESULT: ${{ needs.installer-tests.result }}
+        run: test "$RESULT" = success
