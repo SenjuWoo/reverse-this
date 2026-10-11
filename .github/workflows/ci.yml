@@ -26,11 +26,19 @@ jobs:
   installer:
     runs-on: windows-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        shell: [powershell, pwsh]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: asset pattern self-test
-        shell: powershell
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -SelfTest
+        run: ./Install-Modkit.ps1 -SelfTest
       - name: plan prints the catalog
-        shell: powershell
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -Plan
+        run: ./Install-Modkit.ps1 -Plan
+      - name: offline installer regression checks
+        run: ./tests/test_installer.ps1
+      - name: isolation configuration contract
+        run: ./tests/test_isolation.ps1

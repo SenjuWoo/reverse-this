@@ -245,6 +245,101 @@
       "shims": [{"name": "frida", "exe_glob": "frida.exe"}]
     },
     {
+      "id": "jadx",
+      "name": "JADX",
+      "job": "Android DEX/APK and Java bytecode decompiler, CLI and GUI.",
+      "method": "github-release",
+      "repo": "skylot/jadx",
+      "asset_pattern": "^jadx-[0-9].+\\.zip$",
+      "needs_jdk": 25,
+      "shims": [
+        {"name": "jadx", "exe_glob": "jadx.bat"},
+        {"name": "jadx-gui", "exe_glob": "jadx-gui.bat"}
+      ]
+    },
+    {
+      "id": "capa-rules",
+      "name": "capa capability rules",
+      "job": "Released capability rules for capa, without malware test samples.",
+      "method": "github-archive",
+      "repo": "mandiant/capa-rules",
+      "ref": "release",
+      "shims": []
+    },
+    {
+      "id": "capa-source",
+      "name": "capa source and library signatures",
+      "job": "Released capa source and bundled library-identification signatures; no testfiles submodule.",
+      "method": "github-archive",
+      "repo": "mandiant/capa",
+      "ref": "release",
+      "shims": []
+    },
+    {
+      "id": "capa",
+      "name": "capa",
+      "job": "Identify executable capabilities from static rules; findings need confirmation.",
+      "method": "pip-venv",
+      "package": "flare-capa",
+      "requires": ["capa-rules", "capa-source"],
+      "shims": [{"name": "capa", "exe_glob": "capa.exe"}]
+    },
+    {
+      "id": "kaitai",
+      "name": "Kaitai Struct compiler",
+      "job": "Compile documented binary format descriptions into parsers.",
+      "method": "github-release",
+      "repo": "kaitai-io/kaitai_struct_compiler",
+      "asset_pattern": "^kaitai-struct-compiler-[0-9].+\\.zip$",
+      "needs_jdk": 25,
+      "shims": [{"name": "kaitai-struct-compiler", "exe_glob": "kaitai-struct-compiler.bat"}]
+    },
+    {
+      "id": "pyinstxtractor-ng",
+      "name": "pyinstxtractor-ng",
+      "job": "Extract PyInstaller executables. Python bytecode decompilation is a separate step.",
+      "method": "github-files",
+      "repo": "pyinstxtractor/pyinstxtractor-ng",
+      "files": ["pyinstxtractor-ng.exe"],
+      "shims": [{"name": "pyinstxtractor-ng", "exe_glob": "pyinstxtractor-ng.exe"}]
+    },
+    {
+      "id": "wasm-tools",
+      "name": "wasm-tools",
+      "job": "Inspect, validate, disassemble and assemble WebAssembly modules and components.",
+      "method": "github-release",
+      "repo": "bytecodealliance/wasm-tools",
+      "asset_pattern": "^wasm-tools-[0-9].+-x86_64-windows\\.zip$",
+      "shims": [{"name": "wasm-tools", "exe_glob": "wasm-tools.exe"}]
+    },
+    {
+      "id": "apktool",
+      "name": "Apktool",
+      "job": "Decode APK resources and smali, and rebuild APKs. Signing and device tools are separate.",
+      "method": "github-release",
+      "repo": "iBotPeaches/Apktool",
+      "asset_pattern": "^apktool_[0-9].+\\.jar$",
+      "unpack": "raw",
+      "needs_jdk": 25,
+      "shims": [{"name": "apktool", "exe_glob": "apktool_*.jar", "java_jar": true}]
+    },
+    {
+      "id": "asar",
+      "name": "Electron ASAR",
+      "job": "List, extract and repack Electron ASAR archives. Requires Node 22.12+.",
+      "method": "npm-tool",
+      "package": "@electron/asar",
+      "shims": [{"name": "asar", "exe_glob": "asar.cmd"}]
+    },
+    {
+      "id": "lief",
+      "name": "LIEF Python library",
+      "job": "Parse and modify PE, ELF and Mach-O files from an isolated Python environment, Python 3.9+.",
+      "method": "pip-venv",
+      "package": "lief",
+      "shims": []
+    },
+    {
       "id": "frosty-editor",
       "name": "Frosty Editor",
       "job": "Frostbite mod editor. The stable release, not the rewrite.",
@@ -441,7 +536,7 @@
     {"id": "assetstudio", "instead": "assetripper", "why": "The AssetStudio repository is archived."},
     {"id": "dnspy", "instead": "dnspyex", "why": "The original dnSpy repository is archived."},
     {"id": "uabe", "instead": "uabea", "why": "Original UABE is unsupported. UABEA is the build that still publishes a Windows zip."},
-    {"id": "umodel-ue4", "instead": "fmodel", "why": "UModel is not the UE4/UE5 browser. Use FModel, repak and retoc."},
+    {"id": "umodel-ue4", "instead": "fmodel", "why": "UE Viewer/UModel supports older Unreal and many UE4 games. Keep it as a target-specific manual route; FModel, repak and retoc are the default modern Unreal toolset here."},
     {"id": "cpp2il-2022-binary", "instead": "il2cppdumper", "why": "Cpp2IL's last published binary is the 2022 release. The source has moved on and has not published a replacement binary."},
     {"id": "ue4ss-stable", "instead": "ue4ss", "why": "The stable UE4SS tag lags the experimental release. The kit installs experimental-latest."},
     {"id": "bepinex6-pre2", "instead": "melonloader", "why": "BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader."},

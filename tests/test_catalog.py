@@ -12,10 +12,11 @@ METHODS = {
     "renderdoc-stable-zip",
     "dotnet-tool",
     "pip-venv",
+    "npm-tool",
     "github-archive",
     "virtualltek-portable",
 }
-UNPACK = {None, "7z", "msi-admin", "nsis-app64"}
+UNPACK = {None, "7z", "msi-admin", "nsis-app64", "raw"}
 
 
 def load(name):
@@ -87,7 +88,7 @@ def main():
                 errors.append("{0} files missing from fixture {1}".format(tid, missing))
             if any(name.endswith("_arm64.exe") for name in tool["files"]):
                 errors.append("{0} selected an arm64 exe".format(tid))
-        if tool["method"] in ("dotnet-tool", "pip-venv") and not tool.get("package"):
+        if tool["method"] in ("dotnet-tool", "pip-venv", "npm-tool") and not tool.get("package"):
             errors.append("{0} needs a package".format(tid))
         if "repo" in tool and tool["repo"].count("/") != 1:
             errors.append("{0} repo is not owner/name".format(tid))
@@ -106,6 +107,10 @@ def main():
         errors.append("duplicate tool ids")
 
     installable = set(ids)
+    for tool in catalog["tools"]:
+        for dependency in tool.get("requires", []):
+            if dependency not in installable or dependency == tool["id"]:
+                errors.append("{0} has invalid dependency {1}".format(tool["id"], dependency))
     for row in catalog["retired"]:
         if row["id"] in installable:
             errors.append("retired id is also installed: {0}".format(row["id"]))

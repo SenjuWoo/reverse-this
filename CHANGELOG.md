@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0
+
+- Add Android/Java decompilation and APK rebuilding, Electron ASAR, PyInstaller extraction, static capability triage, Kaitai format parsers, WebAssembly tools and LIEF binary analysis.
+- Add an optional Windows Sandbox launcher with read-only inputs/tools, disabled networking and one writable output folder.
+- Repair malformed installed records; recreate missing shims and preserve CLI working directories, environment and exit codes.
+- Validate replacement executables before promotion; retain last-good payloads and roll back failed updates.
+- Use exact GitHub asset digests, immutable source commits, atomic state writes and an exclusive install lock.
+- Ignore private work, backups and state snapshots; document companion integration and remaining target/runtime limits.
+- Test installer behavior and Sandbox configuration in Windows PowerShell 5.1 and PowerShell 7.
+
 ## 1.1.0
 
 - 7-Zip, LDtk, OpenBOR, and the official Fighter Factory Windows portable are installed. LDtk's installer is unpacked and not run. OpenBOR's rar is unpacked with 7-Zip.

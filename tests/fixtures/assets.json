@@ -1,4 +1,34 @@
 {
+  "wasm-tools": {
+    "assets": [
+      "wasm-tools-1.261.0-aarch64-linux.tar.gz",
+      "wasm-tools-1.261.0-aarch64-macos.tar.gz",
+      "wasm-tools-1.261.0-aarch64-musl.tar.gz",
+      "wasm-tools-1.261.0-aarch64-windows.zip",
+      "wasm-tools-1.261.0-riscv64-linux.tar.gz",
+      "wasm-tools-1.261.0-wasm32-wasip1.tar.gz",
+      "wasm-tools-1.261.0-x86_64-linux.tar.gz",
+      "wasm-tools-1.261.0-x86_64-macos.tar.gz",
+      "wasm-tools-1.261.0-x86_64-musl.tar.gz",
+      "wasm-tools-1.261.0-x86_64-windows.zip"
+    ],
+    "expect": "wasm-tools-1.261.0-x86_64-windows.zip"
+  },
+  "apktool": {
+    "assets": ["apktool_3.0.3.jar"],
+    "expect": "apktool_3.0.3.jar"
+  },
+  "jadx": {
+    "assets": ["jadx-1.5.6.zip", "jadx-gui-1.5.6-win.zip", "jadx-gui-1.5.6-with-jre-win.zip"],
+    "expect": "jadx-1.5.6.zip"
+  },
+  "kaitai": {
+    "assets": ["kaitai-struct-compiler-0.11.msi", "kaitai-struct-compiler-0.11.zip", "kaitai-struct-compiler_0.11_all.deb"],
+    "expect": "kaitai-struct-compiler-0.11.zip"
+  },
+  "pyinstxtractor-ng": {
+    "assets": ["pyinstxtractor-ng", "pyinstxtractor-ng.exe"]
+  },
   "ghidra": {
     "assets": ["ghidra_12.1.4_PUBLIC_20260921.zip"],
     "expect": "ghidra_12.1.4_PUBLIC_20260921.zip"

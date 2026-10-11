@@ -13,6 +13,8 @@
 param(
     [switch]$Plan,
     [switch]$SelfTest,
+    [switch]$Doctor,
+    [switch]$DebugLog,
     [switch]$Force,
     [string[]]$Only
 )
@@ -32,7 +34,8 @@ $PointerDir = Join-Path $env:LOCALAPPDATA 'ReverseThis'
 $PointerPath = Join-Path $PointerDir 'kit.json'
 
 function Write-Log {
-    param([string]$Message)
+    param([string]$Message, [switch]$Detail)
+    if ($Detail -and -not $DebugLog) { return }
     $line = '{0}  {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $Message
     Write-Host $line
     if (Test-Path $LogDir) {
@@ -91,6 +94,7 @@ function Get-GitHubArchiveUrl {
     if ($Ref -notmatch '^[A-Za-z0-9._+-]+$') { throw "bad ref $Ref" }
     if ($Kind -eq 'tag') { return "https://github.com/$Repo/archive/refs/tags/$Ref.zip" }
     if ($Kind -eq 'branch') { return "https://github.com/$Repo/archive/refs/heads/$Ref.zip" }
+    if ($Kind -eq 'commit' -and $Ref -match '^[0-9a-f]{40}$') { return "https://github.com/$Repo/archive/$Ref.zip" }
     throw "bad archive kind $Kind"
 }
 
@@ -208,12 +212,7 @@ function Invoke-Plan {
     exit 0
 }
 
-if ($SelfTest) { Invoke-SelfTest }
-if ($Plan) { Invoke-Plan }
-
-New-Item -ItemType Directory -Force -Path $BinDir, $ToolsDir, $TmpDir, $LogDir, $PointerDir | Out-Null
 $kitVersion = (Get-Content -LiteralPath (Join-Path $KitRoot 'VERSION') -Raw -Encoding UTF8).Trim()
-Write-Log "reverse-this $kitVersion  root=$KitRoot"
 
 function Save-Url {
     param([string]$Url, [string]$Dest)
@@ -225,7 +224,7 @@ function Save-Url {
     if (-not (Test-Path -LiteralPath $curl)) { throw 'curl.exe is not in System32' }
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $curl -sS -L --fail --retry 3 --retry-delay 2 -A 'reverse-this' -o $Dest $Url
+    & $curl -sS -L --proto '=https' --proto-redir '=https' --fail --retry 3 --retry-delay 2 -A 'reverse-this' -o $Dest $Url
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0 -or -not (Test-Path -LiteralPath $Dest)) {
@@ -288,15 +287,12 @@ function Get-WebText {
     }
 }
 
-function Get-SingleBodyHash {
-    param([string]$Body)
-    $found = [regex]::Matches([string]$Body, '(?i)\b[a-f0-9]{64}\b')
-    if ($found.Count -eq 1) { return $found[0].Value.ToLowerInvariant() }
-    return $null
-}
-
 function Get-PublishedHash {
     param($Release, [string]$AssetName)
+    $selected = @(ConvertTo-Array $Release.assets | Where-Object { $_.name -ceq $AssetName })
+    if ($selected.Count -eq 1 -and $selected[0].digest -match '^sha256:([a-fA-F0-9]{64})$') {
+        return @{ hash = $Matches[1].ToLowerInvariant(); source = 'github-digest' }
+    }
     $siblingName = "$AssetName.sha256"
     $sibling = @(ConvertTo-Array $Release.assets | Where-Object { $_.name -eq $siblingName })
     if ($sibling.Count -eq 1) {
@@ -307,9 +303,40 @@ function Get-PublishedHash {
         if (-not $match.Success) { throw "could not read hash from $siblingName" }
         return @{ hash = $match.Value.ToLowerInvariant(); source = 'asset' }
     }
-    $bodyHash = Get-SingleBodyHash -Body ([string]$Release.body)
-    if ($bodyHash) { return @{ hash = $bodyHash; source = 'release-body' } }
     return $null
+}
+
+function Assert-OwnedToolPath {
+    param([string]$Path)
+    $root = [IO.Path]::GetFullPath($ToolsDir).TrimEnd('\') + '\'
+    $full = [IO.Path]::GetFullPath($Path)
+    if (-not $full.StartsWith($root, [StringComparison]::OrdinalIgnoreCase) -or
+        (Split-Path -Parent $full) -ne $root.TrimEnd('\')) { throw "not an owned tool directory: $Path" }
+    if (Test-Path -LiteralPath $Path) {
+        $links = @(Get-Item -LiteralPath $Path) + @(Get-ChildItem -LiteralPath $Path -Recurse -Force)
+        if ($links | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }) {
+            throw "refusing linked tool directory: $Path"
+        }
+    }
+}
+
+function Assert-ToolPayload {
+    param($Tool, [string]$Dest)
+    if (-not (Test-Path -LiteralPath $Dest -PathType Container)) { throw "missing tool directory: $Dest" }
+    $payload = @(Get-ChildItem -LiteralPath $Dest -Recurse -File -Force | Where-Object { $_.Name -notlike '.kit-*' } | Select-Object -First 1)
+    if (-not $payload.Count) { throw "$($Tool.id) has no payload files" }
+    if ($Tool.method -eq 'pip-venv') {
+        if (-not (Test-Path -LiteralPath (Join-Path $Dest 'Scripts\python.exe'))) { throw "$($Tool.id) missing Python interpreter" }
+        $metadata = @(Get-ChildItem -Path (Join-Path $Dest 'Lib\site-packages') -Directory -Filter (($Tool.package -replace '-', '_') + '-*.dist-info') -ErrorAction SilentlyContinue)
+        if (-not $metadata.Count) { throw "$($Tool.id) missing package metadata" }
+    }
+    foreach ($shim in (ConvertTo-Array $Tool.shims)) {
+        $file = Find-ToolFile -Root $Dest -Glob $shim.exe_glob -Prefer $shim.prefer_path
+        if (-not $file) { throw "$($Tool.id) missing required executable $($shim.exe_glob)" }
+        if ($shim.require_path -and $file.FullName -notmatch $shim.require_path) {
+            throw "$($Tool.id) shim $($shim.name) resolved to $($file.FullName)"
+        }
+    }
 }
 
 function Move-FlattenedStage {
@@ -327,8 +354,18 @@ function Move-FlattenedStage {
         }
         $produced = @(Get-ChildItem -LiteralPath $fresh -Force -Recurse -File)
         if ($produced.Count -eq 0) { throw 'extract produced no files' }
-        if (Test-Path -LiteralPath $Dest) { Remove-Item -LiteralPath $Dest -Recurse -Force }
-        Move-Item -LiteralPath $fresh -Destination $Dest
+        Assert-OwnedToolPath $Dest
+        Assert-ToolPayload -Tool $script:CurrentTool -Dest $fresh
+        $backup = Join-Path $Sandbox ('backups/' + (Split-Path -Leaf $Dest) + '-' + [guid]::NewGuid().ToString('N'))
+        if (Test-Path -LiteralPath $Dest) {
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $backup) | Out-Null
+            Move-Item -LiteralPath $Dest -Destination $backup
+            $script:PromotedBackup = $backup
+        }
+        try { Move-Item -LiteralPath $fresh -Destination $Dest } catch {
+            if (Test-Path -LiteralPath $backup) { Move-Item -LiteralPath $backup -Destination $Dest }
+            throw
+        }
     } finally {
         if (Test-Path -LiteralPath $fresh) { Remove-Item -LiteralPath $fresh -Recurse -Force -ErrorAction SilentlyContinue }
     }
@@ -339,6 +376,18 @@ function Expand-FlattenedZip {
     $stage = Join-Path $TmpDir ('stage-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force -Path $stage | Out-Null
     try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $archive = [IO.Compression.ZipFile]::OpenRead($Zip)
+        try {
+            $stageRoot = [IO.Path]::GetFullPath($stage).TrimEnd('\') + '\'
+            foreach ($entry in $archive.Entries) {
+                $entryPath = [IO.Path]::GetFullPath((Join-Path $stage $entry.FullName))
+                if (-not $entryPath.StartsWith($stageRoot, [StringComparison]::OrdinalIgnoreCase) -or
+                    (($entry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000) {
+                    throw "unsafe ZIP entry: $($entry.FullName)"
+                }
+            }
+        } finally { $archive.Dispose() }
         $tar = Join-Path $env:SystemRoot 'System32\tar.exe'
         if (-not (Test-Path -LiteralPath $tar)) { throw 'tar.exe is not in System32' }
         $prev = $ErrorActionPreference
@@ -367,10 +416,13 @@ function Get-JavaMajor {
 function Find-JdkHome {
     param([int]$Major)
     $homes = @()
+    if ($env:JAVA_HOME) { $homes += @(Get-Item -LiteralPath $env:JAVA_HOME -ErrorAction SilentlyContinue) }
+    $javaCmd = Get-Command java -ErrorAction SilentlyContinue
+    if ($javaCmd) { $homes += @(Get-Item -LiteralPath (Split-Path -Parent (Split-Path -Parent $javaCmd.Source)) -ErrorAction SilentlyContinue) }
     foreach ($n in $Major..40) {
-        $homes += @(Get-Item -Path "C:\Program Files\Microsoft\jdk-$n*" -ErrorAction SilentlyContinue)
-        $homes += @(Get-Item -Path "C:\Program Files\Eclipse Adoptium\jdk-$n*" -ErrorAction SilentlyContinue)
-        $homes += @(Get-Item -Path "C:\Program Files\Java\jdk-$n*" -ErrorAction SilentlyContinue)
+        $homes += @(Get-Item -Path (Join-Path $env:ProgramFiles "Microsoft\jdk-$n*") -ErrorAction SilentlyContinue)
+        $homes += @(Get-Item -Path (Join-Path $env:ProgramFiles "Eclipse Adoptium\jdk-$n*") -ErrorAction SilentlyContinue)
+        $homes += @(Get-Item -Path (Join-Path $env:ProgramFiles "Java\jdk-$n*") -ErrorAction SilentlyContinue)
         $homes += @(Get-Item -Path (Join-Path $env:LOCALAPPDATA "Programs\Eclipse Adoptium\jdk-$n*") -ErrorAction SilentlyContinue)
     }
     foreach ($jdkDir in $homes) {
@@ -391,7 +443,7 @@ function Install-Jdk {
     Write-Log "installing Microsoft.OpenJDK.$Major via winget"
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & winget install --id "Microsoft.OpenJDK.$Major" -e --accept-package-agreements --accept-source-agreements --disable-interactivity
+    & winget install --id "Microsoft.OpenJDK.$Major" -e --accept-package-agreements --accept-source-agreements --disable-interactivity | ForEach-Object { Write-Log -Detail "winget: $_" }
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0) { throw "winget Microsoft.OpenJDK.$Major failed ($code)" }
@@ -406,8 +458,10 @@ function Find-ToolFile {
     if ($hits.Count -eq 0) { return $null }
     if ($Prefer) {
         $preferred = @($hits | Where-Object { $_.FullName -match $Prefer })
-        if ($preferred.Count -ge 1) { return $preferred[0] }
+        if ($preferred.Count -eq 1) { return $preferred[0] }
+        if ($preferred.Count -gt 1) { throw "ambiguous executable $Glob under $Root" }
     }
+    if ($hits.Count -gt 1) { throw "ambiguous executable $Glob under $Root" }
     return $hits[0]
 }
 
@@ -421,7 +475,8 @@ function Write-Shim {
     param(
         [string]$Name,
         [string]$Target,
-        [string]$JavaHome
+        [string]$JavaHome,
+        [bool]$JavaJar = $false
     )
     $rel = (Resolve-Path -LiteralPath $Target).Path
     $from = (Resolve-Path -LiteralPath $BinDir).Path
@@ -429,12 +484,16 @@ function Write-Shim {
     $base = New-Object System.Uri $from
     $to = New-Object System.Uri $rel
     $relative = [Uri]::UnescapeDataString($base.MakeRelativeUri($to).ToString()) -replace '/', '\'
-    $lines = @('@echo off')
+    $lines = @('@echo off', 'setlocal')
     if ($JavaHome) {
         $lines += 'set "JAVA_HOME=' + $JavaHome + '"'
         $lines += 'set "PATH=%JAVA_HOME%\bin;%PATH%"'
     }
-    $lines += '"%~dp0' + $relative + '" %*'
+    $call = if ([IO.Path]::GetExtension($Target) -in @('.bat', '.cmd')) { 'call ' } else { '' }
+    if ($JavaJar) { $call = '"%JAVA_HOME%\bin\java.exe" -jar ' }
+    $arguments = if ($Name -eq 'capa') { '-r "%~dp0..\tools\capa-rules" -s "%~dp0..\tools\capa-source\sigs" %*' } else { '%*' }
+    $lines += $call + '"%~dp0' + $relative + '" ' + $arguments
+    $lines += 'exit /b %errorlevel%'
     $dest = Join-Path $BinDir ($Name + '.cmd')
     Write-Utf8 -Path $dest -Text (($lines -join "`r`n") + "`r`n")
     return $dest
@@ -456,7 +515,31 @@ function Test-AlreadyInstalled {
     if ($Force) { return $false }
     if (-not (Test-Path -LiteralPath $markerPath)) { return $false }
     $have = (Get-Content -LiteralPath $markerPath -Raw -Encoding UTF8).Trim()
-    return $have -eq $Marker
+    if ($have -ne $Marker) { return $false }
+    $recordPath = Join-Path $Dest '.kit-record.json'
+    $row = $null
+    if (Test-Path -LiteralPath $recordPath) {
+        try { $row = Get-Content -LiteralPath $recordPath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { return $false }
+    } elseif ($script:InstallState) {
+        $row = $script:InstallState.tools.($script:CurrentTool.id)
+    }
+    if (-not $row -or $row.id -ne $script:CurrentTool.id) { return $false }
+    if ($script:CurrentTool.package_version -and $row.version -ne $script:CurrentTool.package_version) { return $false }
+    try { Assert-ToolPayload -Tool $script:CurrentTool -Dest $Dest } catch { return $false }
+    $row.shims = Install-Shims -Tool $script:CurrentTool -Dest $Dest
+    $row.dir = Get-RelativeKitPath $Dest
+    if ($row.version -eq 'pip') {
+        $pythonExe = Join-Path $Dest 'Scripts\python.exe'
+        $row.version = (& $pythonExe -c "import importlib.metadata; print(importlib.metadata.version('$($script:CurrentTool.package)'))" | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $row.version) { return $false }
+    } elseif ($row.version -eq 'dotnet-tool') {
+        $packageRows = @(& dotnet tool list --tool-path $Dest)
+        $versionRows = @($packageRows | Where-Object { $_ -match ('^' + [regex]::Escape($script:CurrentTool.package) + '\s+') })
+        if ($LASTEXITCODE -ne 0 -or $versionRows.Count -ne 1) { return $false }
+        $row.version = ($versionRows[0] -split '\s+')[1]
+    }
+    $script:CachedRecord = $row
+    return $true
 }
 
 function Write-Marker {
@@ -467,20 +550,37 @@ function Write-Marker {
 function Save-State {
     param($State)
     $json = $State | ConvertTo-Json -Depth 8
-    Write-Utf8 -Path $StatePath -Text $json
+    Write-AtomicJson -Path $StatePath -Text $json
     $pointer = [ordered]@{
         kit_root = $KitRoot
         installed_json = $StatePath
         bin = $BinDir
         java_home = $State.java_home
     }
-    Write-Utf8 -Path $PointerPath -Text ($pointer | ConvertTo-Json -Depth 4)
+    Write-AtomicJson -Path $PointerPath -Text ($pointer | ConvertTo-Json -Depth 4)
+}
+
+function Write-AtomicJson {
+    param([string]$Path, [string]$Text)
+    $Text | ConvertFrom-Json | Out-Null
+    $temp = $Path + '.new'
+    Write-Utf8 -Path $temp -Text $Text
+    if (Test-Path -LiteralPath $Path) { [IO.File]::Replace($temp, $Path, [NullString]::Value) }
+    else { [IO.File]::Move($temp, $Path) }
 }
 
 function New-State {
     if (Test-Path -LiteralPath $StatePath) {
         $existing = Get-Content -LiteralPath $StatePath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($existing.tools) { return $existing }
+        if ($existing.tools) {
+            foreach ($property in @($existing.tools.PSObject.Properties)) {
+                # Old installers captured native stdout alongside the record.
+                $rows = @($property.Value | Where-Object { $_ -isnot [string] -and $_.id -eq $property.Name })
+                if ($rows.Count -ne 1) { throw "invalid installed record: $($property.Name)" }
+                $property.Value = $rows[0]
+            }
+            return $existing
+        }
     }
     return [pscustomobject]@{
         schema = 1
@@ -500,15 +600,14 @@ function Install-Shims {
     foreach ($shim in (ConvertTo-Array $Tool.shims)) {
         $file = Find-ToolFile -Root $Dest -Glob $shim.exe_glob -Prefer $shim.prefer_path
         if ($null -eq $file) {
-            Write-Log "WARN $($Tool.id) shim $($shim.name) did not find $($shim.exe_glob)"
-            continue
+            throw "$($Tool.id) shim $($shim.name) did not find $($shim.exe_glob)"
         }
         $java = $null
         if ($Tool.needs_jdk) { $java = $script:JavaHome }
         if ($shim.require_path -and ($file.FullName -notmatch $shim.require_path)) {
             throw "$($Tool.id) shim $($shim.name) resolved to $($file.FullName)"
         }
-        $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java
+        $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java -JavaJar ([bool]$shim.java_jar)
         $made[$shim.name] = Get-RelativeKitPath $cmd
     }
     return $made
@@ -518,11 +617,13 @@ function Install-GitHubZipTool {
     param($Tool)
     $release = Get-GitHubRelease -Repo $Tool.repo -Release $Tool.release
     $asset = Select-OneAsset -Assets (ConvertTo-Array $release.assets) -Pattern $Tool.asset_pattern
+    if ([string]$asset.name -notmatch '^[A-Za-z0-9._+ -]+$') { throw "unsafe asset filename: $($asset.name)" }
     $dest = Join-Path $ToolsDir $Tool.id
     $marker = '{0}|{1}' -f $release.tag_name, $asset.name
+    if ($Tool.needs_jdk -and -not $script:JavaHome) { $script:JavaHome = Install-Jdk -Major ([int]$Tool.needs_jdk) }
     if (Test-AlreadyInstalled -Dest $dest -Marker $marker) {
         Write-Log "skip $($Tool.id) $marker"
-        return
+        return $script:CachedRecord
     }
     if ($Tool.needs_jdk -and -not $script:JavaHome) {
         $script:JavaHome = Install-Jdk -Major ([int]$Tool.needs_jdk)
@@ -545,6 +646,13 @@ function Install-GitHubZipTool {
         'msi-admin' { Expand-MsiAdmin -Msi $zip -Dest $dest }
         'nsis-app64' { Expand-NsisApp64 -Installer $zip -Dest $dest }
         '7z' { Expand-WithSevenZip -Archive $zip -Dest $dest }
+        'raw' {
+            $rawStage = Join-Path $TmpDir ('raw-' + [guid]::NewGuid().ToString('N'))
+            New-Item -ItemType Directory -Path $rawStage | Out-Null
+            Copy-Item -LiteralPath $zip -Destination (Join-Path $rawStage $asset.name)
+            try { Move-FlattenedStage -Stage $rawStage -Dest $dest }
+            finally { Remove-Item -LiteralPath $rawStage -Recurse -Force }
+        }
         default { Expand-FlattenedZip -Zip $zip -Dest $dest }
     }
     Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
@@ -569,7 +677,7 @@ function Install-GitHubFilesTool {
     $marker = '{0}|{1}' -f $release.tag_name, ($names -join '+')
     if (Test-AlreadyInstalled -Dest $dest -Marker $marker) {
         Write-Log "skip $($Tool.id) $marker"
-        return
+        return $script:CachedRecord
     }
     $fresh = Join-Path $TmpDir ('files-' + $Tool.id)
     if (Test-Path $fresh) { Remove-Item $fresh -Recurse -Force }
@@ -588,8 +696,8 @@ function Install-GitHubFilesTool {
         }
         $hashes[$name] = $actual
     }
-    if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
-    Move-Item -LiteralPath $fresh -Destination $dest
+    Move-FlattenedStage -Stage $fresh -Dest $dest
+    Remove-Item -LiteralPath $fresh -Force
     $shims = Install-Shims -Tool $Tool -Dest $dest
     Write-Marker -Dest $dest -Marker $marker
     return [pscustomobject]@{
@@ -611,7 +719,7 @@ function Install-RenderDocTool {
     $marker = [string]$release.tag_name
     if (Test-AlreadyInstalled -Dest $dest -Marker $marker) {
         Write-Log "skip $($Tool.id) $marker"
-        return
+        return $script:CachedRecord
     }
     $zip = Join-Path $TmpDir ("RenderDoc_" + $release.tag_name + "_64.zip")
     Write-Log "get renderdoc $url"
@@ -634,26 +742,31 @@ function Install-RenderDocTool {
 
 function Install-DotNetTool {
     param($Tool)
+    if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) { throw '.NET SDK is missing; install the Starter Bundle runtime prerequisites first' }
     $dest = Join-Path $ToolsDir $Tool.id
     New-Item -ItemType Directory -Force -Path $dest | Out-Null
     if ((Test-AlreadyInstalled -Dest $dest -Marker 'present') -and (Get-ChildItem -LiteralPath $dest -Filter ($Tool.shims[0].exe_glob) -Recurse -ErrorAction SilentlyContinue)) {
         Write-Log "skip $($Tool.id)"
-        return
+        return $script:CachedRecord
     }
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & dotnet tool install $Tool.package --tool-path $dest
+    & dotnet tool install $Tool.package --tool-path $dest | ForEach-Object { Write-Log -Detail "dotnet: $_" }
     if ($LASTEXITCODE -ne 0) {
-        & dotnet tool update $Tool.package --tool-path $dest
+        & dotnet tool update $Tool.package --tool-path $dest | ForEach-Object { Write-Log -Detail "dotnet: $_" }
     }
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0) { throw "dotnet tool $($Tool.package) failed ($code)" }
+    $packageRows = @(& dotnet tool list --tool-path $dest)
+    $versionRow = @($packageRows | Where-Object { $_ -match ('^' + [regex]::Escape($Tool.package) + '\s+') })
+    if ($versionRow.Count -ne 1) { throw "cannot read installed version: $($Tool.package)" }
+    $packageVersion = ($versionRow[0] -split '\s+')[1]
     $shims = Install-Shims -Tool $Tool -Dest $dest
     Write-Marker -Dest $dest -Marker 'present'
     return [pscustomobject]@{
         id = $Tool.id
-        version = 'dotnet-tool'
+        version = $packageVersion
         asset = [string]$Tool.package
         sha256 = $null
         hash_source = 'nuget'
@@ -664,31 +777,60 @@ function Install-DotNetTool {
 
 function Install-PipVenv {
     param($Tool)
+    if (-not (Get-Command py -ErrorAction SilentlyContinue)) { throw 'Python launcher py is missing; install the Starter Bundle runtime prerequisites first' }
     $dest = Join-Path $ToolsDir $Tool.id
-    $exe = Join-Path $dest 'Scripts\frida.exe'
-    if ((Test-Path -LiteralPath $exe) -and -not $Force) {
+    $exe = Join-Path $dest 'Scripts\python.exe'
+    if ((Test-AlreadyInstalled -Dest $dest -Marker 'present') -and (Test-Path -LiteralPath $exe)) {
         Write-Log "skip $($Tool.id)"
-        return
+        return $script:CachedRecord
     }
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & py -3 -m venv $dest
+    & py -3 -m venv $dest | ForEach-Object { Write-Log -Detail "python: $_" }
     if ($LASTEXITCODE -ne 0) { $ErrorActionPreference = $prev; throw "venv failed ($LASTEXITCODE)" }
     $pyexe = Join-Path $dest 'Scripts\python.exe'
-    & $pyexe -m pip install --disable-pip-version-check $Tool.package
+    $packageSpec = if ($Tool.package_version) { $Tool.package + '==' + $Tool.package_version } else { $Tool.package }
+    & $pyexe -m pip install --upgrade --disable-pip-version-check $packageSpec | ForEach-Object { Write-Log -Detail "pip: $_" }
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0) { throw "pip install $($Tool.package) failed ($code)" }
+    $packageVersion = (& $pyexe -c "import importlib.metadata; print(importlib.metadata.version('$($Tool.package)'))" | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $packageVersion) { throw "cannot read installed version: $($Tool.package)" }
     $shims = Install-Shims -Tool $Tool -Dest $dest
     Write-Marker -Dest $dest -Marker 'present'
     return [pscustomobject]@{
         id = $Tool.id
-        version = 'pip'
+        version = $packageVersion
         asset = [string]$Tool.package
         sha256 = $null
         hash_source = 'pypi'
         dir = Get-RelativeKitPath $dest
         shims = $shims
+    }
+}
+
+function Install-NpmTool {
+    param($Tool)
+    $dest = Join-Path $ToolsDir $Tool.id
+    if (Test-AlreadyInstalled -Dest $dest -Marker 'present') { return $script:CachedRecord }
+    $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
+    if (-not $npm) { throw 'npm.cmd is missing; use the Node runtime supplied by the Starter Bundle' }
+    New-Item -ItemType Directory -Force -Path $dest | Out-Null
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & $npm.Source install --prefix $dest --no-audit --no-fund --ignore-scripts --engine-strict ($Tool.package + '@latest') | ForEach-Object { Write-Log -Detail "npm: $_" }
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $prev
+    if ($code -ne 0) { throw "npm install $($Tool.package) failed ($code)" }
+    $packageJson = Join-Path $dest ('node_modules/' + $Tool.package + '/package.json')
+    $packageVersion = (Get-Content -LiteralPath $packageJson -Raw -Encoding UTF8 | ConvertFrom-Json).version
+    if (-not $packageVersion) { throw "cannot read installed version: $($Tool.package)" }
+    $shims = Install-Shims -Tool $Tool -Dest $dest
+    Write-Marker -Dest $dest -Marker 'present'
+    return [pscustomobject]@{
+        id = $Tool.id; version = $packageVersion; asset = $Tool.package
+        sha256 = $null; hash_source = 'npm-lock-integrity'
+        dir = Get-RelativeKitPath $dest; shims = $shims
     }
 }
 
@@ -711,7 +853,7 @@ function Invoke-SevenZip {
     param([string]$SevenZip, [string[]]$ArgumentList)
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $SevenZip @ArgumentList
+    & $SevenZip @ArgumentList | ForEach-Object { Write-Log -Detail "7z: $_" }
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0) { throw "7z failed ($code)" }
@@ -728,7 +870,7 @@ function Expand-MsiAdmin {
         $msiexec = Join-Path $env:SystemRoot 'System32\msiexec.exe'
         $prev = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
-        $proc = Start-Process -FilePath $msiexec -ArgumentList @('/a', $localMsi, '/qn', ('TARGETDIR=' + $extract)) -Wait -PassThru
+        $proc = Start-Process -FilePath $msiexec -ArgumentList @('/a', $localMsi, '/qn', ('TARGETDIR=' + $extract)) -WindowStyle Hidden -Wait -PassThru
         $code = $proc.ExitCode
         $ErrorActionPreference = $prev
         if ($code -ne 0 -and $code -ne 3010) { throw "msiexec /a failed ($code)" }
@@ -750,7 +892,14 @@ function Get-SevenZip {
     $tool = ConvertTo-Array $catalog.tools | Where-Object { $_.id -eq '7zip' } | Select-Object -First 1
     if (-not $tool) { throw 'catalog has no 7zip tool' }
     if ([string]$tool.unpack -ne 'msi-admin') { throw '7zip tool must unpack with msi-admin' }
-    $row = Install-GitHubZipTool $tool
+    $parentTool = $script:CurrentTool
+    $parentCached = $script:CachedRecord
+    $parentBackup = $script:PromotedBackup
+    try { $row = Install-One $tool } finally {
+        $script:CurrentTool = $parentTool
+        $script:CachedRecord = $parentCached
+        $script:PromotedBackup = $parentBackup
+    }
     if ($row) { $script:ExtraInstalled += @($row) }
     if (-not (Test-Path -LiteralPath $exe) -or -not (Test-Path -LiteralPath $dll)) {
         throw '7zip install did not produce 7z.exe and 7z.dll'
@@ -807,14 +956,14 @@ function Install-GitHubArchive {
         $commit = Invoke-GitHubApi -ApiPath ("repos/" + $repo + "/commits/" + $branch)
         $sha = [string]$commit.sha
         if ($sha -notmatch '^[0-9a-f]{40}$') { throw "$($Tool.id) commit sha was not a sha" }
-        $url = Get-GitHubArchiveUrl -Repo $repo -Kind 'branch' -Ref $branch
+        $url = Get-GitHubArchiveUrl -Repo $repo -Kind 'commit' -Ref $sha
         $marker = 'commit|' + $sha
         $version = $sha.Substring(0, 12)
     }
     $dest = Join-Path $ToolsDir $Tool.id
     if (Test-AlreadyInstalled -Dest $dest -Marker $marker) {
         Write-Log "skip $($Tool.id) $marker"
-        return
+        return $script:CachedRecord
     }
     $zip = Join-Path $TmpDir ($Tool.id + '-src.zip')
     Write-Log "get $($Tool.id) $url"
@@ -843,7 +992,7 @@ function Install-FighterFactory {
     $dest = Join-Path $ToolsDir $Tool.id
     if (Test-AlreadyInstalled -Dest $dest -Marker $url) {
         Write-Log "skip $($Tool.id) $url"
-        return
+        return $script:CachedRecord
     }
     $zip = Join-Path $TmpDir $name
     Write-Log "get fighter-factory $url"
@@ -866,15 +1015,69 @@ function Install-FighterFactory {
 
 function Install-One {
     param($Tool)
-    switch ($Tool.method) {
-        'github-release' { return Install-GitHubZipTool $Tool }
-        'github-files' { return Install-GitHubFilesTool $Tool }
-        'renderdoc-stable-zip' { return Install-RenderDocTool $Tool }
-        'dotnet-tool' { return Install-DotNetTool $Tool }
-        'pip-venv' { return Install-PipVenv $Tool }
-        'github-archive' { return Install-GitHubArchive $Tool }
-        'virtualltek-portable' { return Install-FighterFactory $Tool }
+    $capaTag = $null
+    if ($Tool.id -eq 'capa') {
+        $capaTag = [string](Get-GitHubRelease -Repo 'mandiant/capa').tag_name
+        if ($capaTag -notmatch '^v\d+\.\d+\.\d+$') { throw "invalid capa release version: $capaTag" }
+        $Tool | Add-Member -NotePropertyName package_version -NotePropertyValue $capaTag.Substring(1) -Force
+    }
+    foreach ($id in (ConvertTo-Array $Tool.requires)) {
+        $dependency = @(ConvertTo-Array (Get-Catalog).tools | Where-Object { $_.id -eq $id })
+        if ($dependency.Count -ne 1) { throw "unknown dependency: $id" }
+        if ($capaTag) { $dependency[0] | Add-Member -NotePropertyName release -NotePropertyValue $capaTag -Force }
+        $script:ExtraInstalled += @(Install-One $dependency[0])
+    }
+    $script:CurrentTool = $Tool
+    $script:CachedRecord = $null
+    $dest = Join-Path $ToolsDir $Tool.id
+    Write-Log -Detail "resolved $($Tool.id): method=$($Tool.method) directory=$dest force=$Force"
+    Assert-OwnedToolPath $dest
+    $savedShims = @{}
+    foreach ($shim in (ConvertTo-Array $Tool.shims)) {
+        if ($shim.name -notmatch '^[A-Za-z0-9-]+$') { throw "unsafe shim name: $($shim.name)" }
+        $shimPath = Join-Path $BinDir ($shim.name + '.cmd')
+        $savedShims[$shimPath] = if (Test-Path -LiteralPath $shimPath) { [IO.File]::ReadAllBytes($shimPath) } else { $null }
+    }
+    $script:PromotedBackup = $null
+    $packageBackup = $null
+    if ($Tool.method -in @('pip-venv', 'dotnet-tool', 'npm-tool') -and (Test-Path -LiteralPath $dest)) {
+        if (Test-AlreadyInstalled -Dest $dest -Marker 'present') {
+            Write-AtomicJson -Path (Join-Path $dest '.kit-record.json') -Text ($script:CachedRecord | ConvertTo-Json -Depth 8)
+            return $script:CachedRecord
+        }
+        $packageBackup = Join-Path $Sandbox ('backups/' + $Tool.id + '-' + [guid]::NewGuid().ToString('N'))
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $packageBackup) | Out-Null
+        Copy-Item -LiteralPath $dest -Destination $packageBackup -Recurse
+    }
+    try {
+    $row = switch ($Tool.method) {
+        'github-release' { Install-GitHubZipTool $Tool }
+        'github-files' { Install-GitHubFilesTool $Tool }
+        'renderdoc-stable-zip' { Install-RenderDocTool $Tool }
+        'dotnet-tool' { Install-DotNetTool $Tool }
+        'pip-venv' { Install-PipVenv $Tool }
+        'npm-tool' { Install-NpmTool $Tool }
+        'github-archive' { Install-GitHubArchive $Tool }
+        'virtualltek-portable' { Install-FighterFactory $Tool }
         default { throw "unknown method $($Tool.method)" }
+    }
+    if ($row -is [array] -or -not $row -or $row.id -ne $Tool.id) { throw "invalid install result: $($Tool.id)" }
+    Assert-ToolPayload -Tool $Tool -Dest $dest
+    Write-AtomicJson -Path (Join-Path $dest '.kit-record.json') -Text ($row | ConvertTo-Json -Depth 8)
+    return $row
+    } catch {
+        $rollback = if ($packageBackup) { $packageBackup } else { $script:PromotedBackup }
+        if ($rollback -and (Test-Path -LiteralPath $rollback)) {
+            Assert-OwnedToolPath $dest
+            if (Test-Path -LiteralPath $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
+            Move-Item -LiteralPath $rollback -Destination $dest
+            Write-Log "restored last-good $($Tool.id)"
+        }
+        foreach ($shimPath in $savedShims.Keys) {
+            if ($null -ne $savedShims[$shimPath]) { [IO.File]::WriteAllBytes($shimPath, $savedShims[$shimPath]) }
+            elseif (Test-Path -LiteralPath $shimPath) { Remove-Item -LiteralPath $shimPath -Force }
+        }
+        throw
     }
 }
 
@@ -888,14 +1091,54 @@ function Merge-ExtraInstalled {
     $script:ExtraInstalled = @()
 }
 
+if ($SelfTest) { Invoke-SelfTest }
+if ($Plan) { Invoke-Plan }
+
 $catalog = Get-Catalog
 $selected = @(ConvertTo-Array $catalog.tools)
 if ($Only) {
     $wanted = @($Only | ForEach-Object { $_.Split(',') } | ForEach-Object { $_.Trim().ToLowerInvariant() } | Where-Object { $_ })
+    $unknown = @($wanted | Where-Object { $_ -notin $selected.id })
+    if ($unknown.Count) { throw "unknown tool id: $($unknown -join ', ')" }
     $selected = @($selected | Where-Object { $wanted -contains $_.id })
     if ($selected.Count -eq 0) { throw "Only matched nothing: $($wanted -join ', ')" }
 }
+if ($Doctor) {
+    $missing = 0
+    $state = New-State
+    foreach ($tool in $selected) {
+        try {
+            $row = $state.tools.($tool.id)
+            if (-not $row) { throw 'not installed' }
+            foreach ($id in (ConvertTo-Array $tool.requires)) {
+                if (-not $state.tools.$id) { throw "missing dependency: $id" }
+                $dependency = $catalog.tools | Where-Object { $_.id -eq $id }
+                Assert-ToolPayload -Tool $dependency -Dest (Join-Path $ToolsDir $id)
+            }
+            Assert-ToolPayload -Tool $tool -Dest (Join-Path $ToolsDir $tool.id)
+            foreach ($shim in (ConvertTo-Array $tool.shims)) {
+                if (-not (Test-Path -LiteralPath (Join-Path $BinDir ($shim.name + '.cmd')))) { throw "missing shim $($shim.name)" }
+            }
+            Write-Host "OK $($tool.id) $($row.version)"
+        } catch { Write-Host "FAIL $($tool.id): $($_.Exception.Message)"; $missing++ }
+    }
+    Write-Host 'Doctor checks files and records only; run the relevant tool on a lab sample for runtime proof.'
+    if ($missing) { exit 1 }
+    exit 0
+}
+
+New-Item -ItemType Directory -Force -Path $BinDir, $ToolsDir, $TmpDir, $LogDir, $PointerDir | Out-Null
+$lockPath = Join-Path $Sandbox '.install.lock'
+try { $lock = [IO.File]::Open($lockPath, 'OpenOrCreate', 'ReadWrite', 'None') }
+catch { throw 'Another installer is using this kit. Wait for it to finish.' }
+try {
+Write-Log "reverse-this $kitVersion  root=$KitRoot"
+if (Test-Path -LiteralPath $StatePath) {
+    $stateBackup = $StatePath + '.pre-' + $kitVersion + '.json'
+    if (-not (Test-Path -LiteralPath $stateBackup)) { Copy-Item -LiteralPath $StatePath -Destination $stateBackup }
+}
 $state = New-State
+$script:InstallState = $state
 $state.kit_version = $kitVersion
 $state.kit_root = $KitRoot
 $ok = @()
@@ -929,3 +1172,4 @@ if ($bad.Count -gt 0) {
 Write-Log "bin: $BinDir"
 Write-Log "pointer: $PointerPath"
 exit 0
+} finally { $lock.Dispose() }
