@@ -1,6 +1,14 @@
 # Validation
 
-Audit baseline: v1.1.0 at 94d27b7. New source version: 1.2.0.
+Source version: 1.2.1. Audit baselines: v1.1.0 at 94d27b7 and verified public v1.2.0 at 38f71b5. Previous source, release and installed-state rollback copies are retained.
+
+- All six offline PowerShell checks pass in Windows PowerShell 5.1 and PowerShell 7: SelfTest, Plan, installer regressions, isolation configuration, real batch entrypoint and .NET prerequisites. Together with Python catalog validation, the local matrix passes 13/13 checks.
+- Added regressions exercise unsafe ZIP rejection; failed package backups; matched capa rollback after parent/dependency failures; full catalog order and support-only group routing; nested pointer preservation; literal batch punctuation, environment and exit status; and native Windows sharing-lock recovery/exhaustion. Atomic replacement retries are bounded and preserve old/new files; permanent and partially renamed-file errors are surfaced. The process behind the earlier sporadic Win32 1175 error is unidentified.
+- Current ilspycmd installs and launches through production functions/shims from a directory pinned to SDK 8.0.418, using the selected .NET 10 host and explicit net10.0 framework. Fake-command regressions cover missing/preview SDKs, runtime discovery, winget failure/rediscovery and environment restoration. This host already has .NET 10, so a real missing-runtime winget installation was not exercised here.
+- Owner repair to 1.2.1 completed 55/55 transactions covering 57 records and 40 shims. Doctor passes all 57 entries; pointer extensions are preserved. Previous installed state/payloads and the versioned v1.2.0 release receipt remain available.
+- Runtime checks now build/decode/modify/rebuild/decode an owned APK with package/resource/asset assertions, and perform full static capa analysis of its own Python launcher with sample hash/version assertions. Unsigned APKs are not installed and scanned PE samples are not executed. The other six generated-input checks below remain covered.
+
+Prior audit foundation (v1.2.0, retained in 1.2.1):
 
 - The existing kit had 47 tool directories and 32 resolved shim targets. Four manifest rows contained native command output instead of a single tool record. Four stored per-file hashes matched the installed bytes.
 - Existing CLI checks passed for Detect It Easy, 7-Zip, repak, retoc, ILSpy CLI, DirectXTex, headless Godot and Frida. No game or injection target was launched.
