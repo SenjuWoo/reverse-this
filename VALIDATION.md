@@ -1,3 +1,7 @@
+## 1.3.0 modular verification
+
+Catalog: 58 tools. PowerShell 5.1/7 installer, isolation, entrypoint and .NET gates PASS. New pin mismatch, empty npm root-key, unowned REA reuse and self-shim exclusion fixtures PASS. Actual isolated REA 6.8.0 installation, owner Doctor, version/help and owned static-JavaScript fixture PASS. No Windows Sandbox guest or native target runtime was retested; existing unrelated-tool evidence remains in the prior release. Exact-SHA CI/security and public bytes pending.
+
 # Validation
 
 Source version: 1.2.1. Audit baselines: v1.1.0 at 94d27b7 and verified public v1.2.0 at 38f71b5. Previous source, release and installed-state rollback copies are retained.
