@@ -1,3 +1,23 @@
+# 1.3.0 modular ownership (2026-10-25)
+
+- Baseline 2f3ccca; branch codex/modular-tool-ownership.
+- REA 6.8.0 pin matches the npm registry integrity. Isolated npm installation
+  disables lifecycle scripts and verifies the lock before activation; matching
+  global REA is unowned and preserved. Both PowerShell editions handle npm's
+  empty root package-lock key. No provider setup/update command is run.
+- 58-entry catalog gate and all existing offline installer, isolation,
+  entrypoint and .NET prerequisite gates PASS on PowerShell 5.1 and 7.
+- REA version/help, owner Doctor, and static JavaScript analysis of a tiny
+  owned fixture PASS. The JSON evidence is retained privately; no target was run.
+- The original live kit pointer and its existing payloads are preserved. The
+  source test install uses an isolated LOCALAPPDATA pointer. Private sandbox,
+  logs, npm modules and target work are excluded from Git/publication.
+- Next: exact-SHA CI/security checks and release 1.3.0; deploy only public
+  source files into the existing kit, keeping installed tools/state/backups.
+- Last good public version: 1.2.1. Logs: sandbox/log/modkit.log.
+- Run: powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1.
+
+
 # Reverse THIS! state
 
 Version: 1.2.1

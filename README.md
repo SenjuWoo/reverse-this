@@ -113,3 +113,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_dotnet_prerequi
 ```
 
 After installing the app/format tools, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_tool_smoke.ps1` from a source checkout for generated-sample checks, including APK resource modification/rebuilding and a static capa scan. Results/logs stay under `sandbox/work/runtime-smoke`. APK signing/device installation, graphical tools and game compatibility still need a real target test.
+
+## Companion projects
+
+Use the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) for shared compilers, AI providers, skills and MCP routing. Use [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) for Skyrim-specific authoring and validation. All three can coexist; this kit never rewrites provider configuration.
+
+REA is optional (`-Only rea`), pinned to an npm integrity digest with lifecycle scripts disabled. A matching global REA is reused as unowned; `-Force` installs an isolated kit copy. No `rea setup` or `rea update` is run. See [analysis routing](docs/reverse-engineering.md).

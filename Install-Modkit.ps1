@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Install the Reverse THIS! modkit into stable paths under this repo.
@@ -547,7 +547,7 @@ function Test-AlreadyInstalled {
     if (-not $row -or $row.id -ne $script:CurrentTool.id) { return $false }
     if ($script:CurrentTool.method -eq 'github-archive' -and $row.asset -like '*/archive/refs/heads/*') { return $false }
     if ($script:CurrentTool.package_version -and $row.version -ne $script:CurrentTool.package_version) { return $false }
-    try { Assert-ToolPayload -Tool $script:CurrentTool -Dest $Dest } catch { return $false }
+    try { Assert-ToolPayload -Tool $script:CurrentTool -Dest $Dest; if ($script:CurrentTool.method -eq 'npm-tool') { Assert-NpmIntegrity -Tool $script:CurrentTool -Dest $Dest } } catch { return $false }
     $row.shims = Install-Shims -Tool $script:CurrentTool -Dest $Dest
     $row.dir = Get-RelativeKitPath $Dest
     if ($row.version -eq 'pip') {
@@ -905,6 +905,36 @@ function Install-PipVenv {
     }
 }
 
+# Reuse a matching global REA without taking ownership or changing its settings.
+function Get-ExternalRea {
+    param($Tool)
+    if ($Tool.id -ne 'rea' -or $Force) { return $null }
+    foreach ($command in @(Get-Command rea.cmd -All -CommandType Application -ErrorAction SilentlyContinue)) {
+        if ($command.Source.StartsWith($BinDir.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) { continue }
+        $version = (& $command.Source --version 2>$null | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $version -notmatch ('(?<![0-9.])' + [regex]::Escape($Tool.package_version) + '(?![0-9.])')) { continue }
+        $shim = Write-Shim -Name 'rea' -Target $command.Source
+        return [pscustomobject]@{ id='rea'; version=$Tool.package_version; source='existing-path'; owned=$false; command=$command.Source; dir=$null; shims=@{rea=(Get-RelativeKitPath $shim)} }
+    }
+    return $null
+}
+
+function Assert-NpmIntegrity {
+    param($Tool, [string]$Dest)
+    if (-not $Tool.npm_integrity) { return }
+    $text = [IO.File]::ReadAllText((Join-Path $Dest 'package-lock.json'))
+    # npm has an empty root key; PS5.1's PSCustomObject converter rejects it.
+    if ($PSVersionTable.PSVersion.Major -ge 6) { $lock = ConvertFrom-Json -InputObject $text -AsHashtable }
+    else {
+        Add-Type -AssemblyName System.Web.Extensions
+        $json = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+        $json.MaxJsonLength=16777216
+        $lock=$json.DeserializeObject($text)
+    }
+    $row = $lock['packages']['node_modules/' + $Tool.package]
+    if (-not $row -or $row['version'] -ne $Tool.package_version -or $row['integrity'] -cne $Tool.npm_integrity) { throw "npm integrity/version mismatch: $($Tool.package)" }
+}
+
 function Install-NpmTool {
     param($Tool)
     $dest = Join-Path $ToolsDir $Tool.id
@@ -914,16 +944,18 @@ function Install-NpmTool {
     New-Item -ItemType Directory -Force -Path $dest | Out-Null
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $npm.Source install --prefix $dest --no-audit --no-fund --ignore-scripts --engine-strict ($Tool.package + '@latest') | ForEach-Object { Write-Log -Detail "npm: $_" }
+    & $npm.Source install --prefix $dest --no-audit --no-fund --ignore-scripts --engine-strict ($Tool.package + '@' + $(if ($Tool.package_version) { $Tool.package_version } else { 'latest' })) | ForEach-Object { Write-Log -Detail "npm: $_" }
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0) { throw "npm install $($Tool.package) failed ($code)" }
     $packageJson = Join-Path $dest ('node_modules/' + $Tool.package + '/package.json')
     $packageVersion = (Get-Content -LiteralPath $packageJson -Raw -Encoding UTF8 | ConvertFrom-Json).version
     if (-not $packageVersion) { throw "cannot read installed version: $($Tool.package)" }
+    Assert-NpmIntegrity -Tool $Tool -Dest $dest
     $shims = Install-Shims -Tool $Tool -Dest $dest
     Write-Marker -Dest $dest -Marker 'present'
     return [pscustomobject]@{
+        npm_integrity = $Tool.npm_integrity
         id = $Tool.id; version = $packageVersion; asset = $Tool.package
         sha256 = $null; hash_source = 'npm-lock-integrity'
         dir = Get-RelativeKitPath $dest; shims = $shims
@@ -1145,6 +1177,8 @@ function Install-One {
     $dependencyChanges = @()
     $previousExtra = @($script:ExtraInstalled)
     try {
+    $external = Get-ExternalRea -Tool $Tool
+    if ($external) { return $external }
     foreach ($id in (ConvertTo-Array $Tool.requires)) {
         $dependency = @(ConvertTo-Array (Get-Catalog).tools | Where-Object { $_.id -eq $id })
         if ($dependency.Count -ne 1) { throw "unknown dependency: $id" }
@@ -1262,7 +1296,9 @@ if ($Doctor) {
                 $dependency = $catalog.tools | Where-Object { $_.id -eq $id }
                 Assert-ToolPayload -Tool $dependency -Dest (Join-Path $ToolsDir $id)
             }
-            Assert-ToolPayload -Tool $tool -Dest (Join-Path $ToolsDir $tool.id)
+            if ($row.source -eq 'existing-path' -and $row.owned -eq $false) {
+                if (-not (Test-Path -LiteralPath $row.command -PathType Leaf)) { throw 'external command missing' }
+            } else { Assert-ToolPayload -Tool $tool -Dest (Join-Path $ToolsDir $tool.id) }
             foreach ($shim in (ConvertTo-Array $tool.shims)) {
                 if (-not (Test-Path -LiteralPath (Join-Path $BinDir ($shim.name + '.cmd')))) { throw "missing shim $($shim.name)" }
             }

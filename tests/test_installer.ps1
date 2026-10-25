@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <## Offline installer regression checks. No downloads or machine configuration writes. ##>
 $ErrorActionPreference = 'Stop'
 $sourceRoot = Split-Path -Parent $PSScriptRoot
@@ -711,6 +711,27 @@ public static class AtomicJsonLockFixture {
         Assert-True ((Get-Content -LiteralPath (Join-Path $zipDest 'probe.cmd') -Raw) -ceq 'old executable' -and
             (Get-Content -LiteralPath (Join-Path $zipDest 'keep.txt') -Raw) -ceq 'old payload') ('ZIP ' + $kind + ' changed the prior payload')
     }
+    # A pinned npm lock must be checked before a CLI is activated.
+    $pinDir=Join-Path $TmpDir 'pin-check'
+    New-Item -ItemType Directory -Path $pinDir | Out-Null
+    $pinTool=[pscustomobject]@{package='rea-agents';package_version='6.8.0';npm_integrity='sha512-expected'}
+    Write-Utf8 -Path (Join-Path $pinDir 'package-lock.json') -Text '{"packages":{"":{"name":"root-fixture"},"node_modules/rea-agents":{"version":"6.8.0","integrity":"sha512-wrong"}}}'
+    $rejected=$false
+    try { Assert-NpmIntegrity -Tool $pinTool -Dest $pinDir } catch { $rejected=$true }
+    Assert-True $rejected 'A mismatched npm integrity was accepted'
+    Write-Utf8 -Path (Join-Path $pinDir 'package-lock.json') -Text '{"packages":{"":{"name":"root-fixture"},"node_modules/rea-agents":{"version":"6.8.0","integrity":"sha512-expected"}}}'
+    Assert-NpmIntegrity -Tool $pinTool -Dest $pinDir
+    $extBin=Join-Path $TmpDir 'external-rea'
+    New-Item -ItemType Directory -Path $extBin | Out-Null
+    Write-Utf8 -Path (Join-Path $extBin 'rea.cmd') -Text "@echo off`r`necho 6.8.0`r`n"
+    $oldPath=$env:PATH; $env:PATH=$extBin+';'+$env:PATH
+    try {
+        $external=Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'})
+        Assert-True ($external.owned -eq $false -and $external.source -eq 'existing-path') 'Global REA was not kept unowned'
+        Assert-True ((Get-Content -LiteralPath (Join-Path $extBin 'rea.cmd') -Raw).Contains('6.8.0')) 'Global REA was modified'
+        $env:PATH=$BinDir
+        Assert-True ($null -eq (Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'}))) 'REA selected its own shim recursively'
+    } finally { $env:PATH=$oldPath }
     Write-Host 'installer regression checks ok'
 } finally {
     $resolved = [IO.Path]::GetFullPath($testRoot)

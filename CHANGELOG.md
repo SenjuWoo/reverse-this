@@ -1,3 +1,9 @@
+## 1.3.0 (2026-10-25)
+
+- Own the optional REA CLI and specialist analysis guidance.
+- Pin npm versions/integrity before activation; reuse matching global REA without changing it.
+- Document shared compiler and Skyrim companion ownership.
+
 # Changelog
 
 ## 1.2.1

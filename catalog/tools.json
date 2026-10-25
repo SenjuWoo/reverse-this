@@ -10,8 +10,14 @@
       "asset_pattern": "^ghidra_.+_PUBLIC_.+\\.zip$",
       "needs_jdk": 25,
       "shims": [
-        {"name": "ghidra", "exe_glob": "ghidraRun.bat"},
-        {"name": "analyzeHeadless", "exe_glob": "analyzeHeadless.bat"}
+        {
+          "name": "ghidra",
+          "exe_glob": "ghidraRun.bat"
+        },
+        {
+          "name": "analyzeHeadless",
+          "exe_glob": "analyzeHeadless.bat"
+        }
       ]
     },
     {
@@ -21,7 +27,12 @@
       "method": "github-release",
       "repo": "WerWolv/ImHex",
       "asset_pattern": "^imhex-.+-Windows-Portable-x86_64\\.zip$",
-      "shims": [{"name": "imhex", "exe_glob": "imhex.exe"}]
+      "shims": [
+        {
+          "name": "imhex",
+          "exe_glob": "imhex.exe"
+        }
+      ]
     },
     {
       "id": "die",
@@ -30,7 +41,12 @@
       "method": "github-release",
       "repo": "horsicq/DIE-engine",
       "asset_pattern": "^die_win64_portable_.+_x64\\.zip$",
-      "shims": [{"name": "diec", "exe_glob": "diec.exe"}]
+      "shims": [
+        {
+          "name": "diec",
+          "exe_glob": "diec.exe"
+        }
+      ]
     },
     {
       "id": "x64dbg",
@@ -39,7 +55,13 @@
       "method": "github-release",
       "repo": "x64dbg/x64dbg",
       "asset_pattern": "^snapshot_[0-9].+\\.zip$",
-      "shims": [{"name": "x64dbg", "exe_glob": "x64dbg.exe", "prefer_path": "\\\\x64\\\\"}]
+      "shims": [
+        {
+          "name": "x64dbg",
+          "exe_glob": "x64dbg.exe",
+          "prefer_path": "\\\\x64\\\\"
+        }
+      ]
     },
     {
       "id": "pe-bear",
@@ -48,7 +70,12 @@
       "method": "github-release",
       "repo": "hasherezade/pe-bear",
       "asset_pattern": "^PE-bear_.+_qt6_x64_win_.+\\.zip$",
-      "shims": [{"name": "pe-bear", "exe_glob": "PE-bear.exe"}]
+      "shims": [
+        {
+          "name": "pe-bear",
+          "exe_glob": "PE-bear.exe"
+        }
+      ]
     },
     {
       "id": "dnspyex",
@@ -57,7 +84,12 @@
       "method": "github-release",
       "repo": "dnSpyEx/dnSpy",
       "asset_pattern": "^dnSpy-net-win64\\.zip$",
-      "shims": [{"name": "dnspy", "exe_glob": "dnSpy.exe"}]
+      "shims": [
+        {
+          "name": "dnspy",
+          "exe_glob": "dnSpy.exe"
+        }
+      ]
     },
     {
       "id": "ilspy",
@@ -66,7 +98,12 @@
       "method": "github-release",
       "repo": "icsharpcode/ILSpy",
       "asset_pattern": "^ILSpy_windows_selfcontained_.+-x64\\.zip$",
-      "shims": [{"name": "ilspy", "exe_glob": "ILSpy.exe"}]
+      "shims": [
+        {
+          "name": "ilspy",
+          "exe_glob": "ILSpy.exe"
+        }
+      ]
     },
     {
       "id": "ilspycmd",
@@ -74,7 +111,12 @@
       "job": ".NET decompiler CLI. This is what an agent should run.",
       "method": "dotnet-tool",
       "package": "ilspycmd",
-      "shims": [{"name": "ilspycmd", "exe_glob": "ilspycmd.exe"}]
+      "shims": [
+        {
+          "name": "ilspycmd",
+          "exe_glob": "ilspycmd.exe"
+        }
+      ]
     },
     {
       "id": "assetripper",
@@ -83,7 +125,13 @@
       "method": "github-release",
       "repo": "AssetRipper/AssetRipper",
       "asset_pattern": "^AssetRipper_win_x64\\.zip$",
-      "shims": [{"name": "assetripper", "exe_glob": "AssetRipper*.exe", "prefer_path": "CLI"}]
+      "shims": [
+        {
+          "name": "assetripper",
+          "exe_glob": "AssetRipper*.exe",
+          "prefer_path": "CLI"
+        }
+      ]
     },
     {
       "id": "il2cppdumper",
@@ -92,7 +140,12 @@
       "method": "github-release",
       "repo": "Perfare/Il2CppDumper",
       "asset_pattern": "^Il2CppDumper-win-.+\\.zip$",
-      "shims": [{"name": "il2cppdumper", "exe_glob": "Il2CppDumper.exe"}]
+      "shims": [
+        {
+          "name": "il2cppdumper",
+          "exe_glob": "Il2CppDumper.exe"
+        }
+      ]
     },
     {
       "id": "fmodel",
@@ -101,7 +154,12 @@
       "method": "github-release",
       "repo": "4sval/FModel",
       "asset_pattern": "^FModel\\.zip$",
-      "shims": [{"name": "fmodel", "exe_glob": "FModel.exe"}]
+      "shims": [
+        {
+          "name": "fmodel",
+          "exe_glob": "FModel.exe"
+        }
+      ]
     },
     {
       "id": "repak",
@@ -110,7 +168,12 @@
       "method": "github-release",
       "repo": "trumank/repak",
       "asset_pattern": "^repak_cli-x86_64-pc-windows-msvc\\.zip$",
-      "shims": [{"name": "repak", "exe_glob": "repak.exe"}]
+      "shims": [
+        {
+          "name": "repak",
+          "exe_glob": "repak.exe"
+        }
+      ]
     },
     {
       "id": "retoc",
@@ -119,7 +182,12 @@
       "method": "github-release",
       "repo": "trumank/retoc",
       "asset_pattern": "^retoc_cli-x86_64-pc-windows-msvc\\.zip$",
-      "shims": [{"name": "retoc", "exe_glob": "retoc.exe"}]
+      "shims": [
+        {
+          "name": "retoc",
+          "exe_glob": "retoc.exe"
+        }
+      ]
     },
     {
       "id": "uassetgui",
@@ -127,8 +195,15 @@
       "job": "Unreal asset editor.",
       "method": "github-files",
       "repo": "atenfyr/UAssetGUI",
-      "files": ["UAssetGUI.exe"],
-      "shims": [{"name": "uassetgui", "exe_glob": "UAssetGUI.exe"}]
+      "files": [
+        "UAssetGUI.exe"
+      ],
+      "shims": [
+        {
+          "name": "uassetgui",
+          "exe_glob": "UAssetGUI.exe"
+        }
+      ]
     },
     {
       "id": "directxtex",
@@ -136,11 +211,24 @@
       "job": "DDS convert, assemble and diagnose.",
       "method": "github-files",
       "repo": "microsoft/DirectXTex",
-      "files": ["texconv.exe", "texassemble.exe", "texdiag.exe"],
+      "files": [
+        "texconv.exe",
+        "texassemble.exe",
+        "texdiag.exe"
+      ],
       "shims": [
-        {"name": "texconv", "exe_glob": "texconv.exe"},
-        {"name": "texassemble", "exe_glob": "texassemble.exe"},
-        {"name": "texdiag", "exe_glob": "texdiag.exe"}
+        {
+          "name": "texconv",
+          "exe_glob": "texconv.exe"
+        },
+        {
+          "name": "texassemble",
+          "exe_glob": "texassemble.exe"
+        },
+        {
+          "name": "texdiag",
+          "exe_glob": "texdiag.exe"
+        }
       ]
     },
     {
@@ -214,8 +302,14 @@
       "method": "renderdoc-stable-zip",
       "repo": "baldurk/renderdoc",
       "shims": [
-        {"name": "renderdoccmd", "exe_glob": "renderdoccmd.exe"},
-        {"name": "qrenderdoc", "exe_glob": "qrenderdoc.exe"}
+        {
+          "name": "renderdoccmd",
+          "exe_glob": "renderdoccmd.exe"
+        },
+        {
+          "name": "qrenderdoc",
+          "exe_glob": "qrenderdoc.exe"
+        }
       ]
     },
     {
@@ -242,7 +336,12 @@
       "job": "Dynamic instrumentation CLI.",
       "method": "pip-venv",
       "package": "frida-tools",
-      "shims": [{"name": "frida", "exe_glob": "frida.exe"}]
+      "shims": [
+        {
+          "name": "frida",
+          "exe_glob": "frida.exe"
+        }
+      ]
     },
     {
       "id": "jadx",
@@ -253,8 +352,14 @@
       "asset_pattern": "^jadx-[0-9].+\\.zip$",
       "needs_jdk": 25,
       "shims": [
-        {"name": "jadx", "exe_glob": "jadx.bat"},
-        {"name": "jadx-gui", "exe_glob": "jadx-gui.bat"}
+        {
+          "name": "jadx",
+          "exe_glob": "jadx.bat"
+        },
+        {
+          "name": "jadx-gui",
+          "exe_glob": "jadx-gui.bat"
+        }
       ]
     },
     {
@@ -281,8 +386,16 @@
       "job": "Identify executable capabilities from static rules; findings need confirmation.",
       "method": "pip-venv",
       "package": "flare-capa",
-      "requires": ["capa-rules", "capa-source"],
-      "shims": [{"name": "capa", "exe_glob": "capa.exe"}]
+      "requires": [
+        "capa-rules",
+        "capa-source"
+      ],
+      "shims": [
+        {
+          "name": "capa",
+          "exe_glob": "capa.exe"
+        }
+      ]
     },
     {
       "id": "kaitai",
@@ -292,7 +405,12 @@
       "repo": "kaitai-io/kaitai_struct_compiler",
       "asset_pattern": "^kaitai-struct-compiler-[0-9].+\\.zip$",
       "needs_jdk": 25,
-      "shims": [{"name": "kaitai-struct-compiler", "exe_glob": "kaitai-struct-compiler.bat"}]
+      "shims": [
+        {
+          "name": "kaitai-struct-compiler",
+          "exe_glob": "kaitai-struct-compiler.bat"
+        }
+      ]
     },
     {
       "id": "pyinstxtractor-ng",
@@ -300,8 +418,15 @@
       "job": "Extract PyInstaller executables. Python bytecode decompilation is a separate step.",
       "method": "github-files",
       "repo": "pyinstxtractor/pyinstxtractor-ng",
-      "files": ["pyinstxtractor-ng.exe"],
-      "shims": [{"name": "pyinstxtractor-ng", "exe_glob": "pyinstxtractor-ng.exe"}]
+      "files": [
+        "pyinstxtractor-ng.exe"
+      ],
+      "shims": [
+        {
+          "name": "pyinstxtractor-ng",
+          "exe_glob": "pyinstxtractor-ng.exe"
+        }
+      ]
     },
     {
       "id": "wasm-tools",
@@ -310,7 +435,12 @@
       "method": "github-release",
       "repo": "bytecodealliance/wasm-tools",
       "asset_pattern": "^wasm-tools-[0-9].+-x86_64-windows\\.zip$",
-      "shims": [{"name": "wasm-tools", "exe_glob": "wasm-tools.exe"}]
+      "shims": [
+        {
+          "name": "wasm-tools",
+          "exe_glob": "wasm-tools.exe"
+        }
+      ]
     },
     {
       "id": "apktool",
@@ -321,7 +451,13 @@
       "asset_pattern": "^apktool_[0-9].+\\.jar$",
       "unpack": "raw",
       "needs_jdk": 25,
-      "shims": [{"name": "apktool", "exe_glob": "apktool_*.jar", "java_jar": true}]
+      "shims": [
+        {
+          "name": "apktool",
+          "exe_glob": "apktool_*.jar",
+          "java_jar": true
+        }
+      ]
     },
     {
       "id": "asar",
@@ -329,7 +465,12 @@
       "job": "List, extract and repack Electron ASAR archives. Requires Node 22.12+.",
       "method": "npm-tool",
       "package": "@electron/asar",
-      "shims": [{"name": "asar", "exe_glob": "asar.cmd"}]
+      "shims": [
+        {
+          "name": "asar",
+          "exe_glob": "asar.cmd"
+        }
+      ]
     },
     {
       "id": "lief",
@@ -346,7 +487,12 @@
       "method": "github-release",
       "repo": "CadeEvs/FrostyToolsuite",
       "asset_pattern": "^FrostyEditor\\.zip$",
-      "shims": [{"name": "frosty-editor", "exe_glob": "FrostyEditor.exe"}]
+      "shims": [
+        {
+          "name": "frosty-editor",
+          "exe_glob": "FrostyEditor.exe"
+        }
+      ]
     },
     {
       "id": "frosty-modmanager",
@@ -355,7 +501,12 @@
       "method": "github-release",
       "repo": "CadeEvs/FrostyToolsuite",
       "asset_pattern": "^FrostyModManager\\.zip$",
-      "shims": [{"name": "frosty-modmanager", "exe_glob": "FrostyModManager.exe"}]
+      "shims": [
+        {
+          "name": "frosty-modmanager",
+          "exe_glob": "FrostyModManager.exe"
+        }
+      ]
     },
     {
       "id": "godot",
@@ -364,7 +515,12 @@
       "method": "github-release",
       "repo": "godotengine/godot",
       "asset_pattern": "^Godot_v.+-stable_mono_win64\\.zip$",
-      "shims": [{"name": "godot", "exe_glob": "*_console.exe"}]
+      "shims": [
+        {
+          "name": "godot",
+          "exe_glob": "*_console.exe"
+        }
+      ]
     },
     {
       "id": "gdre",
@@ -373,7 +529,12 @@
       "method": "github-release",
       "repo": "GDRETools/gdsdecomp",
       "asset_pattern": "^GDRE_tools-.+-windows\\.zip$",
-      "shims": [{"name": "gdre", "exe_glob": "gdre_tools.exe"}]
+      "shims": [
+        {
+          "name": "gdre",
+          "exe_glob": "gdre_tools.exe"
+        }
+      ]
     },
     {
       "id": "ikemen-go",
@@ -382,7 +543,12 @@
       "method": "github-release",
       "repo": "ikemen-engine/Ikemen-GO",
       "asset_pattern": "^Ikemen_GO-.+-windows\\.zip$",
-      "shims": [{"name": "ikemen-go", "exe_glob": "Ikemen_GO.exe"}]
+      "shims": [
+        {
+          "name": "ikemen-go",
+          "exe_glob": "Ikemen_GO.exe"
+        }
+      ]
     },
     {
       "id": "pixelorama",
@@ -391,7 +557,12 @@
       "method": "github-release",
       "repo": "Orama-Interactive/Pixelorama",
       "asset_pattern": "^Pixelorama-Windows-64bit\\.zip$",
-      "shims": [{"name": "pixelorama", "exe_glob": "Pixelorama.exe"}]
+      "shims": [
+        {
+          "name": "pixelorama",
+          "exe_glob": "Pixelorama.exe"
+        }
+      ]
     },
     {
       "id": "7zip",
@@ -401,7 +572,12 @@
       "repo": "ip7z/7zip",
       "asset_pattern": "^7z[0-9]+-x64\\.msi$",
       "unpack": "msi-admin",
-      "shims": [{"name": "7z", "exe_glob": "7z.exe"}]
+      "shims": [
+        {
+          "name": "7z",
+          "exe_glob": "7z.exe"
+        }
+      ]
     },
     {
       "id": "ldtk",
@@ -411,7 +587,12 @@
       "repo": "deepnight/ldtk",
       "asset_pattern": "^LDtk-.+-installer\\.exe$",
       "unpack": "nsis-app64",
-      "shims": [{"name": "ldtk", "exe_glob": "LDtk.exe"}]
+      "shims": [
+        {
+          "name": "ldtk",
+          "exe_glob": "LDtk.exe"
+        }
+      ]
     },
     {
       "id": "openbor",
@@ -421,19 +602,26 @@
       "repo": "DCurrent/openbor",
       "asset_pattern": "^OpenBOR\\.v.+\\.rar$",
       "unpack": "7z",
-      "shims": [{"name": "openbor", "exe_glob": "OpenBOR.exe"}]
+      "shims": [
+        {
+          "name": "openbor",
+          "exe_glob": "OpenBOR.exe"
+        }
+      ]
     },
     {
       "id": "fighter-factory",
       "name": "Fighter Factory",
       "job": "Sprite and fighting-game toolset. Official Windows portable, x64 build.",
       "method": "virtualltek-portable",
-      "shims": [{
-        "name": "fighter-factory",
-        "exe_glob": "ffs.exe",
-        "prefer_path": "\\\\x64\\\\",
-        "require_path": "\\\\x64\\\\ffs\\.exe$"
-      }]
+      "shims": [
+        {
+          "name": "fighter-factory",
+          "exe_glob": "ffs.exe",
+          "prefer_path": "\\\\x64\\\\",
+          "require_path": "\\\\x64\\\\ffs\\.exe$"
+        }
+      ]
     },
     {
       "id": "hd2-runtime-sdk",
@@ -478,7 +666,12 @@
       "method": "github-release",
       "repo": "SkyeShade/HD2Runtime-ModBuilder",
       "asset_pattern": "^HD2Runtime-ModBuilder-.+-win-x64\\.zip$",
-      "shims": [{"name": "hd2-modbuilder", "exe_glob": "HD2RuntimeModBuilder.exe"}]
+      "shims": [
+        {
+          "name": "hd2-modbuilder",
+          "exe_glob": "HD2RuntimeModBuilder.exe"
+        }
+      ]
     },
     {
       "id": "hd2-sdk-community",
@@ -530,23 +723,99 @@
       "method": "github-archive",
       "repo": "SDmodding/SDK-Playground",
       "shims": []
+    },
+    {
+      "id": "rea",
+      "name": "REA (Reverse Engineer Anything)",
+      "job": "Optional static-analysis CLI; no provider setup or global MCP registration.",
+      "method": "npm-tool",
+      "package": "rea-agents",
+      "package_version": "6.8.0",
+      "npm_integrity": "sha512-9QDeRnGqEDzABZyr04eLnBXBv/c6I9/TWu/6M0MD4pEfkySI/BIgwTODIbAReX3C1x6hjw9+Jlx4A2yUSPZ9ww==",
+      "shims": [
+        {
+          "name": "rea",
+          "exe_glob": "rea.cmd",
+          "prefer_path": "node_modules/.bin"
+        }
+      ]
     }
   ],
   "retired": [
-    {"id": "assetstudio", "instead": "assetripper", "why": "The AssetStudio repository is archived."},
-    {"id": "dnspy", "instead": "dnspyex", "why": "The original dnSpy repository is archived."},
-    {"id": "uabe", "instead": "uabea", "why": "Original UABE is unsupported. UABEA is the build that still publishes a Windows zip."},
-    {"id": "umodel-ue4", "instead": "fmodel", "why": "UE Viewer/UModel supports older Unreal and many UE4 games. Keep it as a target-specific manual route; FModel, repak and retoc are the default modern Unreal toolset here."},
-    {"id": "cpp2il-2022-binary", "instead": "il2cppdumper", "why": "Cpp2IL's latest stable binary is 2022.0.7, but active preview binaries are published. Keep Il2CppDumper as this kit's default and use the documented target-specific Cpp2IL preview route when needed."},
-    {"id": "ue4ss-stable", "instead": "ue4ss", "why": "The stable UE4SS tag lags the experimental release. The kit installs experimental-latest."},
-    {"id": "bepinex6-pre2", "instead": "melonloader", "why": "BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader."},
-    {"id": "cheat-engine-download", "instead": null, "why": "The Cheat Engine GitHub release ships no binary. The kit does not download the bundled website installer."},
-    {"id": "reclass-rar", "instead": null, "why": "ReClass.NET's only published binary is the 2019 v1.2 rar. The source kept changing through 2024 and published no newer binary."},
-    {"id": "3dmigoto-tag", "instead": null, "why": "The tagged 3Dmigoto release is from 2018, the repository has continued, and that release attaches every historical zip so one pattern cannot select a current file."},
-    {"id": "sinai-unityexplorer", "instead": "unityexplorer-bepinex5", "why": "sinai-dev/UnityExplorer is archived. The kit uses the yukieiji fork."},
-    {"id": "frosty-rewrite", "instead": "frosty-editor", "why": "FrostyToolsuite/FrostyToolsuite publishes no release. The kit installs the stable Editor and Mod Manager zips."},
-    {"id": "ldtk-installer", "instead": "ldtk", "why": "LDtk's Windows file is an installer. The kit unpacks it with 7-Zip and does not run it."},
-    {"id": "openbor-rar", "instead": "openbor", "why": "OpenBOR's Windows file is a rar. The kit unpacks it with 7-Zip."},
-    {"id": "fighter-factory-installer", "instead": "fighter-factory", "why": "The old dump only had an installer. The kit downloads the official Windows portable zip."}
+    {
+      "id": "assetstudio",
+      "instead": "assetripper",
+      "why": "The AssetStudio repository is archived."
+    },
+    {
+      "id": "dnspy",
+      "instead": "dnspyex",
+      "why": "The original dnSpy repository is archived."
+    },
+    {
+      "id": "uabe",
+      "instead": "uabea",
+      "why": "Original UABE is unsupported. UABEA is the build that still publishes a Windows zip."
+    },
+    {
+      "id": "umodel-ue4",
+      "instead": "fmodel",
+      "why": "UE Viewer/UModel supports older Unreal and many UE4 games. Keep it as a target-specific manual route; FModel, repak and retoc are the default modern Unreal toolset here."
+    },
+    {
+      "id": "cpp2il-2022-binary",
+      "instead": "il2cppdumper",
+      "why": "Cpp2IL's latest stable binary is 2022.0.7, but active preview binaries are published. Keep Il2CppDumper as this kit's default and use the documented target-specific Cpp2IL preview route when needed."
+    },
+    {
+      "id": "ue4ss-stable",
+      "instead": "ue4ss",
+      "why": "The stable UE4SS tag lags the experimental release. The kit installs experimental-latest."
+    },
+    {
+      "id": "bepinex6-pre2",
+      "instead": "melonloader",
+      "why": "BepInEx 6.0.0-pre.2 is an old prerelease. Mono games get current BepInEx 5. IL2CPP gets current MelonLoader."
+    },
+    {
+      "id": "cheat-engine-download",
+      "instead": null,
+      "why": "The Cheat Engine GitHub release ships no binary. The kit does not download the bundled website installer."
+    },
+    {
+      "id": "reclass-rar",
+      "instead": null,
+      "why": "ReClass.NET's only published binary is the 2019 v1.2 rar. The source kept changing through 2024 and published no newer binary."
+    },
+    {
+      "id": "3dmigoto-tag",
+      "instead": null,
+      "why": "The tagged 3Dmigoto release is from 2018, the repository has continued, and that release attaches every historical zip so one pattern cannot select a current file."
+    },
+    {
+      "id": "sinai-unityexplorer",
+      "instead": "unityexplorer-bepinex5",
+      "why": "sinai-dev/UnityExplorer is archived. The kit uses the yukieiji fork."
+    },
+    {
+      "id": "frosty-rewrite",
+      "instead": "frosty-editor",
+      "why": "FrostyToolsuite/FrostyToolsuite publishes no release. The kit installs the stable Editor and Mod Manager zips."
+    },
+    {
+      "id": "ldtk-installer",
+      "instead": "ldtk",
+      "why": "LDtk's Windows file is an installer. The kit unpacks it with 7-Zip and does not run it."
+    },
+    {
+      "id": "openbor-rar",
+      "instead": "openbor",
+      "why": "OpenBOR's Windows file is a rar. The kit unpacks it with 7-Zip."
+    },
+    {
+      "id": "fighter-factory-installer",
+      "instead": "fighter-factory",
+      "why": "The old dump only had an installer. The kit downloads the official Windows portable zip."
+    }
   ]
 }
