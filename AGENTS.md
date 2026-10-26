@@ -6,13 +6,13 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 
 ## Find the kit
 
-1. If this file exists, the kit root is its directory.
-2. Read `sandbox/installed.json`. Call the shims it names under `sandbox/bin`.
-3. If that file is missing, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1` and read `sandbox/installed.json` again.
-4. If you were not started inside the kit, read `%LOCALAPPDATA%\ReverseThis\kit.json`. It has `kit_root`, `installed_json` and `bin`. Then follow those paths.
+1. Read `%LOCALAPPDATA%\ReverseThis\kit.json` when present. Its validated `kit_root`, `installed_json` and `bin` identify the canonical owner; a different source checkout reuses it.
+2. Read that owner's `sandbox/installed.json`. Call the shims it names under `sandbox/bin`.
+3. If no owner pointer exists, this source directory is the initial kit root. Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1` when installation is needed.
+4. Tests use an explicit `-InstallRoot` and isolated state. That override never rewrites the shared pointer. An invalid owner receipt is a repair issue, not permission to create a duplicate kit.
 5. Stop if none of those exist. Ask for the kit root. Do not scan `Program Files`, Downloads, or a personal tools dump.
 
-`Install-Modkit.ps1 -Plan` prints the catalog and downloads nothing. Release tools resolve the current release on each run and reuse matching payloads; package tools reuse installed versions until `-Force`, except capa, which tracks its release with matching rules/signatures. `-Force` also reinstalls matching release payloads. `-Doctor` checks installed records and required files without downloading, not runtime behavior. Add `-DebugLog` to a repair run when detailed package/archive output is needed.
+`Install-Modkit.ps1 -Plan` prints the catalog without network or writes. Normal runs update old owned release/pip/npm/NuGet tools while preserving pins, newer valid versions and rollback backups. `-NoUpdate` retains installed versions; missing selections can install. `-Doctor`/`-Offline` check receipts/files without network, setup or writes, not runtime behavior. Add `-DebugLog` for detailed diagnostics. The workbench provisions its own missing shared prerequisites; the bundle is optional. Read `docs/standalone.md` before changing ownership or using external tool receipts, and `docs/companions.md` for task routing and snapshot provenance.
 
 ## Paths
 
