@@ -27,6 +27,14 @@ $oldBinding=$env:UABS_PYTHON; $oldRoots=$env:UABS_TOOL_ROOTS; $oldPath=$env:PATH
 $NoUpdate=$false; $Force=$false; $script:Node=$null; $script:PythonExe=$null
 try {
     New-Item -ItemType Directory -Path $testRoot -Force | Out-Null
+    # Hidden parents (including the real AppData on clean Windows) remain valid path evidence.
+    $hiddenParent=Join-Path $testRoot 'hidden-parent'
+    New-Item -ItemType Directory -Path $hiddenParent | Out-Null
+    (Get-Item -LiteralPath $hiddenParent -Force).Attributes=[IO.FileAttributes]::Directory -bor [IO.FileAttributes]::Hidden
+    $updaterAst=[Management.Automation.Language.Parser]::ParseFile((Join-Path $root 'Update-ReverseThis.ps1'),[ref]$null,[ref]$null)
+    $guard=$updaterAst.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Assert-SourceWritePath'},$true)
+    Invoke-Expression $guard.Extent.Text
+    Assert-SourceWritePath (Join-Path $hiddenParent 'new-tool')
     $KitRoot=Join-Path $testRoot 'owner'; $Sandbox=Join-Path $KitRoot 'sandbox'; $ToolsDir=Join-Path $Sandbox 'tools'; $BinDir=Join-Path $Sandbox 'bin'
     New-Item -ItemType Directory -Path $ToolsDir,$BinDir -Force | Out-Null
     $statePath=Join-Path $Sandbox 'installed.json'; $pointer=Join-Path $testRoot 'kit.json'

@@ -15,7 +15,7 @@ Done:
 
 Validation: all seven offline checks pass in Windows PowerShell 5.1 and PowerShell 7; all source PowerShell files parse in both editions. The Python standard-library catalog gate passes for 58 tools and version 1.4.0. See VALIDATION.md for commands and limits. Disposable fixtures exercised local archives and actual filesystem/batch boundaries; they did not install or update live tools.
 
-Next: parent release workflow reviews the source diff, pushes the exact revision, converges CI/security checks, packages and verifies public archive bytes. Live deployment is a separate remaining gate; the installed kit and pointer remain unchanged by this source work.
+Next: PR #7 tests the pushed 1.4 candidate. The first CI run exposed hidden AppData path probes; all read-only Get-Item probes now use -Force, with a hidden-parent regression. Converge the corrected exact-SHA CI/security, then package and verify public archive bytes. Live deployment is a separate remaining gate; the installed kit and pointer remain unchanged by this source work.
 
 Last good public version: 1.3.0, commit f91aec703857d77cfa0d423ddbcbe77cb20c5cf2. Its source/archive and installed payload/state backups remain the rollback baseline.
 

@@ -26,7 +26,7 @@ function Assert-SourceWritePath {
     param([string]$Path)
     $probe = $Path
     while ($probe) {
-        if ((Test-Path -LiteralPath $probe) -and ((Get-Item -LiteralPath $probe).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Linked source destination refused: $Path" }
+        if ((Test-Path -LiteralPath $probe) -and ((Get-Item -LiteralPath $probe -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Linked source destination refused: $Path" }
         $parent = Split-Path -Parent $probe
         if ($parent -eq $probe) { break }
         $probe = $parent
@@ -173,7 +173,7 @@ try {
         $resolved = [IO.Path]::GetFullPath($temp)
         if ((Split-Path -Parent $resolved).TrimEnd('\') -ne ([IO.Path]::GetTempPath()).TrimEnd('\') -or
             (Split-Path -Leaf $resolved) -notmatch '^reverse-this-update-[a-f0-9]{32}$' -or
-            ((Get-Item -LiteralPath $resolved).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Unsafe source-update temporary cleanup refused.' }
+            ((Get-Item -LiteralPath $resolved -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Unsafe source-update temporary cleanup refused.' }
         Remove-Item -LiteralPath $resolved -Recurse -Force
     }
 }

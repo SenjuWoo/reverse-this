@@ -68,7 +68,7 @@ function Resolve-OwnerRoot {
         -not (Test-Path -LiteralPath $expectedState -PathType Leaf)) { throw 'Invalid Reverse THIS! owner pointer: manifest/bin do not match the registered root.' }
     $state = Get-Content -LiteralPath $expectedState -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($state.schema -ne 1 -or -not $state.kit_root -or $state.kit_root.TrimEnd('\') -ne $owner -or -not $state.tools) { throw 'Invalid Reverse THIS! installed owner receipt.' }
-    if ((Get-Item -LiteralPath $owner).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refusing a linked owner root.' }
+    if ((Get-Item -LiteralPath $owner -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refusing a linked owner root.' }
     return $owner
 }
 
@@ -522,7 +522,7 @@ function Save-Url {
     if ($code -ne 0 -or -not (Test-Path -LiteralPath $Dest)) {
         throw "download failed ($code) $Url"
     }
-    if ((Get-Item -LiteralPath $Dest).Length -le 0) { throw "empty download $Url" }
+    if ((Get-Item -LiteralPath $Dest -Force).Length -le 0) { throw "empty download $Url" }
 }
 
 function Get-Sha256Hex {
@@ -606,14 +606,14 @@ function Assert-OwnedToolPath {
     if (-not $registered -and (-not $full.StartsWith($root, [StringComparison]::OrdinalIgnoreCase) -or
         (Split-Path -Parent $full) -ne $root.TrimEnd('\'))) { throw "not an owned tool directory: $Path" }
     if (Test-Path -LiteralPath $Path) {
-        $links = @(Get-Item -LiteralPath $Path) + @(Get-ChildItem -LiteralPath $Path -Recurse -Force)
+        $links = @(Get-Item -LiteralPath $Path -Force) + @(Get-ChildItem -LiteralPath $Path -Recurse -Force)
         if ($links | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }) {
             throw "refusing linked tool directory: $Path"
         }
     }
     $ancestor = Split-Path -Parent $full
     while ($ancestor) {
-        if ((Test-Path -LiteralPath $ancestor) -and ((Get-Item -LiteralPath $ancestor).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "refusing linked tool ancestor: $Path" }
+        if ((Test-Path -LiteralPath $ancestor) -and ((Get-Item -LiteralPath $ancestor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "refusing linked tool ancestor: $Path" }
         $parent = Split-Path -Parent $ancestor
         if ($parent -eq $ancestor) { break }
         $ancestor = $parent
@@ -727,7 +727,7 @@ function Get-JavaMajor {
 function Find-JdkHome {
     param([int]$Major)
     $homes = @()
-    if ($env:JAVA_HOME) { $homes += @(Get-Item -LiteralPath $env:JAVA_HOME -ErrorAction SilentlyContinue) }
+    if ($env:JAVA_HOME) { $homes += @(Get-Item -LiteralPath $env -Force:JAVA_HOME -ErrorAction SilentlyContinue) }
     $javaCmd = Get-Command java -ErrorAction SilentlyContinue
     if ($javaCmd) { $homes += @(Get-Item -LiteralPath (Split-Path -Parent (Split-Path -Parent $javaCmd.Source)) -ErrorAction SilentlyContinue) }
     foreach ($n in $Major..40) {
@@ -773,7 +773,7 @@ function Find-ToolFile {
         if ($preferred.Count -gt 1) { throw "ambiguous executable $Glob under $Root" }
     }
     # Portable archives can also contain helpers for another architecture.
-    $direct = @($hits | Where-Object { $_.DirectoryName -eq (Get-Item -LiteralPath $Root).FullName })
+    $direct = @($hits | Where-Object { $_.DirectoryName -eq (Get-Item -LiteralPath $Root -Force).FullName })
     if ($direct.Count -eq 1) { return $direct[0] }
     if ($hits.Count -gt 1) { throw "ambiguous executable $Glob under $Root" }
     return $hits[0]
@@ -1631,7 +1631,7 @@ $LogPath = Join-Path $LogDir 'modkit.log'
 $StatePath = Join-Path $Sandbox 'installed.json'
 if ($InstallRoot) { $PointerPath = $null }
 foreach ($path in @($KitRoot,$Sandbox,$BinDir,$ToolsDir,$TmpDir,$LogDir)) {
-    if ((Test-Path -LiteralPath $path) -and ((Get-Item -LiteralPath $path).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Linked owner state path refused: $path" }
+    if ((Test-Path -LiteralPath $path) -and ((Get-Item -LiteralPath $path -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Linked owner state path refused: $path" }
 }
 
 $catalog = Get-Catalog
