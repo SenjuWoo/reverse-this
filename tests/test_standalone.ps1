@@ -317,3 +317,6 @@ function global:Get-FileHash {
         Remove-Item -LiteralPath $resolved -Recurse -Force
     }
 }
+
+# Expected failed child probes must not become the GitHub shell wrapper's final exit status.
+exit 0

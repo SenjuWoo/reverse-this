@@ -8,6 +8,8 @@ Source baseline: published 1.3.0 at f91aec703857d77cfa0d423ddbcbe77cb20c5cf2. No
 - Runtime regressions retain Java/.NET bindings in NoUpdate, the JDK for normal reuse of a newer tool, and the selected compatible Node when a different Node leads the caller's PATH. Capa retains its matched version, repairs a missing signature file and uses external support paths. Existing archive, backup, atomic-JSON, transaction rollback, batch quoting/exit and .NET tests remain green.
 - Actual local source archives exercise digest rejection, unchanged released-source promotion, retained last-good files, private-work preservation, edited-public-file refusal, new-path collision refusal, Git-root refusal, fresh empty/missing destination deployment and nonempty-unowned refusal. A deterministic hash-boundary fixture advances the prior valid release after the initial version read; the updater rechecks under its lock and preserves that newer release. Fixtures live outside Git ancestors so the same test works in CI checkouts.
 
+CI resume: hidden AppData metadata probes now use forced read-only lookup, preserving reparse-point checks. The standalone fixture explicitly returns success after its expected failed child probes; both GitHub-style shell wrappers pass locally.
+
 Source-only gate: SCOPE PASS; DIFF REVIEW PASS; BUILD/COMPILE N/A (scripts); TESTS/VALIDATORS PASS. PACKAGE INSPECTION/PUBLICATION pending in the parent release workflow. Real missing-prerequisite setup, online package/source release resolution, GUI/game targets and Sandbox guests were not retested. These offline results do not claim live deployment or public 1.4 byte verification.
 
 ## Historical 1.3.0 modular verification
