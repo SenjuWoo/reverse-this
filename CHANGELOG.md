@@ -1,3 +1,12 @@
+## 1.4.0 (2026-10-26)
+
+- Reuse the registered owner kit from another checkout and keep explicit isolated test roots separate from its pointer.
+- Discover shared base Python and compatible Node/npm independently; provision missing official prerequisites and patch manager-owned installations without replacing app runtimes.
+- Resolve owned pip, npm and NuGet package updates on normal runs; retain intentional pins, newer compatible versions and transactional backups. Add NoUpdate and read-only Offline modes.
+- Reuse explicit owner tool receipts in place, including scoped UABS_TOOL_ROOTS candidates; validate file hashes without launching GUI tools.
+- Add an official digest-verified source release updater with fresh empty-destination support, previous-release hash checks, local-edit/collision refusal and retained source backups; preserve Git development roots and private sandbox files.
+- Retain selected Java/.NET/Node runtime bindings in normal and NoUpdate shims, repair missing matched capa support files and bind external capa support directories correctly. Recheck the installed source version under its lock to preserve a newer concurrent release.
+- Document standalone setup, companion ownership and the supplied upstream snapshot licenses; test local source archives and runtime/receipt failure boundaries.
 ## 1.3.0 (2026-10-25)
 
 - Own the optional REA CLI and specialist analysis guidance.

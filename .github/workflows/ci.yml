@@ -47,6 +47,8 @@ jobs:
         run: ./tests/test_entrypoint.ps1
       - name: dotnet prerequisite regression checks
         run: ./tests/test_dotnet_prerequisite.ps1
+      - name: standalone ownership, runtime and source-update boundaries
+        run: ./tests/test_standalone.ps1
 
   installer:
     runs-on: ubuntu-latest

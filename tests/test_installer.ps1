@@ -445,10 +445,13 @@ public static class AtomicJsonLockFixture {
 
     $savedPath = $env:PATH
     $savedNpmVersion = $env:RT_NPM_VERSION
+    $savedNodeInitializer = ${function:Initialize-SharedNode}
     try {
         $npmBin = Join-Path $TmpDir 'fake npm'
         New-Item -ItemType Directory -Path $npmBin | Out-Null
         $npmExe = Join-Path $npmBin 'npm.cmd'
+        # Runtime discovery has separate boundary checks; this fixture must invoke only its owned fake npm.
+        function Initialize-SharedNode { param([bool]$Rea) return [pscustomobject]@{node=(Join-Path $npmBin 'node.exe'); npm=$npmExe; version='v24.22.1'} }
         Write-Utf8 -Path $npmExe -Text (@(
             '@echo off'
             'echo npm progress'
@@ -479,6 +482,7 @@ public static class AtomicJsonLockFixture {
         $Force = $false
         $env:PATH = $savedPath
         $env:RT_NPM_VERSION = $savedNpmVersion
+        Set-Item Function:\Initialize-SharedNode $savedNodeInitializer
     }
 
     $savedNpmInstall = ${function:Install-NpmTool}
@@ -590,6 +594,22 @@ public static class AtomicJsonLockFixture {
         $capaRecord.version = '99.2.3'
         Write-AtomicJson -Path (Join-Path $capaDest '.kit-record.json') -Text ($capaRecord | ConvertTo-Json -Depth 8)
         Assert-True (Test-AlreadyInstalled -Dest $capaDest -Marker 'present') 'A matching capa package was not reusable'
+
+        # NoUpdate keeps capa's recorded release while still repairing its exact support group.
+        $NoUpdate = $true
+        function Get-GitHubRelease { throw 'NoUpdate queried the latest capa release.' }
+        try {
+            $script:CapaDependencies = @()
+            $retained = Install-One $capaTool
+            Assert-True ($retained.version -eq '99.2.3' -and $script:CapaDependencies.Count -eq 0) 'NoUpdate failed to reuse the matched capa group without release lookup'
+            Remove-Item -LiteralPath (Join-Path $ToolsDir 'capa-source\sigs\fixture.sig')
+            $retained = Install-One $capaTool
+            Assert-True ($retained.version -eq '99.2.3' -and $script:CapaDependencies.Count -eq 1 -and
+                $script:CapaDependencies[0].id -eq 'capa-source' -and $script:CapaDependencies[0].tag -eq 'v99.2.3') 'NoUpdate skipped a missing capa support file or changed its matched version'
+        } finally {
+            $NoUpdate = $false
+            function Get-GitHubRelease { return [pscustomobject]@{ tag_name = $script:CapaTag } }
+        }
 
         $script:InstallState.tools | Add-Member -NotePropertyName capa -NotePropertyValue $capaRecord -Force
         Merge-ExtraInstalled $script:InstallState
@@ -729,6 +749,14 @@ public static class AtomicJsonLockFixture {
         $external=Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'})
         Assert-True ($external.owned -eq $false -and $external.source -eq 'existing-path') 'Global REA was not kept unowned'
         Assert-True ((Get-Content -LiteralPath (Join-Path $extBin 'rea.cmd') -Raw).Contains('6.8.0')) 'Global REA was modified'
+        $env:PATH=$extBin
+        Write-Utf8 -Path (Join-Path $extBin 'rea.cmd') -Text "@echo off`r`necho 6.9.0`r`n"
+        $external=Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'})
+        Assert-True ($external.owned -eq $false -and $external.version -eq '6.9.0') 'Newer compatible global REA was not retained with its observed version'
+        Write-Utf8 -Path (Join-Path $extBin 'rea.cmd') -Text "@echo off`r`necho 6.7.0`r`n"
+        $rejected=$false
+        try { Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'}) | Out-Null } catch { $rejected=$_.Exception.Message -match 'no duplicate was installed' }
+        Assert-True $rejected 'An older unowned REA was silently duplicated'
         $env:PATH=$BinDir
         Assert-True ($null -eq (Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'}))) 'REA selected its own shim recursively'
     } finally { $env:PATH=$oldPath }
