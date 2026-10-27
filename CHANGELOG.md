@@ -1,3 +1,7 @@
+## Unreleased
+
+- Add the MIT replica-skill pack (app recon, clean-room rebuild, parity diff) as an optional source archive under sandbox/tools.
+
 ## 1.5.0 (2026-10-27)
 
 - Add a reproducible repository-owned product builder from exact Git objects; private/untracked files, development ledgers and changelogs stay outside runtime ZIPs.
