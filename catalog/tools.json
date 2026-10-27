@@ -725,6 +725,14 @@
       "shims": []
     },
     {
+      "id": "replica-skill",
+      "name": "Replica skills",
+      "job": "Clean-room app recon, rebuild and parity-diff Claude skills (MIT). Copy the replica-* folders into a skills directory to use them.",
+      "method": "github-archive",
+      "repo": "Jakeschincariol/replica-skill",
+      "shims": []
+    },
+    {
       "id": "rea",
       "name": "REA (Reverse Engineer Anything)",
       "job": "Optional static-analysis CLI; no provider setup or global MCP registration.",

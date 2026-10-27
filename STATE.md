@@ -1,3 +1,7 @@
+# Reverse THIS! 1.6.0 candidate (2026-10-27)
+
+- Adds optional replica-skill (Jakeschincariol/replica-skill, MIT) as a github-archive catalog entry; catalog 59 tools. Real isolated install PASS (receipt records commit 77c9436). Last good: 1.5.0 (v1.5.0). Run: install.cmd; Install-Modkit.ps1 -Doctor. CI/release evidence below once complete.
+
 # Reverse THIS! 1.5.0 — verified handoff (2026-10-27)
 
 - Source/product complete. Frozen public tag v1.5.0: ab9b842d8a5f7bfce7c128f5f94c1421e3933723. Later handoff commits update documentation only.
