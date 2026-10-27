@@ -460,8 +460,8 @@ function Invoke-SelfTest {
         $failed += "ue4ss api url is $api"
     }
     $ffExpect = 'https://virtualltek.com/wp-content/uploads/wpforo/default_attachments/1/1707418391-375_windows_port.zip'
-    $ffDownload = Get-Content -LiteralPath (Join-Path $KitRoot 'tests\fixtures\fighter-factory-download.html') -Raw -Encoding UTF8
-    $ffTopic = Get-Content -LiteralPath (Join-Path $KitRoot 'tests\fixtures\fighter-factory-topic.html') -Raw -Encoding UTF8
+    $ffDownload = Get-Content -LiteralPath (Join-Path $KitRoot 'catalog\selftest\fighter-factory-download.html') -Raw -Encoding UTF8
+    $ffTopic = Get-Content -LiteralPath (Join-Path $KitRoot 'catalog\selftest\fighter-factory-topic.html') -Raw -Encoding UTF8
     try {
         $ffZip = Resolve-FighterFactoryZipUrl -DownloadHtml $ffDownload -TopicHtml $ffTopic
         if ($ffZip -ne $ffExpect) { $failed += "fighter factory zip is $ffZip" }

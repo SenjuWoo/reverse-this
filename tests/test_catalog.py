@@ -132,8 +132,8 @@ def main():
     if release_api(ue["repo"], ue["release"]).endswith("/releases/latest"):
         errors.append("ue4ss must not track the stable latest release")
 
-    ff_download = (ROOT / "tests/fixtures/fighter-factory-download.html").read_text(encoding="utf-8")
-    ff_topic = (ROOT / "tests/fixtures/fighter-factory-topic.html").read_text(encoding="utf-8")
+    ff_download = (ROOT / "catalog/selftest/fighter-factory-download.html").read_text(encoding="utf-8")
+    ff_topic = (ROOT / "catalog/selftest/fighter-factory-topic.html").read_text(encoding="utf-8")
     ff_expect = "https://virtualltek.com/wp-content/uploads/wpforo/default_attachments/1/1707418391-375_windows_port.zip"
     ff_topic_match = re.search(r'href="(/community/[^"]*winport[^"]*)"', ff_download)
     if ff_topic_match is None or not re.fullmatch(r"/community/[A-Za-z0-9][A-Za-z0-9./_-]*winport/?", ff_topic_match.group(1)):
