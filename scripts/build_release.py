@@ -5,7 +5,7 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCT_FILES = {'VERSION','LICENSE','README.md','AGENTS.md','CLAUDE.md','Install-Modkit.ps1',
-                 'Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd'}
+                 'Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd','catalog/asset-pattern-fixtures.json'}
 
 
 def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:

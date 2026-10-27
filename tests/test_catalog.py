@@ -44,7 +44,7 @@ def release_api(repo, release):
 def main():
     errors = []
     catalog = load("catalog/tools.json")
-    fixture = load("tests/fixtures/assets.json")
+    fixture = load("catalog/asset-pattern-fixtures.json")
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
