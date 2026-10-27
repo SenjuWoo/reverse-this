@@ -1,3 +1,13 @@
+# Reverse THIS! 1.5.0 — verified handoff (2026-10-27)
+
+- Source/product complete. Frozen public tag v1.5.0: ab9b842d8a5f7bfce7c128f5f94c1421e3933723. Later handoff commits update documentation only.
+- Exact-commit checks and dual-shell installer/catalog/archive gates PASS; security alerts 0/0/0, code quality unavailable and left off. Extracted SelfTest/Plan PASS without writing state. Runtime SelfTest inputs live in catalog, not developer tests.
+- Product ZIP 64,217 bytes; SHA256 5734af455687f5c4345a497f8ea672e6fb0d2249f060e79ada36628b09b8a7ca. Two builds identical. Both public assets downloaded and match build bytes, GitHub digests and checksums.
+- Approved existing live owner upgraded to 1.5.0, with source backups retained under sandbox/backups/source-1.5.0-62f9c745017b4caab100684cbb66b0b4. Existing selection refreshed with NoUpdate: 56 succeeded, 0 failed; read-only doctor PASS. Private target work and tool versions preserved.
+- Last-good prior source: 1.4.1. Run: install.cmd; Install-Modkit.ps1 -Doctor; source tests: python tests/test_delivery.py and tests/test_standalone.ps1. Build: python scripts/build_release.py <new-output.zip> --commit <tested-SHA>. Logs: installed sandbox/log/modkit.log and source-update.log; detailed logs opt in with DebugLog.
+- Evidence: Starter Bundle artifacts/final-assurance/reverse150-final/verified/final.local.json and reverse150-live-*.log. Bundle owns the global three-repository handoff and its pending Forge/bundle phases.
+- Exact limits: doctor checks files/receipts, not every real target/GUI; no guest Sandbox or paid API/inference proof. No further Reverse implementation/release work remains.
+
 # Final assurance 1.5.0 candidate (2026-10-27)
 
 Ownership, frozen-commit product builder and transactional obsolete-file retirement implemented. Real archive regression and source-upgrade tests PASS. Full dual-shell gates, exact-SHA CI/security, release-byte proof and approved live refresh pending. Last good: 1.4.1; log/evidence: Starter Bundle artifacts/final-assurance. Run: install.cmd; tests/test_standalone.ps1; python scripts/build_release.py <new-output.zip> --commit <tested-SHA>. Historical evidence below.
