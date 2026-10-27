@@ -1,26 +1,14 @@
-# Reverse THIS! state
+# Reverse THIS! 1.4.0 verified release handoff
 
-Version: 1.4.0 source candidate (2026-10-26)
-
-Goal: keep the workbench independently installable and safely reusable alongside the Starter Bundle and Skyrim Forge. Preserve one canonical owner, shared runtimes, private analysis, installed choices and newer compatible tools.
-
-Done:
-
-- A different source checkout reuses the registered canonical owner. Explicit absolute non-root `-InstallRoot` isolates tool state and never registers or moves the shared pointer.
-- Shared Python resolves Process/User `UABS_PYTHON` before validated base discovery; official manager setup and current-feature patch updates are independent of the bundle. Shared Node/npm compatibility and ownership govern official setup/updates; app runtimes and unowned incompatible installations are preserved.
-- Normal runs resolve owned package updates; intentional pins and newer valid versions remain. `-NoUpdate` keeps valid installed versions and runtime bindings while repairing missing matched capa support. `-Offline`/`-Doctor` inspect files without network, setup or writes.
-- Explicit external owner receipts bind launchers/package metadata to hashes and retain their directories. Capa shims use the selected support owner paths.
-- `Update-ReverseThis.ps1` deploys verified public source into an empty destination or an unchanged released kit. It requires the archive digest and release receipt, refuses Git/link roots, local edits and path collisions, retains source backups and preserves private sandbox content.
-- Standalone setup, companion routes and supplied upstream snapshot provenance are documented. CI runs the added standalone boundary test in both PowerShell editions.
-
-Validation: all seven offline checks pass in Windows PowerShell 5.1 and PowerShell 7; all source PowerShell files parse in both editions. The Python standard-library catalog gate passes for 58 tools and version 1.4.0. See VALIDATION.md for commands and limits. Disposable fixtures exercised local archives and actual filesystem/batch boundaries; they did not install or update live tools.
-
-Next: PR #7 tests the pushed 1.4 candidate. The first CI run exposed hidden AppData path probes; all read-only Get-Item probes now use -Force, with a hidden-parent regression. Converge the corrected exact-SHA CI/security, then package and verify public archive bytes. Live deployment is a separate remaining gate; the installed kit and pointer remain unchanged by this source work.
-
-Last good public version: 1.3.0, commit f91aec703857d77cfa0d423ddbcbe77cb20c5cf2. Its source/archive and installed payload/state backups remain the rollback baseline.
-
-Logs: canonical `<kit>/sandbox/log/modkit.log`; source updates use `<kit>/sandbox/log/source-update.log`. `-DebugLog` enables details. Private work, installed state, tools, logs and backups stay outside Git/public releases.
-
-Run: `powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1`; select installed choices with `-Only id1,id2`. Source update: `Update-ReverseThis.ps1 -Destination <absolute kit> [-Archive <zip> -Sha256 <expected digest>]`. Each source archive's `RELEASE.json` binds its commit and public files.
-
-Limits: no actual missing-runtime winget installation, network package upgrade, Windows Sandbox guest, GUI/game target execution or 1.4 public release was certified in this pass. Prior 1.3 REA CLI/static-fixture evidence and prior release tool smoke evidence remain historical, not proof of every current target workflow.
+- Goal: an independently installable analysis workbench with one canonical owner, shared runtimes, safe updates and preserved private analysis/settings.
+- Owner: this Git checkout. Public version 1.4.0; source/tag 979fa17c7a9b7687a433e4f6a1e4689940d3b756. Previous public rollback baseline: 1.3.0, retained in Git tags, release archives and installed payload/state backups.
+- Published: https://github.com/SenjuWoo/reverse-this/releases/tag/v1.4.0 . PR #7 and its corrected head/main checks/security passed. The deterministic source archive passed CRC/extraction and extracted catalog/standalone tests. Both public assets were downloaded and matched local bytes, GitHub digests and SHA256SUMS.
+- Public ZIP: 108,789 bytes; SHA256 4087251269e6da95ffa563837ad4b6c684b4d60d52fe9873b3a6874351d5c24b.
+- Done: canonical owner reuse, isolated explicit roots, shared Python/Node bootstrap and manager-owned patch policy, normal owned-package updates with pin/newer preservation, validated external receipts, source-update backup/rollback and race protection, and selected Java/Node binding in all generated shims.
+- Verification: seven offline checks on PowerShell 5.1 and 7, real batch/filesystem boundaries, catalog 58 entries, extracted-package proof, and exact-SHA CI/security. Negative controls prove the source-version race and Node-binding regressions. Hidden AppData and expected native-failure exit handling are covered under the actual Actions shell invocation.
+- Source implementation/publication remaining: none. Cross-product live installation and provider proof are tracked by the Starter Bundle STATE.md; source status is not installed-target certification.
+- Companion boundaries: Starter Bundle owns general AI/build tools and project build-system guidance; Skyrim Forge owns Skyrim tools/SDK guidance. Their presence is optional. This workbench never rewrites provider trust or model choices.
+- Run: powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1 . Select tools with -Only id1,id2; -Doctor/-Offline are read-only. Explicit -InstallRoot isolates state without registering another shared owner.
+- Source update: Update-ReverseThis.ps1 -Destination <absolute kit> [-Archive <zip> -Sha256 <expected digest>]. RELEASE.json binds public source files to their release commit; edited files are preserved/refused.
+- Logs: <kit>/sandbox/log/modkit.log and source-update.log; -DebugLog enables details. Private tools/targets/state/backups remain outside Git/releases.
+- Runtime limit: actual game/app GUI targets, paid APIs, guest Sandbox sessions and real missing-prerequisite installation were not certified by these offline source gates.

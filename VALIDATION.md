@@ -1,3 +1,7 @@
+# Published 1.4.0 proof
+
+Exact release commit 979fa17c7a9b7687a433e4f6a1e4689940d3b756 passed main CI/security. Both public assets were downloaded and matched the deterministic local build, GitHub digests and SHA256SUMS. ZIP SHA256 is 4087251269e6da95ffa563837ad4b6c684b4d60d52fe9873b3a6874351d5c24b (108,789 bytes). Extracted catalog/standalone checks passed. This post-publication handoff change is documentation-only and does not move the release tag or replace assets. Cross-product live proof is tracked in the Starter Bundle STATE.md.
+
 ## 1.4.0 standalone source verification (2026-10-26)
 
 Source baseline: published 1.3.0 at f91aec703857d77cfa0d423ddbcbe77cb20c5cf2. No live kit, canonical pointer, game target or provider configuration was changed in this pass.
