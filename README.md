@@ -121,3 +121,7 @@ Use the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle)
 REA is selectable with `-Only rea` and included in the full catalog run. Its owner pin uses npm integrity with lifecycle scripts disabled. A matching or newer compatible same-major global REA is reused as unowned; unknown/older unowned copies are preserved and reported for their owner's update instead of duplicated. `-Force` explicitly installs an isolated owned copy. No `rea setup` or `rea update` is run. See [analysis routing](docs/reverse-engineering.md), [companion and snapshot routes](docs/companions.md), and [standalone installation/updates](docs/standalone.md).
 
 ZIP installations update their public source through `Update-ReverseThis.ps1`, which requires the official release asset digest and retains source backups without changing private tools/work/state. Git development checkouts use their reviewed Git workflow. The updater's `-Plan`, `-Offline` and `-NoUpdate` modes write and download nothing.
+
+## Product delivery
+
+The versioned product ZIP contains runnable installers, catalog, usage instructions and required licensing. Source ledgers, changelogs, tests, workflows and private target work stay outside it. Maintainers build from an exact tested commit with `python scripts/build_release.py <new-output.zip> --commit <SHA>`; GitHub source downloads remain separately labelled source exports. Source upgrades retire only unchanged obsolete owned files into rollback backups.

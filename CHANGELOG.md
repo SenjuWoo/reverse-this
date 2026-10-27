@@ -1,3 +1,9 @@
+## 1.5.0 (2026-10-27)
+
+- Add a reproducible repository-owned product builder from exact Git objects; private/untracked files, development ledgers and changelogs stay outside runtime ZIPs.
+- Source updates back up and retire unchanged obsolete release-owned files with rollback; personal edits/collisions and private target work remain preserved.
+- Explicit source/target ownership and local/publication defaults, including public GitHub/MIT for original work when requested.
+
 ## 1.4.1 (2026-10-26)
 
 - Fix shared Python probing under Windows PowerShell 5.1: dictionary keyword arguments survive the native command boundary without embedded quote loss.

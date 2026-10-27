@@ -1,3 +1,7 @@
+# Final assurance 1.5.0 candidate (2026-10-27)
+
+Ownership, frozen-commit product builder and transactional obsolete-file retirement implemented. Real archive regression and source-upgrade tests PASS. Full dual-shell gates, exact-SHA CI/security, release-byte proof and approved live refresh pending. Last good: 1.4.1; log/evidence: Starter Bundle artifacts/final-assurance. Run: install.cmd; tests/test_standalone.ps1; python scripts/build_release.py <new-output.zip> --commit <tested-SHA>. Historical evidence below.
+
 # Published 1.4.1 proof
 
 Release commit b21a41427dd38cbb6f76cd00ddcca9df8808781e passed all attached main checks and security queries. Public ZIP 108,340 bytes, SHA256 76b7ce541f313defbecb832a14dac4b8934a5fa8fde2ca1724639244306f0826. Both assets match local reproducible bytes, GitHub digests and checksums. Extracted catalog and native Python/standalone checks pass in both shells. Live source 1.4.1 completed 56 selected tools with zero failures and its owner doctor; shared Python updated to 3.14.10 in place. The bundle tracks cross-provider certification and AI-app reconnect. This handoff does not change the release tag/assets.
