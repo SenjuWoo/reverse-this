@@ -1,8 +1,12 @@
-# Reverse THIS! 1.4.1 compatibility patch
+# Reverse THIS! 1.4.1 verified release handoff
 
-- Live integration found that PowerShell 5.1 strips the embedded dictionary-key quotes from Python -c. The interpreter is healthy; the 1.4.0 fake-runtime fixture did not exercise native argument parsing.
-- Fix: use quote-free dictionary keyword construction; keep all existing base-runtime, venv and version validation. Add a real Python boundary in both CI shells.
-- Regression: new native test failed before the production fix on PowerShell 5.1. All offline installer regressions and the real Python probe pass in PowerShell 5.1 and 7; catalog 58 entries PASS. Publication remains pending.
-- Previous verified release/rollback: 1.4.0 at 979fa17c7a9b7687a433e4f6a1e4689940d3b756. Existing live source is 1.4.0; tool payloads and personal settings were preserved when the probe failed.
-- Next: dual-shell validation, exact-SHA CI/security, deterministic 1.4.1 source archive, downloaded-byte proof, then approved live update through the bundle.
-- Run: install.cmd; read-only checks: Install-Modkit.ps1 -Doctor. Logs: <kit>/sandbox/log/modkit.log and source-update.log. Private tools, state, backups and targets remain outside Git/releases.
+- Goal: independently installable analysis tools with one owner, shared runtimes and preserved private targets/settings.
+- Published: https://github.com/SenjuWoo/reverse-this/releases/tag/v1.4.1 from b21a41427dd38cbb6f76cd00ddcca9df8808781e (PR #8). Exact-main CI/security PASS.
+- Public ZIP: 108,340 bytes; SHA256 76b7ce541f313defbecb832a14dac4b8934a5fa8fde2ca1724639244306f0826. Both public assets match the deterministic local build, GitHub digests and checksum file. Extracted PowerShell 5.1/7 and catalog checks PASS.
+- Fixed: PowerShell 5.1 stripped dictionary-key quotes from the shared Python probe. Quote-free construction retains all validation. A real native Python regression fails before the fix and passes afterward; production discovery handles multiple launchers.
+- Validation: all offline installer tests in both shells, catalog 58 entries, exact-SHA CI/security, deterministic double build, CRC/extraction and downloaded bytes. One Windows runner timed out at batch startup; its failed job passed on retry without code/test changes.
+- Source implementation/publication remaining: none. The approved live kit now has source 1.4.1; the official Python 3.14.10 update is blocked by running MCP runtime DLLs. The bundle STATE.md tracks that repair and remaining cross-product proof.
+- Last good rollback: 1.4.0 at 979fa17c7a9b7687a433e4f6a1e4689940d3b756; prior releases, payload/state backups and private work retained. No tag or asset was replaced.
+- Companions: Starter Bundle owns general AI/build tools; Skyrim Forge owns Skyrim tooling/SDK guidance. Both are optional and mutually recommended.
+- Run: install.cmd; read-only checks: Install-Modkit.ps1 -Doctor/-Offline. Update-ReverseThis.ps1 updates verified public source; Install-Modkit.ps1 refreshes the existing selection.
+- Logs: <kit>/sandbox/log/modkit.log and source-update.log. Private tools, targets, state and backups remain outside Git/releases. Actual game/app GUI targets, paid APIs and guest sessions are not certified by source gates.
