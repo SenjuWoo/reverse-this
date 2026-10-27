@@ -1,3 +1,8 @@
+## 1.4.1 (2026-10-26)
+
+- Fix shared Python probing under Windows PowerShell 5.1: dictionary keyword arguments survive the native command boundary without embedded quote loss.
+- Exercise an actual shared Python interpreter in both CI shells in addition to canned runtime fixtures.
+
 ## 1.4.0 (2026-10-26)
 
 - Reuse the registered owner kit from another checkout and keep explicit isolated test roots separate from its pointer.

@@ -83,7 +83,7 @@ function Test-SharedPython {
     param([string]$Executable, [string[]]$Prefix = @())
     try {
         if (Test-PrivateRuntimePath $Executable) { return $null }
-        $args = @($Prefix) + @('-I','-c','import json,sys,venv; print(json.dumps({"exe":sys.executable,"base":sys.base_prefix,"prefix":sys.prefix,"version":list(sys.version_info[:3])}))')
+        $args = @($Prefix) + @('-I','-c','import json,sys,venv; print(json.dumps(dict(exe=sys.executable,base=sys.base_prefix,prefix=sys.prefix,version=list(sys.version_info[:3]))))')
         $json = (& $Executable @args 2>$null | Out-String).Trim() | ConvertFrom-Json
         if ($LASTEXITCODE -ne 0 -or $json.base -ne $json.prefix -or (Test-PrivateRuntimePath $json.exe) -or
             [version]($json.version -join '.') -lt $(if ($script:MinimumPython) { $script:MinimumPython } else { [version]'3.10' }) -or -not (Test-Path -LiteralPath $json.exe -PathType Leaf)) { return $null }

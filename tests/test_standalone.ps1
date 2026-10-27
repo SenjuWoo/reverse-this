@@ -91,6 +91,10 @@ try {
         $NoUpdate=$false; $script:JavaHome=$null; $script:DotNetHome=$null
     }
 
+    # A real native Python catches argument quoting that a canned .cmd stdout fixture cannot detect.
+    $realPython=if ($oldBinding) { $oldBinding } else { (Get-Command python -CommandType Application -ErrorAction Stop).Source }
+    Assert-True ([bool](Test-SharedPython $realPython)) 'Real shared Python failed the native argument boundary.'
+
     # An owned fake interpreter proves that the probe validates stdout, base prefix and explicit process binding.
     $fakePython=Join-Path $testRoot 'python.cmd'
     $probe=@{exe=$fakePython;base=$testRoot;prefix=$testRoot;version=@(3,14,4)} | ConvertTo-Json -Compress
