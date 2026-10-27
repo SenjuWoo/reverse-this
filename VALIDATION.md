@@ -1,3 +1,7 @@
+# 1.4.1 native Python boundary (2026-10-26)
+
+The added real-Python regression fails on unpatched Windows PowerShell 5.1; the existing canned stdout fixture passed. The fix removes embedded quotes from the Python expression without weakening validation. All six offline installer checks pass in PowerShell 5.1 and 7, including real Python 3.14.9; catalog 58 entries PASS. Exact-SHA CI/security and publication remain pending. The 1.4.0 evidence below covers the unchanged installer boundaries.
+
 # Published 1.4.0 proof
 
 Exact release commit 979fa17c7a9b7687a433e4f6a1e4689940d3b756 passed main CI/security. Both public assets were downloaded and matched the deterministic local build, GitHub digests and SHA256SUMS. ZIP SHA256 is 4087251269e6da95ffa563837ad4b6c684b4d60d52fe9873b3a6874351d5c24b (108,789 bytes). Extracted catalog/standalone checks passed. This post-publication handoff change is documentation-only and does not move the release tag or replace assets. Cross-product live proof is tracked in the Starter Bundle STATE.md.

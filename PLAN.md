@@ -1,4 +1,4 @@
-# Standalone workbench 1.4.0
+# Standalone workbench 1.4.1
 
 Keep Reverse THIS!, Skyrim Forge and the Starter Bundle independent. Reuse the registered workbench and shared runtimes; preserve private tools, state, user settings and newer compatible software.
 
