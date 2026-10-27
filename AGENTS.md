@@ -77,7 +77,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Risk of Rain 2 API | `sandbox/tools/r2api` |
 | Sleeping Dogs engine source | `sandbox/tools/theoryengine` |
 | Sleeping Dogs SDK | `sandbox/tools/sleeping-dogs-sdk` and `sandbox/tools/sleeping-dogs-sdk-playground` |
-| Clean-room app recon / rebuild / parity diff (web and mobile app behavior, not binaries) | `sandbox/tools/replica-skill/replica-*` skills; load with `Copy-Item -Recurse sandbox	oolseplica-skilleplica-* $HOME\.claude\skills\`. Behavior only: do not copy the target's code, assets or copy. |
+| Clean-room app recon / rebuild / parity diff (web and mobile app behavior, not binaries) | `sandbox/tools/replica-skill/replica-*` skills; load with `Copy-Item -Recurse sandbox\tools\replica-skill\replica-* $HOME\.claude\skills\`. Behavior only: do not copy the target's code, assets or copy. |
 
 Ghidra, JADX, Apktool and Kaitai shims set `JAVA_HOME` to the JDK the installer recorded. Use their shims. ASAR needs Node 22.12+ and npm; capa needs Python 3.10+, LIEF 3.9+. capa uses `flare-capa` in a venv, with released `capa-rules` and the signature-bearing `capa-source` archive installed automatically even for `-Only capa`; its shim supplies the rules and signature directories. The source archive excludes the separate malware testfiles submodule. JADX does not guarantee complete decompilation; PyInstaller extraction produces files and bytecode, not automatically readable source. Confirm capa matches against actual code or observed behavior.
 
