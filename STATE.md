@@ -1,4 +1,11 @@
-# Reverse THIS! 1.6.0 candidate (2026-10-27)
+# Reverse THIS! 1.6.0 — verified handoff (2026-10-27)
+
+- Adds optional replica-skill (Jakeschincariol/replica-skill, MIT) as a github-archive catalog entry; catalog 59 tools. Release: https://github.com/SenjuWoo/reverse-this/releases/tag/v1.6.0 from a6029396ca591e310070144b10f99727aed0cb6f (PR #14). Exact-commit CI PASS; alerts 0/0/0.
+- ZIP 64,634 bytes; SHA256 38cf2df03f9de2daaeb8d7b45b4d8a31f1499e703ee5d1c08d23bff59a444199; two builds identical; downloaded asset matches build and GitHub digest.
+- Install proof: isolated -InstallRoot install and live install both ok=1; receipt records upstream commit 77c9436. Skills copied to ~/.claude/skills (11 replica-*, none pre-existing).
+- Live owner: the registered kit Reverse-This-1.2.1 no longer existed (stale pointer); pointer backed up as kit.json.pre-1.6.0-stale and this checkout registered as owner with only replica-skill installed. Other catalog tools are not installed here; run install.cmd for them.
+- Local env: tests/test_installer.ps1 and test_entrypoint.ps1 fail on this machine identically on main (cmd delayed-expansion/path); CI passes both shells.
+- Last good: 1.5.0.
 
 - Adds optional replica-skill (Jakeschincariol/replica-skill, MIT) as a github-archive catalog entry; catalog 59 tools. Real isolated install PASS (receipt records commit 77c9436). Last good: 1.5.0 (v1.5.0). Run: install.cmd; Install-Modkit.ps1 -Doctor. CI/release evidence below once complete.
 
