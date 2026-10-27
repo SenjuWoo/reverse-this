@@ -1,6 +1,6 @@
-## Unreleased
+## 1.6.0 (2026-10-27)
 
-- Add the MIT replica-skill pack (app recon, clean-room rebuild, parity diff) as an optional source archive under sandbox/tools.
+- Add the MIT replica-skill pack (app recon, clean-room rebuild, parity diff) as an optional source archive under sandbox/tools; the receipt records the installed commit. Load the skills with: Copy-Item -Recurse sandbox	oolseplica-skilleplica-* $HOME\.claude\skills\.
 
 ## 1.5.0 (2026-10-27)
 
