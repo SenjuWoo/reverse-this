@@ -21,7 +21,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: catalog contract
-        run: python tests/test_catalog.py
+        run: |
+          python tests/test_catalog.py
+          python tests/test_delivery.py
 
   installer-tests:
     name: installer (${{ matrix.shell }})

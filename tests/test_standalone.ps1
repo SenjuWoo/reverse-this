@@ -245,7 +245,8 @@ try {
     Write-TestFile (Join-Path $destination 'sandbox\work\private.txt') 'private sentinel'
     $files=foreach ($relative in @('VERSION','Install-Modkit.ps1','catalog/tools.json','README.md','Notes.md')) { @{path=$relative;sha256=(Get-FileHash -LiteralPath (Join-Path $source $relative) -Algorithm SHA256).Hash.ToLowerInvariant()} }
     Write-TestFile (Join-Path $source 'RELEASE.json') (@{product='Reverse THIS!';version='1.1.0';commit=('a'*40);files=@($files)} | ConvertTo-Json -Depth 5)
-    $oldFiles=foreach ($relative in @('VERSION','Install-Modkit.ps1','catalog/tools.json','README.md')) { @{path=$relative;sha256=(Get-FileHash -LiteralPath (Join-Path $destination $relative) -Algorithm SHA256).Hash.ToLowerInvariant()} }
+    Write-TestFile (Join-Path $destination 'CHANGELOG.md') 'obsolete owned development ledger'
+    $oldFiles=foreach ($relative in @('VERSION','Install-Modkit.ps1','catalog/tools.json','README.md','CHANGELOG.md')) { @{path=$relative;sha256=(Get-FileHash -LiteralPath (Join-Path $destination $relative) -Algorithm SHA256).Hash.ToLowerInvariant()} }
     Write-TestFile (Join-Path $destination 'RELEASE.json') (@{product='Reverse THIS!';version='1.0.0';commit=('b'*40);files=@($oldFiles)} | ConvertTo-Json -Depth 5)
     $raceDestination=Join-Path $testRoot 'advanced-kit'
     Copy-Item -LiteralPath $destination -Destination $raceDestination -Recurse
@@ -296,6 +297,8 @@ function global:Get-FileHash {
     $result=Invoke-TestUpdater $digest
     Assert-True ($result.Code -eq 0) "Local verified release failed: $($result.Output)"
     Assert-True ((Get-Content -LiteralPath (Join-Path $destination 'VERSION') -Raw) -eq '1.1.0') 'Source update did not promote its version.'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $destination 'CHANGELOG.md'))) 'Obsolete owned ledger remained in the product.'
+    Assert-True (@(Get-ChildItem -LiteralPath (Join-Path $destination 'sandbox/backups') -Filter CHANGELOG.md -Recurse).Count -eq 1) 'Retired ledger was not backed up.'
     Assert-True ((Get-Content -LiteralPath (Join-Path $destination 'sandbox\work\private.txt') -Raw) -eq 'private sentinel') 'Source update changed private work.'
     Assert-True (@(Get-ChildItem -LiteralPath (Join-Path $destination 'sandbox\backups') -Filter README.md -Recurse).Count -eq 1) 'Source update lost the last-good file.'
     New-Item -ItemType Directory -Path (Join-Path $destination '.git') | Out-Null

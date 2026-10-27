@@ -1,3 +1,7 @@
+# Final assurance 1.5.0 candidate (2026-10-27)
+
+Ownership, frozen-commit product builder and transactional obsolete-file retirement implemented. Real archive regression and source-upgrade tests PASS. Full dual-shell gates, exact-SHA CI/security, release-byte proof and approved live refresh pending. Last good: 1.4.1; log/evidence: Starter Bundle artifacts/final-assurance. Run: install.cmd; tests/test_standalone.ps1; python scripts/build_release.py <new-output.zip> --commit <tested-SHA>. Historical evidence below.
+
 # Reverse THIS! 1.4.1 verified release handoff
 
 - Goal: independently installable analysis tools with one owner, shared runtimes and preserved private targets/settings.

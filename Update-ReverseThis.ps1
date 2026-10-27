@@ -139,6 +139,17 @@ try {
     $backup = Join-Path $sandbox ('backups/source-' + $manifest.version + '-' + [guid]::NewGuid().ToString('N'))
     Assert-SourceWritePath $backup
     New-Item -ItemType Directory -Path $backup -Force | Out-Null
+    $incomingPaths = @($manifest.files | ForEach-Object path)
+    foreach ($relative in $previousPaths) {
+        if ($relative -in $incomingPaths -or -not (Test-PublicSourcePath $relative)) { continue }
+        $target = Join-Path $updateRoot $relative
+        Assert-SourceWritePath $target
+        $old = Join-Path $backup $relative
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $old) | Out-Null
+        Copy-Item -LiteralPath $target -Destination $old
+        $changed += [pscustomobject]@{ path=$target; backup=$old; existed=$true }
+        Remove-Item -LiteralPath $target -Force
+    }
     $paths = @($manifest.files | Where-Object { Test-PublicSourcePath $_.path } | ForEach-Object path) + @('RELEASE.json')
     foreach ($relative in $paths) {
         $target = Join-Path $updateRoot $relative
