@@ -1,6 +1,6 @@
 # Current 1.6.1 audit — 2026-10-28
 
-Correct source-provenance documentation, verify both shell suites and standalone ownership, then converge exact-SHA CI/security before a frozen release and downloaded-byte verification. See STATE.md for the current milestone.
+Complete: corrected source-provenance documentation, verified both shell suites and the 59-tool live owner, converged release SHA CI/security, published the frozen double build and verified every public asset. Source-only handoff checks preserve the immutable release. See STATE.md.
 
 # Reverse THIS! 1.5.0 — verified handoff (2026-10-27)
 
