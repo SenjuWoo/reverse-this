@@ -1,6 +1,6 @@
 # Current 1.6.1 audit — 2026-10-28
 
-Catalog 59 and product tests 2/2 PASS. Installer, batch entrypoint, isolation, .NET prerequisite and standalone regression suites PASS in Windows PowerShell 5.1 and PowerShell 7. Current live owner has 59 records and zero missing tool directories. No installer/catalog change; publication proof pending. Logs: sandbox/log/audit-*.log.
+Catalog 59 and product tests 2/2 PASS. Installer, batch entrypoint, isolation, .NET prerequisite and standalone regression suites PASS in Windows PowerShell 5.1 and PowerShell 7. Current live owner has 59 records and zero missing tool directories. No installer/catalog change. Release SHA 2d30d7352230e5d69371f29833c19b01e2ad964b passed exact main/tag checks and alerts 0/0/0. Both public assets match frozen build bytes, GitHub digests and checksums; ZIP 64,697 bytes, SHA256 c71b497ac846cb7d51458fa6e00480a94ad4fc6424bbe3b48cd06d23fabcfc7b. Live NoUpdate refresh: 59 success/0 failures, doctor PASS, all tool records and pointer unchanged. Logs: sandbox/log/audit-*.log; byte proof: sandbox/tmp/release-1.6.1/verified.local.json.
 
 # Reverse THIS! 1.5.0 — verified handoff (2026-10-27)
 

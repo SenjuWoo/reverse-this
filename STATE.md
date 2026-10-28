@@ -1,13 +1,15 @@
-# Reverse THIS! 1.6.1 — compatibility audit (2026-10-28)
+# Reverse THIS! 1.6.1 — verified handoff (2026-10-28)
 
-- Goal: truthful standalone companion release; keep Skyrim optional and shared runtimes/owned installations reusable.
-- Current: clean 1.6.0 handoff main b9b285a was verified before this patch; source branch codex/handoff-currency, product version 1.6.1.
-- Fixed: replica-skill discovery was incorrectly described as an unpinned download; production resolves a full immutable commit and records its archive digest. No installer or catalog behavior changes.
-- Verified: catalog 59 tools; product tests 2/2; installer, entrypoint, isolation, .NET prerequisite and standalone tests PASS in Windows PowerShell 5.1 and PowerShell 7. Recorded local failures do not reproduce under the current environment.
-- Live receipt: canonical checkout owner contains 59 owned tool records and all recorded tool directories; the older 1.6.0 claim that only replica-skill was installed is superseded. Tool catalog entries alone do not prove runtime behavior.
-- Branch audit: every existing remote topic ref is ancestry-merged into main; no unmerged Reverse branch work. No branches or user files removed.
-- Next: exact-SHA CI and security, squash merge, main CI/security, frozen double build, publish 1.6.1 and verify all public asset bytes; preserve the live pointer and private sandbox.
-- Build/run: python scripts/build_release.py <new-output.zip> --commit <tested-SHA>; install.cmd; Install-Modkit.ps1 -Doctor. Evidence: sandbox/log/audit-*.log; last published good 1.6.0.
+- Complete: truthful standalone companion patch; shared tools reuse their recorded owner, and Skyrim Forge remains optional. Installer/catalog/tool versions are unchanged by this documentation patch.
+- Published: https://github.com/SenjuWoo/reverse-this/releases/tag/v1.6.1 ; immutable tag 2d30d7352230e5d69371f29833c19b01e2ad964b (PR 16). Exact main and tag checks passed; alerts 0/0/0, code quality unavailable and left off.
+- Product ZIP: 64,697 bytes; SHA256 c71b497ac846cb7d51458fa6e00480a94ad4fc6424bbe3b48cd06d23fabcfc7b. Two frozen builds byte-identical; both public assets downloaded and matched local bytes, GitHub digests and SHA256SUMS.
+- Corrected replica-skill provenance: default-branch discovery resolves a full immutable commit and records the archive digest; NoUpdate retains that recorded version.
+- Validation: catalog 59; product tests 2/2; installer, real batch entrypoint, isolation, .NET prerequisite and standalone suites PASS in Windows PowerShell 5.1 and 7. Extracted SelfTest/Plan PASS in both shells. Previously recorded local batch failures no longer reproduce.
+- Live: registered canonical checkout owner refreshed with NoUpdate, 59 success/0 failures, doctor PASS. All 59 tool records and owner pointer remained unchanged; only kit_version advanced. Older claim that only replica-skill was installed is superseded.
+- Recovery/evidence: sandbox/backups/live-1.6.1-ef5eaa85faf74add9e501682d2d29332; sandbox/log/audit-*.log; sandbox/tmp/release-1.6.1/verified.local.json. Prior releases/tags intact; last good 1.6.0.
+- Branch audit: all ten pre-existing remote topic refs are ancestry-merged into main; no unmerged work. PR 16 squash tree exactly equals its task tree; remote/local task ref removed after verification. Historic merged refs are reported, not force-deleted.
+- Build/run: python scripts/build_release.py <new-output.zip> --commit <tested-SHA>; install.cmd; Install-Modkit.ps1 -Doctor. Next: source-only handoff CI/security and branch cleanup; no product/deployment work remains.
+- Limits: file/receipt doctor is not proof for every real target or GUI. Actual game targets, guest Sandbox and paid inference/API runtime were not exercised; source/archive tests cover the documented command and ownership boundaries.
 
 ## Historical handoffs (superseded where noted)
 
