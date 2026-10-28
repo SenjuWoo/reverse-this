@@ -1,3 +1,7 @@
+# Current 1.6.1 audit — 2026-10-28
+
+Correct source-provenance documentation, verify both shell suites and standalone ownership, then converge exact-SHA CI/security before a frozen release and downloaded-byte verification. See STATE.md for the current milestone.
+
 # Reverse THIS! 1.5.0 — verified handoff (2026-10-27)
 
 - Source/product complete. Frozen public tag v1.5.0: ab9b842d8a5f7bfce7c128f5f94c1421e3933723. Later handoff commits update documentation only.

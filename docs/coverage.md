@@ -22,7 +22,7 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | Unreal, Godot, Frostbite | FModel, repak, retoc, UAssetGUI, UE4SS; GDRE and Godot; Frosty tools | Check engine/game versions. A source archive or loader is not a supported executable for every game. |
 | Graphics and textures | RenderDoc, DirectXTex | API/driver support and capture compatibility vary; this is not every vendor's profiling suite. |
 | Binary comparison | Ghidra Version Tracking, ImHex | Compare the same architecture and record target hashes; generated names are not stable identifiers. |
-| App behavior recon and clean-room rebuild | replica-skill (`replica-recon`, `-diff`, `-test`, others) | MIT Claude skills with stdlib Python helpers. They work from public pages, screenshots and your own account; they do not analyze binaries. Source is unpinned (default branch archive), so review before use. Rebuilding features is not a licence to copy code, assets or branding. |
+| App behavior recon and clean-room rebuild | replica-skill (`replica-recon`, `-diff`, `-test`, others) | MIT Claude skills with stdlib Python helpers. They work from public pages, screenshots and your own account; they do not analyze binaries. The installer resolves the current default branch to a full immutable commit, records that archive identity and its SHA-256, and reuses the recorded version with `-NoUpdate`; review the selected source before use. Rebuilding features is not a licence to copy code, assets or branding. |
 
 The game-specific SDKs, fighting-game tools and art editors remain in the catalog. They do not extend generic app decompilation.
 
