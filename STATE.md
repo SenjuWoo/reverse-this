@@ -8,7 +8,7 @@
 - Live: registered canonical checkout owner refreshed with NoUpdate, 59 success/0 failures, doctor PASS. All 59 tool records and owner pointer remained unchanged; only kit_version advanced. Older claim that only replica-skill was installed is superseded.
 - Recovery/evidence: sandbox/backups/live-1.6.1-ef5eaa85faf74add9e501682d2d29332; sandbox/log/audit-*.log; sandbox/tmp/release-1.6.1/verified.local.json. Prior releases/tags intact; last good 1.6.0.
 - Branch audit: all ten pre-existing remote topic refs are ancestry-merged into main; no unmerged work. PR 16 squash tree exactly equals its task tree; remote/local task ref removed after verification. Historic merged refs are reported, not force-deleted.
-- Build/run: python scripts/build_release.py <new-output.zip> --commit <tested-SHA>; install.cmd; Install-Modkit.ps1 -Doctor. Next: source-only handoff CI/security and branch cleanup; no product/deployment work remains.
+- Build/run: python scripts/build_release.py <new-output.zip> --commit <tested-SHA>; install.cmd; Install-Modkit.ps1 -Doctor. Next: no product or deployment work remains; use install.cmd for a later requested update. Source-only handoff checks do not move the release tag.
 - Limits: file/receipt doctor is not proof for every real target or GUI. Actual game targets, guest Sandbox and paid inference/API runtime were not exercised; source/archive tests cover the documented command and ownership boundaries.
 
 ## Historical handoffs (superseded where noted)
