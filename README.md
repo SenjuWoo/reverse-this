@@ -31,7 +31,7 @@ Check the installed records and required files without downloading:
 .\Install-Modkit.ps1 -Doctor
 ```
 
-The doctor checks files and records. Run the selected tool on a lab sample to verify its runtime and target support. Installer version, paths, progress and failures are in `sandbox/log/modkit.log`. Add `-DebugLog` to an install or repair run for detailed package/archive output; it is quiet by default.
+The doctor checks files and records. Downloads are digest-verified when installed; afterwards `-Doctor` re-hashes external commands it reuses, but for kit-owned payloads it checks presence and structure only, so a binary changed after install is not detected. Reinstall the tool if in doubt. Run the selected tool on a lab sample to verify its runtime and target support. Installer version, paths, progress and failures are in `sandbox/log/modkit.log`. Add `-DebugLog` to an install or repair run for detailed package/archive output; it is quiet by default.
 
 Updates retain replaced tool payloads under `sandbox/backups/<id>-<unique-id>`. The previous installed manifest is saved as `sandbox/installed.json.pre-<kit-version>.json`. Failed updates restore the saved payload when one exists. Keep these backups until the replacement works on your target; they are local state, not release files.
 
