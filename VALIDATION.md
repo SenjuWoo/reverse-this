@@ -1,3 +1,7 @@
+# Current 1.6.1 audit — 2026-10-28
+
+Catalog 59 and product tests 2/2 PASS. Installer, batch entrypoint, isolation, .NET prerequisite and standalone regression suites PASS in Windows PowerShell 5.1 and PowerShell 7. Current live owner has 59 records and zero missing tool directories. No installer/catalog change; publication proof pending. Logs: sandbox/log/audit-*.log.
+
 # Reverse THIS! 1.5.0 — verified handoff (2026-10-27)
 
 - Source/product complete. Frozen public tag v1.5.0: ab9b842d8a5f7bfce7c128f5f94c1421e3933723. Later handoff commits update documentation only.

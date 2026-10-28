@@ -1,3 +1,16 @@
+# Reverse THIS! 1.6.1 — compatibility audit (2026-10-28)
+
+- Goal: truthful standalone companion release; keep Skyrim optional and shared runtimes/owned installations reusable.
+- Current: clean 1.6.0 handoff main b9b285a was verified before this patch; source branch codex/handoff-currency, product version 1.6.1.
+- Fixed: replica-skill discovery was incorrectly described as an unpinned download; production resolves a full immutable commit and records its archive digest. No installer or catalog behavior changes.
+- Verified: catalog 59 tools; product tests 2/2; installer, entrypoint, isolation, .NET prerequisite and standalone tests PASS in Windows PowerShell 5.1 and PowerShell 7. Recorded local failures do not reproduce under the current environment.
+- Live receipt: canonical checkout owner contains 59 owned tool records and all recorded tool directories; the older 1.6.0 claim that only replica-skill was installed is superseded. Tool catalog entries alone do not prove runtime behavior.
+- Branch audit: every existing remote topic ref is ancestry-merged into main; no unmerged Reverse branch work. No branches or user files removed.
+- Next: exact-SHA CI and security, squash merge, main CI/security, frozen double build, publish 1.6.1 and verify all public asset bytes; preserve the live pointer and private sandbox.
+- Build/run: python scripts/build_release.py <new-output.zip> --commit <tested-SHA>; install.cmd; Install-Modkit.ps1 -Doctor. Evidence: sandbox/log/audit-*.log; last published good 1.6.0.
+
+## Historical handoffs (superseded where noted)
+
 # Reverse THIS! 1.6.0 — verified handoff (2026-10-27)
 
 - Adds optional replica-skill (Jakeschincariol/replica-skill, MIT) as a github-archive catalog entry; catalog 59 tools. Release: https://github.com/SenjuWoo/reverse-this/releases/tag/v1.6.0 from a6029396ca591e310070144b10f99727aed0cb6f (PR #14). Exact-commit CI PASS; alerts 0/0/0.

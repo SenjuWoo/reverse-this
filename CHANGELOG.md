@@ -1,3 +1,8 @@
+## 1.6.1 (2026-10-28)
+
+- Correct replica-skill source provenance: default-branch discovery resolves and records an immutable commit and archive digest.
+- Refresh the verified owner and dual-shell handoff; no tool catalog, provider settings or installed tool versions change.
+
 ## 1.6.0 (2026-10-27)
 
 - Add the MIT replica-skill pack (app recon, clean-room rebuild, parity diff) as an optional source archive under sandbox/tools; the receipt records the installed commit. Load the skills with: Copy-Item -Recurse sandbox\tools\replica-skill\replica-* $HOME\.claude\skills\.
