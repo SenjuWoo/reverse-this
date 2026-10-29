@@ -1,12 +1,6 @@
 # Task routes and supplied source snapshots
 
-Use these three independent repositories together when their tasks overlap:
-
-| Work | Owner |
-|---|---|
-| Shared compilers, agent setup, provider skills and scoped MCPs | [Ultimate AI Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) |
-| Skyrim plugin/script/assets authoring and validation, houseCARL | [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) |
-| App/game binary analysis, extractors, instrumentation and REA | [Reverse THIS!](https://github.com/SenjuWoo/reverse-this) |
+Use the three independent repositories together when their tasks overlap; who owns what is stated once, in the [bundle README](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle#ownership). This kit owns app/game binary analysis, extractors, instrumentation and REA.
 
 Each installs independently and consumes verified existing installations. The workbench's standalone prerequisites are described in [standalone.md](standalone.md). Companion recommendations do not install a second provider stack, grant trust, register all MCP schemas or run an upstream account setup command.
 

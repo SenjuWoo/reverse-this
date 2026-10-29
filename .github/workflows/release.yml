@@ -1,0 +1,122 @@
+name: release
+
+# Publishes Reverse THIS! with no human step once ci is green on main. A VERSION
+# bump that reaches main is the release request; a main commit whose version
+# already has a tag publishes nothing. Fail-closed order: exact SHA is still
+# main -> every other check on that SHA passed -> two builds from that commit
+# are byte-identical -> build attestation -> publish -> re-download and compare.
+# A published release is never deleted or replaced here.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish release
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Decide whether this SHA is a release
+        id: decide
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SHA"
+          version=$(tr -d '\r\n' < VERSION)
+          tag="v$version"
+          main=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          # A newer main commit gets its own CI and its own release decision.
+          if [ "$main" != "$SHA" ]; then echo "main is $main, not $SHA: skip"; echo "publish=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # ls-remote fails the job on a network error instead of reading it as "no tag".
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$tag")" ]; then echo "$tag exists: nothing to publish"; echo "publish=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          { echo "publish=true"; echo "tag=$tag"; echo "version=$version"; } >> "$GITHUB_OUTPUT"
+
+      - name: Wait for every other check on this SHA
+        if: steps.decide.outputs.publish == 'true'
+        run: |
+          python - <<'EOF'
+          import json, os, subprocess, sys, time
+          repo, sha = os.environ["REPO"], os.environ["SHA"]
+          def api(path):
+              return json.loads(subprocess.run(["gh", "api", path], check=True, capture_output=True, text=True).stdout)
+          deadline = time.monotonic() + 3600
+          while True:
+              runs = [r for r in api(f"repos/{repo}/commits/{sha}/check-runs?per_page=100")["check_runs"] if r["name"] != "Publish release"]
+              status = api(f"repos/{repo}/commits/{sha}/status")
+              bad = [r["name"] for r in runs if r["status"] == "completed" and r["conclusion"] != "success"]
+              bad += [s["context"] for s in status["statuses"] if s["state"] in ("failure", "error")]
+              if bad:
+                  sys.exit("failed checks on %s: %s" % (sha, ", ".join(bad)))
+              waiting = [r["name"] for r in runs if r["status"] != "completed"]
+              waiting += [s["context"] for s in status["statuses"] if s["state"] == "pending"]
+              if runs and not waiting:
+                  print("all %d check runs and %d statuses passed on %s" % (len(runs), len(status["statuses"]), sha))
+                  break
+              if time.monotonic() > deadline:
+                  sys.exit("still pending after 60 min: %s" % (", ".join(waiting) or "no checks reported"))
+              time.sleep(30)
+          EOF
+
+      - name: Build twice from the commit and require identical bytes
+        if: steps.decide.outputs.publish == 'true'
+        env:
+          VERSION: ${{ steps.decide.outputs.version }}
+        run: |
+          set -euo pipefail
+          python scripts/build_release.py "dist/Reverse-This-$VERSION.zip" --commit "$SHA"
+          python scripts/build_release.py "check/Reverse-This-$VERSION.zip" --commit "$SHA"
+          cmp "dist/Reverse-This-$VERSION.zip" "check/Reverse-This-$VERSION.zip"
+          (cd dist && sha256sum *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          # The release notes are this version's CHANGELOG section.
+          python - <<'EOF'
+          import os, re
+          text = open("CHANGELOG.md", encoding="utf-8").read().replace("\r\n", "\n")
+          section = re.search(r"^## %s\b[^\n]*\n(.*?)(?=^## |\Z)" % re.escape(os.environ["VERSION"]), text, re.M | re.S)
+          if not section:
+              raise SystemExit("CHANGELOG.md has no section for " + os.environ["VERSION"])
+          open("notes.md", "w", encoding="utf-8").write(section.group(1).strip() + "\n")
+          EOF
+
+      - name: Attest the build
+        if: steps.decide.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*.zip
+
+      - name: Publish and verify the published bytes
+        if: steps.decide.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.decide.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" --repo "$REPO" --target "$SHA" --title "$TAG" --notes-file notes.md --latest dist/*
+          test "$(gh api "repos/$REPO/commits/$TAG" --jq .sha)" = "$SHA"
+          gh release download "$TAG" --repo "$REPO" --dir published
+          for f in dist/*; do cmp "$f" "published/$(basename "$f")"; done
+          (cd published && sha256sum -c SHA256SUMS.txt)
+          echo "published $TAG at $SHA; every downloaded asset equals the build"

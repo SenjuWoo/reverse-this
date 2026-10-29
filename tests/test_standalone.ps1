@@ -60,6 +60,29 @@ try {
     $afterPointerHash=if (Test-Path -LiteralPath $pointerFile) { (Get-FileHash -LiteralPath $pointerFile).Hash } else { $null }
     Assert-True ($pointerHash -eq $afterPointerHash) 'An isolated read-only check changed the shared owner pointer.'
 
+    # -Doctor re-hashes the files each install receipt binds: a changed binary is CHANGED
+    # (exit 1, never "present"), and a tool with no receipt is reported UNVERIFIED.
+    $doctorKit=Join-Path $testRoot 'doctor-kit'; $doctorTools=Join-Path $doctorKit 'sandbox\tools\repak'; $doctorBin=Join-Path $doctorKit 'sandbox\bin'
+    New-Item -ItemType Directory -Path $doctorTools,$doctorBin -Force | Out-Null
+    $doctorExe=Join-Path $doctorTools 'repak.exe'; Write-TestFile $doctorExe 'fixture binary'; Write-TestFile (Join-Path $doctorBin 'repak.cmd') '@echo off'
+    $doctorDigest=(Get-FileHash -LiteralPath $doctorExe -Algorithm SHA256).Hash.ToLowerInvariant()
+    function Write-DoctorState { param($Files) Write-TestFile (Join-Path $doctorKit 'sandbox\installed.json') (@{schema=1;kit_root=$doctorKit;tools=@{repak=@{id='repak';version='v0.0.1';owner='reverse-this';dir='sandbox/tools/repak';files=$Files}}} | ConvertTo-Json -Depth 6) }
+    function Invoke-Doctor {
+        $prior=$ErrorActionPreference
+        try { $ErrorActionPreference='Continue'; $output=@(& $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Install-Modkit.ps1') -Doctor -InstallRoot $doctorKit -Only repak 2>&1); $code=$LASTEXITCODE }
+        finally { $ErrorActionPreference=$prior }
+        return [pscustomobject]@{Code=$code;Text=($output | Out-String)}
+    }
+    Write-DoctorState @{'repak.exe'=$doctorDigest}
+    $doctor=Invoke-Doctor
+    Assert-True ($doctor.Code -eq 0 -and $doctor.Text -match 'OK repak v0\.0\.1 \(verified 1 file') "Doctor did not verify an intact receipt: $($doctor.Text)"
+    Write-TestFile $doctorExe 'tampered binary'
+    $doctor=Invoke-Doctor
+    Assert-True ($doctor.Code -eq 1 -and $doctor.Text -match 'CHANGED repak: repak\.exe differs') "Doctor accepted a changed binary: $($doctor.Text)"
+    Write-DoctorState @{}
+    $doctor=Invoke-Doctor
+    Assert-True ($doctor.Code -eq 0 -and $doctor.Text -match 'UNVERIFIED repak') "A missing receipt was not reported as unverified: $($doctor.Text)"
+
     # Reusing a Java/.NET payload must still bind its known runtime into the regenerated shim.
     $productionJdk=${function:Install-Jdk}; $productionDotnet=${function:Initialize-DotNet10}; $productionRelease=${function:Get-GitHubRelease}
     function Install-Jdk { param([int]$Major) return (Join-Path $testRoot 'known-jdk') }

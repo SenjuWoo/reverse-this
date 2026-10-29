@@ -1,3 +1,10 @@
+## 1.7.0 (2026-10-29)
+
+- `-Doctor` re-hashes the files each install receipt binds (shimmed executables and key files) and reports a changed one as `CHANGED` (exit 1) instead of present; a tool without a receipt is `UNVERIFIED`. All 59 tools on the maintainer kit verify. A regression test proves the old doctor accepted a changed binary.
+- Releases publish themselves: `release.yml` runs after ci passes on main and a VERSION with no tag yet is the release request. It waits for every other check on that exact SHA, builds twice from the commit, requires identical bytes, attests the build, publishes and re-downloads to compare. The maintainer pushes to main after the local gate; rulesets block force-push and deletion, and Dependabot pull requests merge themselves when green.
+- The ownership model is linked from the bundle README instead of restated; the bundle installs this kit's latest release (it pins none). CURRENT.txt had stayed at 1.6.0.
+- Tests call `.\install.cmd` and `.\probe.cmd` explicitly, so they pass where `NoDefaultCurrentDirectoryInExePath` is set (hardened shells), as they already did on CI.
+
 ## 1.6.1 (2026-10-28)
 
 - Correct replica-skill source provenance: default-branch discovery resolves and records an immutable commit and archive digest.

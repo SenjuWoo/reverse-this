@@ -31,7 +31,7 @@ Check the installed records and required files without downloading:
 .\Install-Modkit.ps1 -Doctor
 ```
 
-The doctor checks files and records. Downloads are digest-verified when installed; afterwards `-Doctor` re-hashes external commands it reuses, but for kit-owned payloads it checks presence and structure only, so a binary changed after install is not detected. Reinstall the tool if in doubt. Run the selected tool on a lab sample to verify its runtime and target support. Installer version, paths, progress and failures are in `sandbox/log/modkit.log`. Add `-DebugLog` to an install or repair run for detailed package/archive output; it is quiet by default.
+The doctor checks files and records. Downloads are digest-verified when installed, and the install receipt binds each tool's shimmed executables and key files by SHA-256. `-Doctor` re-hashes those files and external commands it reuses: a changed one is reported `CHANGED` (exit 1; reinstall with `-Only <id> -Force`), a tool with no receipt is reported `UNVERIFIED`, and the rest of a payload is checked for presence and structure. Run the selected tool on a lab sample to verify its runtime and target support. Installer version, paths, progress and failures are in `sandbox/log/modkit.log`. Add `-DebugLog` to an install or repair run for detailed package/archive output; it is quiet by default.
 
 Updates retain replaced tool payloads under `sandbox/backups/<id>-<unique-id>`. The previous installed manifest is saved as `sandbox/installed.json.pre-<kit-version>.json`. Failed updates restore the saved payload when one exists. Keep these backups until the replacement works on your target; they are local state, not release files.
 
@@ -116,7 +116,7 @@ After installing the app/format tools, run `powershell -NoProfile -ExecutionPoli
 
 ## Companion projects
 
-Use the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) for shared compilers, AI providers, skills and MCP routing. Use [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) for Skyrim-specific authoring and validation. All three can coexist; this kit never rewrites provider configuration.
+Who owns what across the three repositories is stated once, in the [bundle README](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle#ownership); the bundle installs this kit's latest release. Use the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) for shared compilers, AI providers, skills and MCP routing. Use [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) for Skyrim-specific authoring and validation. All three can coexist; this kit never rewrites provider configuration.
 
 REA is selectable with `-Only rea` and included in the full catalog run. Its owner pin uses npm integrity with lifecycle scripts disabled. A matching or newer compatible same-major global REA is reused as unowned; unknown/older unowned copies are preserved and reported for their owner's update instead of duplicated. `-Force` explicitly installs an isolated owned copy. No `rea setup` or `rea update` is run. See [analysis routing](docs/reverse-engineering.md), [companion and snapshot routes](docs/companions.md), and [standalone installation/updates](docs/standalone.md).
 

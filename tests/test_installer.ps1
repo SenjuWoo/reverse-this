@@ -390,7 +390,7 @@ public static class AtomicJsonLockFixture {
         Write-Utf8 -Path $bangTarget -Text "@echo off`r`n> `"%RT_BANG_RESULT%`" echo reached`r`nexit /b 0`r`n"
         Write-Shim -Name 'probe' -Target $bangTarget | Out-Null
         Push-Location -LiteralPath $BinDir
-        try { & $env:ComSpec /d /v:on /c probe.cmd } finally { Pop-Location }
+        try { & $env:ComSpec /d /v:on /c .\probe.cmd } finally { Pop-Location }
         Assert-True ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $env:RT_BANG_RESULT)) 'A shim inherited delayed expansion and damaged a path containing !'
         Remove-Item -LiteralPath $env:RT_BANG_RESULT -Force
         }

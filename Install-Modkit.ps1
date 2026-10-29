@@ -1646,9 +1646,11 @@ if ($Only) {
 Initialize-ExternalTools $catalog
 if ($Doctor) {
     $missing = 0
+    $unverified = 0
     $state = New-State
     foreach ($tool in $selected) {
         try {
+            $proof = ''
             $row = $state.tools.($tool.id)
             if (-not $row) { throw 'not installed' }
             foreach ($id in (ConvertTo-Array $tool.requires)) {
@@ -1659,14 +1661,33 @@ if ($Doctor) {
             if ($row.source -eq 'existing-path' -and $row.owned -eq $false) {
                 if (-not (Test-Path -LiteralPath $row.command -PathType Leaf)) { throw 'external command missing' }
                 if ($row.command_sha256 -and (Get-Sha256Hex $row.command) -ne $row.command_sha256) { throw 'external command hash changed' }
-            } else { Assert-ToolPayload -Tool $tool -Dest (Get-ToolDirectory $tool.id) }
+            } else {
+                $toolDir = Get-ToolDirectory $tool.id
+                Assert-ToolPayload -Tool $tool -Dest $toolDir
+                # The kit executes these binaries against targets, so re-hash every file bound
+                # in the install receipt; a changed one is never trusted as present.
+                $receipt = @(if ($row.files) { $row.files.PSObject.Properties })
+                if (-not $receipt.Count) { $proof = 'UNVERIFIED' }
+                foreach ($file in $receipt) {
+                    $path = Join-Path $toolDir $file.Name
+                    if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Sha256Hex $path) -ne [string]$file.Value) {
+                        Write-Host "CHANGED $($tool.id): $($file.Name) differs from its install receipt; reinstall with -Only $($tool.id) -Force"
+                        throw 'changed after install'
+                    }
+                }
+                if (-not $proof) { $proof = "verified $($receipt.Count) file(s)" }
+            }
             foreach ($shim in (ConvertTo-Array $tool.shims)) {
                 if (-not (Test-Path -LiteralPath (Join-Path $BinDir ($shim.name + '.cmd')))) { throw "missing shim $($shim.name)" }
             }
-            Write-Host "OK $($tool.id) $($row.version)"
+            if ($proof -eq 'UNVERIFIED') {
+                Write-Host "UNVERIFIED $($tool.id) $($row.version): no file receipt; reinstall with -Only $($tool.id) -Force to record one"
+                $unverified++
+            } else { Write-Host ("OK $($tool.id) $($row.version)" + $(if ($proof) { " ($proof)" } else { '' })) }
         } catch { Write-Host "FAIL $($tool.id): $($_.Exception.Message)"; $missing++ }
     }
-    Write-Host 'Doctor checks files and records only; run the relevant tool on a lab sample for runtime proof.'
+    Write-Host 'Doctor re-hashes the files each install receipt binds (shimmed executables and key files) and checks the rest for presence; run the relevant tool on a lab sample for runtime proof.'
+    if ($unverified) { Write-Host "$unverified tool(s) have no file receipt and were not digest-verified." }
     if ($missing) { exit 1 }
     exit 0
 }

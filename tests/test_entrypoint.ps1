@@ -14,7 +14,7 @@ function Invoke-Entrypoint {
     param([string]$Directory, [string]$Arguments, [string]$DelayedExpansion = 'off')
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $env:ComSpec
-    $info.Arguments = '/d /v:' + $DelayedExpansion + ' /c install.cmd ' + $Arguments
+    $info.Arguments = '/d /v:' + $DelayedExpansion + ' /c .\install.cmd ' + $Arguments
     $info.WorkingDirectory = $Directory
     $info.UseShellExecute = $false
     $info.CreateNoWindow = $true

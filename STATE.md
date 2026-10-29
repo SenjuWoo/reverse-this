@@ -1,3 +1,10 @@
+# Reverse THIS! 1.7.0 independent releases (2026-10-29)
+
+- Goal: a changed tool binary is detected, and releases need no human step.
+- Done: digest-verifying doctor (CHANGED/UNVERIFIED states, regression test); self-publishing `release.yml` with build attestation; Dependabot auto-merge; ownership linked to the bundle README.
+- Supersedes the uncommitted 1.6.2 plan left in the live kit: its integrity item shipped here as real verification; a VERSION.txt mirror stays rejected (the bundle reads `VERSION`); the source provenance item is covered by the release attestation and RELEASE.json.
+- Next: ci on the pushed SHA, the workflow publishes 1.7.0, verify the downloaded bytes, update the live kit.
+
 # Reverse THIS! 1.6.1 — verified handoff (2026-10-28)
 
 - Complete: truthful standalone companion patch; shared tools reuse their recorded owner, and Skyrim Forge remains optional. Installer/catalog/tool versions are unchanged by this documentation patch.
