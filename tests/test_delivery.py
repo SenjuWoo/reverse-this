@@ -45,4 +45,15 @@ class ProductTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):builder.build(root,a)
             self.assertEqual(a.read_bytes(),before)
 
+class ReleaseWorkflowTests(unittest.TestCase):
+    def test_only_a_green_untagged_main_sha_publishes_and_the_job_never_skips(self):
+        wf=(ROOT/'.github/workflows/release.yml').read_text(encoding='utf-8')
+        for gate in ("workflows: [ci]","conclusion == 'success'","event == 'push'",'if [ "$main" != "$SHA" ]',
+                     'git ls-remote --tags origin','r["name"] != "Publish release"','sha256sum -c SHA256SUMS.txt','actions/attest-build-provenance@'):
+            self.assertIn(gate,wf)
+        # A skipped run is filed under main's newest commit and fails its exact-SHA verdict.
+        self.assertNotIn('\n    if: github.event.workflow_run',wf)
+        self.assertIn('if [ "$CI_GREEN" != "true" ]',wf)
+        for forbidden in ('gh release delete','--clobber','git push --force','git tag -f'):self.assertNotIn(forbidden,wf)
+
 if __name__=='__main__':unittest.main()
