@@ -3,7 +3,8 @@
 - Goal: a changed tool binary is detected, and releases need no human step.
 - Done: digest-verifying doctor (CHANGED/UNVERIFIED states, regression test); self-publishing `release.yml` with build attestation; Dependabot auto-merge; ownership linked to the bundle README.
 - Supersedes the uncommitted 1.6.2 plan left in the live kit: its integrity item shipped here as real verification; a VERSION.txt mirror stays rejected (the bundle reads `VERSION`); the source provenance item is covered by the release attestation and RELEASE.json.
-- Next: ci on the pushed SHA, the workflow publishes 1.7.0, verify the downloaded bytes, update the live kit.
+- Released: v1.7.0 published by release.yml from acee844903b04dffb70e3a444907c104c60cbd85 (Reverse-This-1.7.0.zip sha256 32da083f29b03a8921a419de415354fe48013ee7a554adb2cd337c3a9968a747; SHA256SUMS and build attestation verified). Live kit updated by git to 1.7.0; doctor verifies all 59 tools by digest.
+- Next: nothing pending. Push to main after the local tests; a VERSION bump with its CHANGELOG section publishes itself.
 
 # Reverse THIS! 1.6.1 — verified handoff (2026-10-28)
 
