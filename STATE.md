@@ -4,7 +4,8 @@
 - Done: 21 new tools — native (UPX, YARA, GoReSym, Dependencies, Rizin, System Informer, FLOSS), JVM/Android (Vineflower, uber-apk-signer), Unity scripting (UnityPy), and engines (WolvenKit GUI/CLI, Mod Engine 2, Smithbox, Crowbar, BSPSource, Source 2 Viewer GUI/CLI, UndertaleModTool GUI/CLI, RPFM). Catalog is now 80 tools.
 - Upstream audit: all 41 existing GitHub-release patterns still match exactly one asset; every new pattern was tested the same way. ILSpy v11.2 (build 11.2.0.10050, commit c86190ef) is the current release and the kit's self-contained zip remains the right asset.
 - Validation: `python tests/test_catalog.py` (80 tools), `-SelfTest`, `-Plan`, and the installer, isolation, entrypoint, .NET prerequisite, standalone and product-delivery suites all pass. All 21 new tools were installed into an isolated `-InstallRoot` and `-Doctor` verified every receipt; the live kit was not refreshed.
-- Next: refresh the live kit with `install.cmd` when wanted, then push through the normal release workflow. No live kit refresh or publication was performed by this change.
+- Released: v1.8.0 published by release.yml from 73ee31ff2f73b94246cbc309b02cf1cdc3754de9; Reverse-This-1.8.0.zip sha256 7865a43c20f5ad0eef5fa0f10cb405ac519c0d4a7f49d321ef3a0667cd905366 (71,142 bytes). Exact-SHA checks passed; SHA256SUMS, build attestation, downloaded bytes and RELEASE.json file hashes verified; alerts 0/0/0, code quality unavailable and left off.
+- Next: refresh the live kit with `install.cmd` when wanted (59 tools installed; the 21 new ones are pending). No live kit refresh was performed by this change.
 - Limits: all 21 new tools were installed and receipt-verified in an isolated root; their GUI applications were not launched and no game target was modified. REFramework, CodeWalker, Cutter, RetDec and de4dot stay manual/excluded as documented.
 
 # Reverse THIS! 1.7.0 independent releases (2026-10-29)
