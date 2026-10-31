@@ -1,3 +1,12 @@
+# Reverse THIS! 1.8.0 catalog expansion (2026-10-31)
+
+- Goal: close the remaining generic app and game-modding gaps without weakening the one-asset, digest-verified install rules.
+- Done: 21 new tools — native (UPX, YARA, GoReSym, Dependencies, Rizin, System Informer, FLOSS), JVM/Android (Vineflower, uber-apk-signer), Unity scripting (UnityPy), and engines (WolvenKit GUI/CLI, Mod Engine 2, Smithbox, Crowbar, BSPSource, Source 2 Viewer GUI/CLI, UndertaleModTool GUI/CLI, RPFM). Catalog is now 80 tools.
+- Upstream audit: all 41 existing GitHub-release patterns still match exactly one asset; every new pattern was tested the same way. ILSpy v11.2 (build 11.2.0.10050, commit c86190ef) is the current release and the kit's self-contained zip remains the right asset.
+- Validation: `python tests/test_catalog.py` (80 tools), `-SelfTest`, `-Plan`, and the installer, isolation, entrypoint, .NET prerequisite, standalone and product-delivery suites all pass. All 21 new tools were installed into an isolated `-InstallRoot` and `-Doctor` verified every receipt; the live kit was not refreshed.
+- Next: refresh the live kit with `install.cmd` when wanted, then push through the normal release workflow. No live kit refresh or publication was performed by this change.
+- Limits: all 21 new tools were installed and receipt-verified in an isolated root; their GUI applications were not launched and no game target was modified. REFramework, CodeWalker, Cutter, RetDec and de4dot stay manual/excluded as documented.
+
 # Reverse THIS! 1.7.0 independent releases (2026-10-29)
 
 - Goal: a changed tool binary is detected, and releases need no human step.

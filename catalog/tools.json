@@ -460,6 +460,40 @@
       ]
     },
     {
+      "id": "vineflower",
+      "name": "Vineflower",
+      "job": "JVM decompiler JAR; a second opinion for JADX output.",
+      "method": "github-release",
+      "repo": "Vineflower/vineflower",
+      "asset_pattern": "^vineflower-[0-9.]+\\.jar$",
+      "unpack": "raw",
+      "needs_jdk": 25,
+      "shims": [
+        {
+          "name": "vineflower",
+          "exe_glob": "vineflower-*.jar",
+          "java_jar": true
+        }
+      ]
+    },
+    {
+      "id": "uber-apk-signer",
+      "name": "uber-apk-signer",
+      "job": "Sign and zipalign rebuilt APKs.",
+      "method": "github-release",
+      "repo": "patrickfav/uber-apk-signer",
+      "asset_pattern": "^uber-apk-signer-[0-9.]+\\.jar$",
+      "unpack": "raw",
+      "needs_jdk": 25,
+      "shims": [
+        {
+          "name": "uber-apk-signer",
+          "exe_glob": "uber-apk-signer-*.jar",
+          "java_jar": true
+        }
+      ]
+    },
+    {
       "id": "asar",
       "name": "Electron ASAR",
       "job": "List, extract and repack Electron ASAR archives. Requires Node 22.12+.",
@@ -478,6 +512,137 @@
       "job": "Parse and modify PE, ELF and Mach-O files from an isolated Python environment, Python 3.9+.",
       "method": "pip-venv",
       "package": "lief",
+      "shims": []
+    },
+    {
+      "id": "upx",
+      "name": "UPX",
+      "job": "Executable packer and unpacker; unpack a target before static analysis.",
+      "method": "github-release",
+      "repo": "upx/upx",
+      "asset_pattern": "^upx-.+-win64\\.zip$",
+      "shims": [
+        {
+          "name": "upx",
+          "exe_glob": "upx.exe"
+        }
+      ]
+    },
+    {
+      "id": "yara",
+      "name": "YARA",
+      "job": "Pattern-matching scanner for files and memory; the rules are yours.",
+      "method": "github-release",
+      "repo": "VirusTotal/yara",
+      "asset_pattern": "^yara-.+-win64\\.zip$",
+      "shims": [
+        {
+          "name": "yara",
+          "exe_glob": "yara64.exe"
+        },
+        {
+          "name": "yarac",
+          "exe_glob": "yarac64.exe"
+        }
+      ]
+    },
+    {
+      "id": "gore-sym",
+      "name": "GoReSym",
+      "job": "Recover function names and build info from stripped Go binaries.",
+      "method": "github-release",
+      "repo": "mandiant/GoReSym",
+      "asset_pattern": "^GoReSym-windows\\.zip$",
+      "shims": [
+        {
+          "name": "gore-sym",
+          "exe_glob": "GoReSym.exe"
+        }
+      ]
+    },
+    {
+      "id": "dependencies",
+      "name": "Dependencies",
+      "job": "DLL dependency and import viewer, CLI and GUI.",
+      "method": "github-release",
+      "repo": "lucasg/Dependencies",
+      "asset_pattern": "^Dependencies_x64_Release\\.zip$",
+      "shims": [
+        {
+          "name": "dependencies",
+          "exe_glob": "Dependencies.exe"
+        },
+        {
+          "name": "dependencies-gui",
+          "exe_glob": "DependenciesGui.exe"
+        }
+      ]
+    },
+    {
+      "id": "rizin",
+      "name": "Rizin",
+      "job": "Scriptable binary analysis framework and CLI.",
+      "method": "github-release",
+      "repo": "rizinorg/rizin",
+      "asset_pattern": "^rizin-windows-static-v.+\\.zip$",
+      "shims": [
+        {
+          "name": "rizin",
+          "exe_glob": "rizin.exe"
+        },
+        {
+          "name": "rz-bin",
+          "exe_glob": "rz-bin.exe"
+        },
+        {
+          "name": "rz-diff",
+          "exe_glob": "rz-diff.exe"
+        },
+        {
+          "name": "rz-asm",
+          "exe_glob": "rz-asm.exe"
+        }
+      ]
+    },
+    {
+      "id": "systeminformer",
+      "name": "System Informer",
+      "job": "Process, handle, module and memory inspector. The amd64 build.",
+      "method": "github-release",
+      "repo": "winsiderss/systeminformer",
+      "asset_pattern": "^systeminformer-.+-bin\\.zip$",
+      "shims": [
+        {
+          "name": "systeminformer",
+          "exe_glob": "SystemInformer.exe",
+          "prefer_path": "amd64.SystemInformer"
+        },
+        {
+          "name": "peview",
+          "exe_glob": "peview.exe",
+          "prefer_path": "amd64.peview"
+        }
+      ]
+    },
+    {
+      "id": "floss",
+      "name": "FLOSS",
+      "job": "Extract obfuscated and runtime strings from executables. Python 3.10+.",
+      "method": "pip-venv",
+      "package": "flare-floss",
+      "shims": [
+        {
+          "name": "floss",
+          "exe_glob": "floss.exe"
+        }
+      ]
+    },
+    {
+      "id": "unitypy",
+      "name": "UnityPy",
+      "job": "Script Unity asset and bundle extraction in an isolated Python environment. Python 3.8+.",
+      "method": "pip-venv",
+      "package": "UnityPy",
       "shims": []
     },
     {
@@ -723,6 +888,165 @@
       "method": "github-archive",
       "repo": "SDmodding/SDK-Playground",
       "shims": []
+    },
+    {
+      "id": "wolvenkit",
+      "name": "WolvenKit",
+      "job": "REDengine editor for Cyberpunk 2077 and The Witcher 3.",
+      "method": "github-release",
+      "repo": "WolvenKit/WolvenKit",
+      "asset_pattern": "^WolvenKit-[0-9].+\\.zip$",
+      "shims": [
+        {
+          "name": "wolvenkit",
+          "exe_glob": "WolvenKit.exe"
+        }
+      ]
+    },
+    {
+      "id": "wolvenkit-cli",
+      "name": "WolvenKit CLI",
+      "job": "REDengine archive and asset CLI for scripted work.",
+      "method": "github-release",
+      "repo": "WolvenKit/WolvenKit",
+      "asset_pattern": "^WolvenKit\\.Console-[0-9].+\\.zip$",
+      "shims": [
+        {
+          "name": "wolvenkit-cli",
+          "exe_glob": "WolvenKit.CLI.exe"
+        }
+      ]
+    },
+    {
+      "id": "modengine2",
+      "name": "Mod Engine 2",
+      "job": "FromSoftware mod loader for Elden Ring, Armored Core VI and Dark Souls III.",
+      "method": "github-release",
+      "repo": "soulsmods/ModEngine2",
+      "asset_pattern": "^ModEngine-.+-win64\\.zip$",
+      "shims": [
+        {
+          "name": "modengine2",
+          "exe_glob": "modengine2_launcher.exe"
+        }
+      ]
+    },
+    {
+      "id": "smithbox",
+      "name": "Smithbox",
+      "job": "FromSoftware param, map and regulation editor. OpenGL build.",
+      "method": "github-release",
+      "repo": "vawser/Smithbox",
+      "asset_pattern": "^Smithbox[_-].+\\.zip$",
+      "shims": [
+        {
+          "name": "smithbox",
+          "exe_glob": "Smithbox.OpenGL.exe"
+        }
+      ]
+    },
+    {
+      "id": "crowbar",
+      "name": "Crowbar",
+      "job": "Source engine model compiler and decompiler. The 7-Zip archive.",
+      "method": "github-release",
+      "repo": "ZeqMacaw/Crowbar",
+      "asset_pattern": "^Crowbar_.+\\.7z$",
+      "unpack": "7z",
+      "shims": [
+        {
+          "name": "crowbar",
+          "exe_glob": "Crowbar.exe"
+        }
+      ]
+    },
+    {
+      "id": "bspsrc",
+      "name": "BSPSource",
+      "job": "Decompile Source engine BSP maps to VMF. Java 24+.",
+      "method": "github-release",
+      "repo": "ata4/bspsrc",
+      "asset_pattern": "^bspsrc-jar-only\\.zip$",
+      "needs_jdk": 25,
+      "shims": [
+        {
+          "name": "bspsrc",
+          "exe_glob": "bspsrc.jar",
+          "java_jar": true
+        }
+      ]
+    },
+    {
+      "id": "source2viewer",
+      "name": "Source 2 Viewer",
+      "job": "Browse and export Source 2 VPK and asset files, GUI.",
+      "method": "github-files",
+      "repo": "ValveResourceFormat/ValveResourceFormat",
+      "files": [
+        "Source2Viewer.exe"
+      ],
+      "shims": [
+        {
+          "name": "source2viewer",
+          "exe_glob": "Source2Viewer.exe"
+        }
+      ]
+    },
+    {
+      "id": "source2viewer-cli",
+      "name": "Source 2 Viewer CLI",
+      "job": "Export and inspect Source 2 assets from the command line.",
+      "method": "github-release",
+      "repo": "ValveResourceFormat/ValveResourceFormat",
+      "asset_pattern": "^cli-windows-x64\\.zip$",
+      "shims": [
+        {
+          "name": "source2viewer-cli",
+          "exe_glob": "Source2Viewer-CLI.exe"
+        }
+      ]
+    },
+    {
+      "id": "undertalemodtool",
+      "name": "UndertaleModTool",
+      "job": "GameMaker data.win editor and decompiler, GUI.",
+      "method": "github-release",
+      "repo": "UnderminersTeam/UndertaleModTool",
+      "asset_pattern": "^UndertaleModTool_v.+-Windows\\.zip$",
+      "shims": [
+        {
+          "name": "undertalemodtool",
+          "exe_glob": "UndertaleModTool.exe"
+        }
+      ]
+    },
+    {
+      "id": "utmt-cli",
+      "name": "UndertaleModTool CLI",
+      "job": "Scripted GameMaker data.win dumping and patching.",
+      "method": "github-release",
+      "repo": "UnderminersTeam/UndertaleModTool",
+      "asset_pattern": "^UTMT_CLI_v.+-Windows\\.zip$",
+      "shims": [
+        {
+          "name": "utmt-cli",
+          "exe_glob": "UndertaleModCli.exe"
+        }
+      ]
+    },
+    {
+      "id": "rpfm",
+      "name": "RPFM",
+      "job": "Total War pack file manager and editor.",
+      "method": "github-release",
+      "repo": "Frodo45127/rpfm",
+      "asset_pattern": "^rpfm-v.+-x86_64-pc-windows-msvc\\.zip$",
+      "shims": [
+        {
+          "name": "rpfm",
+          "exe_glob": "rpfm_ui.exe"
+        }
+      ]
     },
     {
       "id": "replica-skill",

@@ -1,6 +1,6 @@
 # Reverse THIS!
 
-One click installs a Windows reverse-engineering and modding workbench with stable commands in `sandbox/bin`. It covers native and .NET apps, Android/Java bytecode, PyInstaller packages, binary formats, and several game engines.
+One click installs a Windows reverse-engineering and modding workbench with stable commands in `sandbox/bin`. It covers native and .NET apps, Android/Java bytecode, PyInstaller packages, binary formats, and game engines from Unreal and Unity to Source, REDengine, FromSoftware, GameMaker and Total War.
 
 `sandbox` is a workspace folder, not process isolation. Tools run with your account's permissions. Use a separate VM or Windows Sandbox when a target requires isolation. This kit does not promise to recover original source, a working build, missing assets, symbols or keys; decompilation does not change ownership or licensing.
 
@@ -23,7 +23,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1
 
 Normal runs resolve current owned release, pip, npm and NuGet versions, preserving intentional pins and numerically newer valid installations. Capa's package, rules and signatures remain one matched transaction. `-NoUpdate` retains valid installed versions; `-Offline` and `-Doctor` inspect files without downloads or writes; `-Plan` prints the catalog. Another checkout reuses the registered owner kit. Use `-InstallRoot` only for an explicit isolated installation; it never moves the shared pointer. See [standalone installation and updates](docs/standalone.md).
 
-This repository installs independently. It reuses a validated shared base Python (`UABS_PYTHON` Process/User, then supported discovery) and compatible shared Node/npm; missing prerequisites use the official Python manager/winget packages. Manager-owned Python receives patch updates on its existing feature line; known winget-owned Node LTS receives targeted updates. App runtimes and venvs stay app-owned. Frida, capa and LIEF use separate dependency venvs; capa requires Python 3.10+, LIEF 3.9+. ASAR needs Node 22.12+; REA has the stricter range in the [standalone guide](docs/standalone.md). Java routes share JDK 25 and ilspycmd uses .NET 10, provisioned through their official winget packages when missing. Runtime setup can change the machine; the bundle is optional.
+This repository installs independently. It reuses a validated shared base Python (`UABS_PYTHON` Process/User, then supported discovery) and compatible shared Node/npm; missing prerequisites use the official Python manager/winget packages. Manager-owned Python receives patch updates on its existing feature line; known winget-owned Node LTS receives targeted updates. App runtimes and venvs stay app-owned. Frida, capa, LIEF, FLOSS and UnityPy use separate dependency venvs; capa requires Python 3.10+, LIEF 3.9+, FLOSS 3.10+ and UnityPy 3.8+. ASAR needs Node 22.12+; REA has the stricter range in the [standalone guide](docs/standalone.md). Java routes share JDK 25 and ilspycmd uses .NET 10, provisioned through their official winget packages when missing. Runtime setup can change the machine; the bundle is optional.
 
 Check the installed records and required files without downloading:
 
@@ -62,13 +62,23 @@ Open the agent in this folder. It reads `AGENTS.md`. If the chat is somewhere el
 
 ## What the click installs
 
-Native: Ghidra (GUI and `analyzeHeadless`), ImHex, Detect It Easy (`diec`), x64dbg, PE-bear, RenderDoc (`renderdoccmd` and `qrenderdoc`), MinHook, SafetyHook sources, Frida.
+Native: Ghidra (GUI and `analyzeHeadless`), ImHex, Detect It Easy (`diec`), x64dbg, PE-bear, RenderDoc (`renderdoccmd` and `qrenderdoc`), Rizin (`rizin`, `rz-bin`, `rz-diff`, `rz-asm`), System Informer, Dependencies (CLI and GUI), UPX, YARA (`yara` and `yarac`), GoReSym, FLOSS, MinHook, SafetyHook sources, Frida.
 
-Apps and formats: JADX (`jadx`, `jadx-gui`) for Android/Java bytecode; Apktool for APK resource/smali decode and rebuild; `asar` for Electron archives; capa for static executable capability triage; Kaitai Struct compiler (`kaitai-struct-compiler`) for binary parsers; `wasm-tools` for WebAssembly; and `pyinstxtractor-ng` for extracting PyInstaller packages. capa uses the official `flare-capa` Python package with released rules in `sandbox/tools/capa-rules` and library-identification signatures in `sandbox/tools/capa-source/sigs`. Both dependencies install automatically, including for `-Only capa`; its shim supplies both paths. LIEF is a Python library in `sandbox/tools/lief`; use its `Scripts/python.exe` to import `lief`. Extraction and capability matches need further analysis; they are not reconstructed source or proof of behavior.
+Apps and formats: JADX (`jadx`, `jadx-gui`) for Android/Java bytecode; Vineflower for a second JVM decompile; Apktool for APK resource/smali decode and rebuild; `uber-apk-signer` for signing rebuilt APKs; `asar` for Electron archives; capa for static executable capability triage; Kaitai Struct compiler (`kaitai-struct-compiler`) for binary parsers; `wasm-tools` for WebAssembly; and `pyinstxtractor-ng` for extracting PyInstaller packages. capa uses the official `flare-capa` Python package with released rules in `sandbox/tools/capa-rules` and library-identification signatures in `sandbox/tools/capa-source/sigs`. Both dependencies install automatically, including for `-Only capa`; its shim supplies both paths. LIEF is a Python library in `sandbox/tools/lief`; use its `Scripts/python.exe` to import `lief`. UnityPy is the same pattern for Unity assets under `sandbox/tools/unitypy`. Extraction and capability matches need further analysis; they are not reconstructed source or proof of behavior.
 
 .NET and Unity: ilspycmd, ILSpy, dnSpyEx, AssetRipper, Il2CppDumper, UABEA, BepInEx 5, MelonLoader, and the matching UnityExplorer plugins.
 
 Unreal: FModel, repak, retoc, UAssetGUI, and the UE4SS experimental release (the stable tag is older; it is not what gets installed).
+
+Source: Crowbar for models, BSPSource (`bspsrc`) for BSP maps, and Source 2 Viewer in both GUI (`source2viewer`) and CLI (`source2viewer-cli`) form.
+
+REDengine: WolvenKit (`wolvenkit`) and its CLI (`wolvenkit-cli`) for Cyberpunk 2077 and The Witcher 3.
+
+FromSoftware: Mod Engine 2 (`modengine2`) to load mods, and Smithbox to edit params, maps and regulation files.
+
+GameMaker: UndertaleModTool (`undertalemodtool`) and its CLI (`utmt-cli`) for `data.win` files.
+
+Total War: RPFM (`rpfm`) for pack files.
 
 Frostbite: Frosty Editor and Frosty Mod Manager.
 

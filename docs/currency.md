@@ -10,7 +10,7 @@ The installer resolves the current official release at install time. This page i
 - x64dbg's current snapshot zip, the x64 debugger. Not the symbols zip.
 - PE-bear's Qt 6 x64 Windows zip.
 - dnSpyEx's `dnSpy-net-win64` zip. Not the .NET Framework build.
-- ILSpy's self-contained Windows x64 zip, plus the [`ilspycmd` dotnet tool](https://www.nuget.org/packages/ilspycmd). Current ilspycmd 11.1 targets .NET 10; its installer checks for the SDK/runtime and uses the official `Microsoft.DotNet.SDK.10` winget package when absent. Older UABS .NET prerequisites alone do not satisfy this tool.
+- ILSpy's self-contained Windows x64 zip, plus the [`ilspycmd` dotnet tool](https://www.nuget.org/packages/ilspycmd). Current ilspycmd 11.2 targets .NET 10; its installer checks for the SDK/runtime and uses the official `Microsoft.DotNet.SDK.10` winget package when absent. Older UABS .NET prerequisites alone do not satisfy this tool. The non-self-contained `ILSpy_windows_*` zip needs a .NET runtime and is not installed.
 - AssetRipper's Windows x64 zip.
 - Il2CppDumper's Windows zip (`Il2CppDumper-win-`), not the net6 or net7 framework-dependent zips.
 - FModel's current zip.
@@ -44,6 +44,24 @@ The installer resolves the current official release at install time. This page i
 - HD2Runtime's current SDK, runtime, example projects, and mod template zips, as four separate tools. HD2Runtime ModBuilder's current Windows x64 zip. The shim is `HD2RuntimeModBuilder.exe`, not the `HD2RuntimeGUI.exe` compatibility copy. The community SDK zip. Bingus Shared Loader's loader zip, not its source zip.
 - R2API source for the current release tag. That repository publishes source, not a bench executable.
 - Sleeping Dogs TheoryEngine source, SDK source (the repository's default branch), and the SDK playground examples. These trees contain no game executable.
+- UPX's `upx-<version>-win64.zip`; the `upx` shim unpacks a target. Only UPX-packed files are supported by UPX.
+- YARA's `yara-<version>-<build>-win64.zip`; `yara` and `yarac` are the 64-bit CLIs.
+- GoReSym's `GoReSym-windows.zip`; one static executable.
+- Dependencies' `Dependencies_x64_Release.zip`, CLI and GUI. Not the debug or x86 build.
+- Rizin's `rizin-windows-static-v<version>.zip`; the static build has no separate VC runtime requirement. Not the installer or the shared build.
+- System Informer's `systeminformer-<version>-bin.zip`, amd64 tree. Not the setup exe.
+- FLOSS (`flare-floss`) in its own venv, Python 3.10+.
+- UnityPy in its own venv, Python 3.8+; a library with no shim.
+- Vineflower's `vineflower-<version>.jar`, not the slim jar. Java 17+; JDK 25 is shared.
+- uber-apk-signer's `uber-apk-signer-<version>.jar`. Java 8+; JDK 25 is shared.
+- WolvenKit's `WolvenKit-<version>.zip` and `WolvenKit.Console-<version>.zip`; GUI and CLI are separate catalog entries. Not the setup exe and not the Linux console build.
+- Mod Engine 2's `ModEngine-<version>-win64.zip`; the shim is `modengine2_launcher.exe`.
+- Smithbox's `Smithbox_*.zip`; the OpenGL build is the shim because the archive has no plain `Smithbox.exe`.
+- Crowbar's `Crowbar_<date>_<version>.7z`; 7-Zip unpacks the single `Crowbar.exe`.
+- BSPSource's `bspsrc-jar-only.zip`; Java 24+, JDK 25 shared.
+- Source 2 Viewer's `Source2Viewer.exe` and `cli-windows-x64.zip`; GUI and CLI are separate catalog entries.
+- UndertaleModTool's `UndertaleModTool_v*-Windows.zip` and `UTMT_CLI_v*-Windows.zip`; GUI and CLI are separate catalog entries.
+- RPFM's `rpfm-v*-x86_64-pc-windows-msvc.zip`; the shim is `rpfm_ui.exe`.
 
 ## Left out
 
@@ -63,6 +81,12 @@ The installer resolves the current official release at install time. This page i
 - `openbor-rar`: the old id for OpenBOR's rar. The installed tool is `openbor`.
 - `fighter-factory-installer`: the old id for the dump's installer. The installed tool is `fighter-factory`.
 
+- `de4dot`: both `de4dot/de4dot` and `ViRb3/de4dot-cex` are archived. No maintained deobfuscator binary is installed.
+- `reframework`: releases are one ZIP per game, so a single asset pattern would install the wrong game's build. It stays a documented manual route.
+- `codewalker`: the repository publishes no GitHub release. Use the author's build and verify its provenance.
+- `cutter`: a GPL-3.0 GUI over the installed `rizin` CLI; Ghidra already provides a maintained GUI. Optional route.
+- `retdec`: the last release is v5.0 (2023). Ghidra and Rizin are the maintained decompilers here.
+
 Also not unpacked, because they install into their own directories or are not redistributable here: ReShade, NVIDIA Nsight, PIX, RTX Remix, and paid shader packs.
 
 The Sleeping Dogs game executable and its PDB are not downloaded. TheoryEngine's README points at a file host for "Game Executable" and "Debug Symbols (PDB)". Those are the game, not a tool. The public GitHub source trees are what the kit installs.
@@ -72,6 +96,10 @@ The dump's other new folders are not a second kit. `GoDot/LimboAi` is another Go
 Helldivers 2's public runtime, SDKs, ModBuilder, and loader are installed. Sleeping Dogs TheoryEngine, its SDK, and the SDK playground are installed from their public source archives. R2API is installed from the current release tag's source archive. None of those downloads include a game executable.
 
 Duplicate trees of the same UE4SS build (`zDEV` next to the release) are not installed. One copy is enough.
+
+## Coverage audit, 2026-10-31
+
+Re-checked every GitHub-release entry against its current upstream release: all 41 existing patterns still matched exactly one asset. The 21 additions were selected the same way, and their archive contents were listed to confirm each shim glob: UPX 5.3.0, YARA 4.6.0, GoReSym 3.4.1, Dependencies 1.11.1, Rizin 0.9.1, System Informer 4.0.26241.138, Vineflower 1.12.0, uber-apk-signer 1.3.0, WolvenKit 9.1.0, Mod Engine 2 release-2.1.0, Smithbox 2.2.6, Crowbar 0.74, BSPSource 1.4.8, Source 2 Viewer 20.1, UndertaleModTool 0.9.2.0 and RPFM 5.3.3. ILSpy v11.2 (build 11.2.0.10050, commit c86190ef) is current; the kit keeps the self-contained zip because the plain `ILSpy_windows_*` zip needs a .NET runtime. These are dated observations, not permanent pins.
 
 ## Coverage audit, 2026-10-11
 

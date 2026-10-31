@@ -1,3 +1,10 @@
+## 1.8.0 (2026-10-31)
+
+- Add 21 tools for the gaps that generic app and game work kept hitting. Native: UPX, YARA, GoReSym, Dependencies, Rizin, System Informer and FLOSS. JVM/Android: Vineflower and uber-apk-signer. Unity scripting: UnityPy. Engines: WolvenKit (GUI and CLI), Mod Engine 2, Smithbox, Crowbar, BSPSource, Source 2 Viewer (GUI and CLI), UndertaleModTool (GUI and CLI) and RPFM.
+- Re-verify every GitHub-release entry against its current upstream release: all 41 existing patterns match exactly one asset, and each new pattern was tested the same way before it was added.
+- Keep the existing rules: one asset per release, digest-verified downloads, shims only for executables confirmed inside the archive, and shared JDK 25 for the Java tools (BSPSource needs Java 24+, Vineflower 17+, uber-apk-signer 8+).
+- Document what stays manual or excluded: REFramework ships one zip per game, CodeWalker publishes no release, Cutter is an optional GUI over the installed rizin CLI, RetDec's last release is from 2023, and de4dot is archived.
+
 ## 1.7.0 (2026-10-29)
 
 - `-Doctor` re-hashes the files each install receipt binds (shimmed executables and key files) and reports a changed one as `CHANGED` (exit 1) instead of present; a tool without a receipt is `UNVERIFIED`. All 59 tools on the maintainer kit verify. A regression test proves the old doctor accepted a changed binary.

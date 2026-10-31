@@ -21,10 +21,26 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | Generic archives | 7-Zip | Proprietary packing and custom compression can require a format-specific tool. |
 | Unreal, Godot, Frostbite | FModel, repak, retoc, UAssetGUI, UE4SS; GDRE and Godot; Frosty tools | Check engine/game versions. A source archive or loader is not a supported executable for every game. |
 | Graphics and textures | RenderDoc, DirectXTex | API/driver support and capture compatibility vary; this is not every vendor's profiling suite. |
-| Binary comparison | Ghidra Version Tracking, ImHex | Compare the same architecture and record target hashes; generated names are not stable identifiers. |
+| Binary comparison | Ghidra Version Tracking, ImHex, `rz-diff` | Compare the same architecture and record target hashes; generated names are not stable identifiers. |
+| Packed executables | UPX | Only UPX-packed files unpack cleanly; other packers need their own unpacker. |
+| Stripped Go binaries | GoReSym | Symbol and build-info recovery depends on the Go version and build flags. |
+| Rule-based scanning | YARA (`yara`, `yarac`) | Rules are yours to write; a match is a lead, not proof of behavior. |
+| Import and dependency view | Dependencies (CLI and GUI) | Resolution can differ from what the loader does at runtime. |
+| Live process, handle and module inspection | System Informer | Needs the same privilege as the target; kernel protections can block it. |
+| Obfuscated or runtime strings | FLOSS | Recovered strings can be decoys; emulation may not reach every code path. |
+| Scripted native analysis | Rizin (`rizin`, `rz-bin`, `rz-diff`, `rz-asm`) | Command syntax differs from radare2; check the installed version's help. |
+| JVM decompilation, second opinion | Vineflower | Compare with JADX output; neither restores the original source. |
+| APK signing | uber-apk-signer | You supply the key; a debug key is not a release identity. |
+| Scripted Unity asset work | UnityPy | Type trees are Unity-version specific; this is a library, not a GUI. |
+| Source models and maps | Crowbar, BSPSource | Format and game support vary; materials and mounts are separate. |
+| Source 2 assets | Source 2 Viewer (GUI and CLI) | Supports current VPK/resource versions; not every resource type exports. |
+| REDengine archives and assets | WolvenKit (GUI and CLI) | Game-version support and archive format changes matter. |
+| FromSoftware mods | Mod Engine 2, Smithbox | Per-game offsets and regulation versions; online/anti-cheat use is out of scope. |
+| GameMaker games | UndertaleModTool (GUI and CLI) | `data.win` version support varies; not every runner build is covered. |
+| Total War packs | RPFM | Schemas are per game; verify the pack version before writing. |
 | App behavior recon and clean-room rebuild | replica-skill (`replica-recon`, `-diff`, `-test`, others) | MIT Claude skills with stdlib Python helpers. They work from public pages, screenshots and your own account; they do not analyze binaries. The installer resolves the current default branch to a full immutable commit, records that archive identity and its SHA-256, and reuses the recorded version with `-NoUpdate`; review the selected source before use. Rebuilding features is not a licence to copy code, assets or branding. |
 
-The game-specific SDKs, fighting-game tools and art editors remain in the catalog. They do not extend generic app decompilation.
+The game-specific SDKs, fighting-game tools and art editors remain in the catalog. They do not extend generic app decompilation. Bethesda and Skyrim tooling is owned by [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge); this kit does not duplicate xEdit, LOOT or the Creation Kit.
 
 ## Added tool sources and runtimes
 
@@ -38,6 +54,24 @@ The game-specific SDKs, fighting-game tools and art editors remain in the catalo
 | Apktool | [iBotPeaches/Apktool](https://github.com/iBotPeaches/Apktool), [installation guide](https://apktool.org/docs/install/), [decode/build options](https://apktool.org/docs/cli-parameters/) | Apache-2.0; Java 8+ confirmed for v3.0.3, JDK 25 shared here. Supply Android framework files if the target needs them. Case-distinct APK paths need a case-sensitive work directory; the installer does not change that Windows setting. |
 | Electron ASAR | [electron/asar](https://github.com/electron/asar) | MIT; `@electron/asar` requires Node 22.12+ and npm. Local prefix with package lifecycle scripts disabled. |
 | LIEF | [lief-project/LIEF](https://github.com/lief-project/LIEF), [Python package metadata](https://pypi.org/project/lief/) | Apache-2.0; Python 3.9+ in a separate venv. Use the installed version's API. |
+| UPX | [upx/upx](https://github.com/upx/upx) | GPL-2.0-or-later with the UPX special exception; standalone Windows x64 zip. |
+| YARA | [VirusTotal/yara](https://github.com/VirusTotal/yara) | BSD-3-Clause; standalone Windows x64 zip with `yara64` and `yarac64`. |
+| GoReSym | [mandiant/GoReSym](https://github.com/mandiant/GoReSym) | MIT; standalone Windows executable. |
+| Dependencies | [lucasg/Dependencies](https://github.com/lucasg/Dependencies) | MIT; x64 release zip with CLI and GUI. |
+| Rizin | [rizinorg/rizin](https://github.com/rizinorg/rizin) | LGPL-3.0; static Windows x64 zip. |
+| System Informer | [winsiderss/systeminformer](https://github.com/winsiderss/systeminformer) | MIT; portable bin zip, amd64 tree. |
+| FLOSS | [mandiant/flare-floss](https://github.com/mandiant/flare-floss) | Apache-2.0; `flare-floss` in a venv, Python 3.10+. |
+| UnityPy | [K0lb3/UnityPy](https://github.com/K0lb3/UnityPy) | MIT; `UnityPy` in a venv, Python 3.8+. |
+| Vineflower | [Vineflower/vineflower](https://github.com/Vineflower/vineflower) | Apache-2.0; JAR, Java 17+, JDK 25 shared here. |
+| uber-apk-signer | [patrickfav/uber-apk-signer](https://github.com/patrickfav/uber-apk-signer) | Apache-2.0; JAR, Java 8+, JDK 25 shared here. |
+| WolvenKit | [WolvenKit/WolvenKit](https://github.com/WolvenKit/WolvenKit) | GPL-3.0; self-contained Windows zip for GUI and CLI. |
+| Mod Engine 2 | [soulsmods/ModEngine2](https://github.com/soulsmods/ModEngine2) | MIT; Windows x64 zip. |
+| Smithbox | [vawser/Smithbox](https://github.com/vawser/Smithbox) | MIT; self-contained Windows zip. |
+| Crowbar | [ZeqMacaw/Crowbar](https://github.com/ZeqMacaw/Crowbar) | CC BY-SA 3.0; 7-Zip archive containing `Crowbar.exe`. |
+| BSPSource | [ata4/bspsrc](https://github.com/ata4/bspsrc) | Public domain; JAR-only zip, Java 24+, JDK 25 shared here. |
+| Source 2 Viewer | [ValveResourceFormat/ValveResourceFormat](https://github.com/ValveResourceFormat/ValveResourceFormat) | MIT; single-file GUI exe and Windows x64 CLI zip. |
+| UndertaleModTool | [UnderminersTeam/UndertaleModTool](https://github.com/UnderminersTeam/UndertaleModTool) | GPL-3.0; self-contained Windows GUI and CLI zips. |
+| RPFM | [Frodo45127/rpfm](https://github.com/Frodo45127/rpfm) | MIT; Windows x64 zip with `rpfm_ui.exe`. |
 
 Selecting `capa`, `capa-rules` or `capa-source` for installation updates the entire matched capa group in one transaction. Plan and Doctor still list/check the individual catalog entries.
 
@@ -51,9 +85,13 @@ These are primary upstream entry points checked on 2026-10-11. Resolve current v
 
 | Gap | Upstream route | Setup and scope |
 |---|---|---|
-| Android signing and device debugging | [Android SDK Build Tools](https://developer.android.com/tools/releases/build-tools), [SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) | Separate SDK installation and licenses; `apksigner` handles APK signing and `adb` handles device work. Apktool alone does not provide them. |
+| Android signing and device debugging | [Android SDK Build Tools](https://developer.android.com/tools/releases/build-tools), [SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) | `uber-apk-signer` covers signing and zipalignment. The separate SDK is still needed for `adb`, device work and Google's own `apksigner`; licenses apply. |
 | Newer Unity IL2CPP metadata or a second analysis route | [Cpp2IL preview 2022.1.0-pre-release.21](https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21) | MIT; preview binaries published 2026-02-22 include a Windows EXE and .NET Framework 4.7.2 ZIP. Choose the correct architecture/runtime and verify target metadata support. No preview is automatically installed. |
-| JVM decompiler alternative | [Vineflower](https://github.com/Vineflower/vineflower) | Apache-2.0; current 1.12.0 ships `vineflower-1.12.0.jar`, Java 17+. Useful when JADX's output needs comparison. |
+| Source 2 tools not covered by the viewer | [Source 2 SDK / ValveResourceFormat source](https://github.com/ValveResourceFormat/ValveResourceFormat) | Build from source when a resource type or game version is newer than the released binaries. |
+| RE Engine mods | [REFramework](https://github.com/praydog/REFramework) | MIT; releases are one ZIP per game (RE2, RE3, RE4, RE7, RE8, DD2, MH Wilds, SF6 and others). Pick the game's asset; a single pattern cannot select all of them. |
+| GTA V modding | [CodeWalker](https://github.com/dexyfex/CodeWalker) | The repository publishes no GitHub release. Use the author's published build; verify its provenance. |
+| Rizin GUI | [Cutter](https://github.com/rizinorg/cutter) | GPL-3.0; the `Cutter-v*-Windows-x86_64.zip` GUI over the installed `rizin` CLI. Optional when Ghidra already covers GUI analysis. |
+| Second native decompiler | [RetDec](https://github.com/avast/retdec) | MIT; last release v5.0 (2023) ships a Windows 7z. Ghidra and Rizin are the maintained defaults; use RetDec only for a target where its output helps. |
 | JVM bytecode editing | [Recaf](https://github.com/Col-E/Recaf/releases/tag/4.0.0-alpha) | MIT; 4.x is explicitly a preview despite GitHub marking its tag as a normal release. Windows artifact `recaf-4x-alpha-win-86-x64.jar`, Java 22+. Do not relabel it stable. |
 | File, registry and process activity | [Microsoft Process Monitor](https://learn.microsoft.com/en-us/sysinternals/downloads/procmon) | Separate Sysinternals license and first-run acceptance; monitoring can require elevation and a driver. Current 4.11 requires Windows 11; it is not part of this kit's Windows 10 baseline. |
 | Windows dumps and system debugging | [WinDbg](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/) | Microsoft-managed installation and symbol setup; not a portable payload here. Preserve private dumps and symbol caches outside source. |

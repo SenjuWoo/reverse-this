@@ -1,3 +1,7 @@
+# Current 1.8.0 catalog expansion — 2026-10-31
+
+Goal: the catalog covers the remaining generic app and game-modding gaps with the same one-asset, digest-verified rules. Added 21 tools (80 total); re-verified all 41 existing GitHub-release patterns against current upstream releases. See STATE.md for validation and limits.
+
 # Current 1.6.1 audit — 2026-10-28
 
 Complete: corrected source-provenance documentation, verified both shell suites and the 59-tool live owner, converged release SHA CI/security, published the frozen double build and verified every public asset. Source-only handoff checks preserve the immutable release. See STATE.md.

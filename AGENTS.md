@@ -39,20 +39,38 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Unity Mono loader | `sandbox/tools/bepinex5` |
 | Unity IL2CPP loader | `sandbox/tools/melonloader` |
 | Unity live inspector | the matching folder under `sandbox/tools/unityexplorer-*` |
+| Unity asset scripting | `sandbox/tools/unitypy/Scripts/python.exe` with `import UnityPy` |
 | Unreal browse | `sandbox/bin/fmodel.cmd` |
 | Unreal pak | `sandbox/bin/repak.cmd` |
 | Unreal IoStore | `sandbox/bin/retoc.cmd` |
 | Unreal assets | `sandbox/bin/uassetgui.cmd` |
 | Unreal Lua / dumper | `sandbox/tools/ue4ss` |
+| Source model compile/decompile | `sandbox/bin/crowbar.cmd` |
+| Source BSP decompile | `sandbox/bin/bspsrc.cmd` |
+| Source 2 assets | `sandbox/bin/source2viewer.cmd` or `sandbox/bin/source2viewer-cli.cmd` |
+| REDengine edit | `sandbox/bin/wolvenkit.cmd`; scripted work with `wolvenkit-cli.cmd` |
+| FromSoftware mod loading | `sandbox/bin/modengine2.cmd` |
+| FromSoftware params/maps | `sandbox/bin/smithbox.cmd` |
+| GameMaker `data.win` | `sandbox/bin/undertalemodtool.cmd` or `utmt-cli.cmd` |
+| Total War packs | `sandbox/bin/rpfm.cmd` |
 | File type | `sandbox/bin/diec.cmd` |
 | Hex | `sandbox/bin/imhex.cmd` |
 | Debugger | `sandbox/bin/x64dbg.cmd` |
 | PE | `sandbox/bin/pe-bear.cmd` |
+| Unpack a UPX target | `sandbox/bin/upx.cmd` |
+| Rule scan | `sandbox/bin/yara.cmd`; compile rules with `yarac.cmd` |
+| Go symbols | `sandbox/bin/gore-sym.cmd` |
+| DLL dependencies | `sandbox/bin/dependencies.cmd` or `dependencies-gui.cmd` |
+| Scripted binary analysis | `sandbox/bin/rizin.cmd`, `rz-bin.cmd`, `rz-diff.cmd`, `rz-asm.cmd` |
+| Live process, handle and module view | `sandbox/bin/systeminformer.cmd` |
+| Obfuscated strings | `sandbox/bin/floss.cmd` |
 | Frame capture | `sandbox/bin/renderdoccmd.cmd` |
 | Hook, new C++ | `sandbox/tools/safetyhook` |
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
 | Android / Java decompile | `sandbox/bin/jadx.cmd` or `sandbox/bin/jadx-gui.cmd` |
+| JVM decompile, second opinion | `sandbox/bin/vineflower.cmd` |
+| APK signing | `sandbox/bin/uber-apk-signer.cmd` |
 | Executable capability triage | `sandbox/bin/capa.cmd` (Python package, rules in `sandbox/tools/capa-rules`, signatures in `sandbox/tools/capa-source/sigs`) |
 | Binary format parser generation | `sandbox/bin/kaitai-struct-compiler.cmd` |
 | PyInstaller extraction | `sandbox/bin/pyinstxtractor-ng.cmd` |
@@ -79,7 +97,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Sleeping Dogs SDK | `sandbox/tools/sleeping-dogs-sdk` and `sandbox/tools/sleeping-dogs-sdk-playground` |
 | Clean-room app recon / rebuild / parity diff (web and mobile app behavior, not binaries) | `sandbox/tools/replica-skill/replica-*` skills; load with `Copy-Item -Recurse sandbox\tools\replica-skill\replica-* $HOME\.claude\skills\`. Behavior only: do not copy the target's code, assets or copy. |
 
-Ghidra, JADX, Apktool and Kaitai shims set `JAVA_HOME` to the JDK the installer recorded. Use their shims. ASAR needs Node 22.12+ and npm; capa needs Python 3.10+, LIEF 3.9+. capa uses `flare-capa` in a venv, with released `capa-rules` and the signature-bearing `capa-source` archive installed automatically even for `-Only capa`; its shim supplies the rules and signature directories. The source archive excludes the separate malware testfiles submodule. JADX does not guarantee complete decompilation; PyInstaller extraction produces files and bytecode, not automatically readable source. Confirm capa matches against actual code or observed behavior.
+Ghidra, JADX, Apktool, Kaitai, Vineflower, BSPSource and uber-apk-signer shims set `JAVA_HOME` to the JDK the installer recorded. Use their shims. BSPSource needs Java 24+, Vineflower 17+ and uber-apk-signer 8+. ASAR needs Node 22.12+ and npm; capa and FLOSS need Python 3.10+, LIEF 3.9+, UnityPy 3.8+. capa uses `flare-capa` in a venv, with released `capa-rules` and the signature-bearing `capa-source` archive installed automatically even for `-Only capa`; its shim supplies the rules and signature directories. The source archive excludes the separate malware testfiles submodule. JADX does not guarantee complete decompilation; PyInstaller extraction produces files and bytecode, not automatically readable source. Confirm capa matches against actual code or observed behavior.
 
 Consult `docs/coverage.md` for optional tools and missing domains. `Start-IsolatedLab.ps1 -Plan` previews Windows Sandbox settings without writing files. Actual launch requires that Windows feature on a supported Pro/Enterprise/Education edition; Windows Home needs a separate VM. The launcher maps tools/input read-only, disables networking and other host integration, and only shares `sandbox/work/isolated` writable. It never starts a target. Host JDK/.NET/Python/Node prerequisites are not copied, so verify each guest tool before claiming it works there.
 
