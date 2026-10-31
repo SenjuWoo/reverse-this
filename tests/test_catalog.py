@@ -67,6 +67,9 @@ def main():
     ):
         if needle not in readme or needle not in agents:
             errors.append("missing contract text in README or AGENTS: {0}".format(needle))
+    for needle in ("## Modular composition", "UABS_PYTHON", "Skyrim Forge", "no Skyrim tools"):
+        if needle not in readme:
+            errors.append("README is missing modular composition text: {0}".format(needle))
 
     ids = []
     for tool in catalog["tools"]:
@@ -106,6 +109,12 @@ def main():
 
     if len(ids) != len(set(ids)):
         errors.append("duplicate tool ids")
+
+    skyrim = [tool["id"] for tool in catalog["tools"]
+              if any(k in (tool["id"] + " " + tool["name"]).lower()
+                     for k in ("skyrim", "xedit", "sseedit", "loot", "housecarl", "papyrus", "creation kit"))]
+    if skyrim:
+        errors.append("catalog must not install Forge-owned Skyrim tools: {0}".format(skyrim))
 
     installable = set(ids)
     for tool in catalog["tools"]:
