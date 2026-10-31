@@ -1,3 +1,7 @@
+# Current 1.9.2 overlap/sync rule — 2026-10-31
+
+Goal: make overlap explicit and safe: one owner, detect before install, skip current, update older in place, preserve newer/unknown, never duplicate. README and `docs/standalone.md` state it; the second `pe-recon` install and the bundle shared-Python path were spot-verified. See STATE.md.
+
 # Current 1.9.1 updater fix — 2026-10-31
 
 Goal: deploy the encyclopedia/kit payload through the owner updater and the bundle's `reverse` pack. `Update-ReverseThis.ps1` now accepts `encyclopedia/` and `kit/`; the delivery test deploys the built product and checks it. See STATE.md for validation and limits.

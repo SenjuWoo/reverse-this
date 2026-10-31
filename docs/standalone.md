@@ -4,6 +4,15 @@ Reverse THIS!, the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Star
 
 Run `Install-Modkit.ps1` for the catalog or use `-Only rea`, `-Only jadx`, or another catalog ID for the current task. Normal installation resolves current owned pip, npm and NuGet packages as well as release tools. Intentional pins remain pins: REA uses 6.8.0 and its npm integrity; capa uses a matched package/rules/signatures release. A numerically newer valid owned tool is retained. Unknown release labels require their recorded identity rather than an invented ordering.
 
+## Overlap and synchronization
+
+Overlap is allowed only when one owner is clear. A consumer detects a shared tool or runtime first, compares its version and payload health, then reuses a current copy, updates an older owned copy in place, or preserves a newer or unknown copy and reports it. It does not silently reinstall or create a parallel copy.
+
+- Kit-owned tools use `.kit-ok`, `.kit-record.json` and payload hashes. A current marker is skipped; an older one is updated; `-NoUpdate` keeps valid installed bytes; `-Force` is the explicit reinstall.
+- Shared runtimes (`UABS_PYTHON`, Node, Java, .NET) are detected before installation. A missing prerequisite is installed once; a working existing one is reused rather than duplicated, and an explicitly bound incompatible interpreter is reported instead of replaced.
+- External tools require `-ToolDirectories` or `UABS_TOOL_ROOTS` with a valid owner receipt; there is no drive scan. Unknown or unverified copies are preserved and reported.
+- 7-Zip and DirectXTex are this kit's payloads. Forge may reference `sandbox/bin/7z.cmd` and the DirectXTex tools instead of installing a second copy.
+
 The registered `%LOCALAPPDATA%\ReverseThis\kit.json` identifies the one canonical owner kit. Another source checkout uses that owner's sandbox and shims, with the new checkout's catalog/installer. It does not silently move the pointer or install another tool suite. An invalid pointer fails with its cause. `-InstallRoot "<absolute isolated root>"` deliberately isolates tool state and never writes the shared pointer; use this for tests. The installer log is `<owner>/sandbox/log/modkit.log`; `-DebugLog` includes package/archive details.
 
 Shared Python resolves `UABS_PYTHON` in Process, then User scope, then validated base interpreters on PATH and the official manager's documented user locations. Virtual environments and AI-app runtimes are excluded. Existing manager-owned Python receives a patch update on its current feature line, never a feature-version replacement. Missing compatible Python uses the official `Python.PythonInstallManager` winget package, then `pymanager install --yes default`. Dependencies remain in tool venvs. An explicitly bound incompatible interpreter is reported rather than silently replaced.
