@@ -3,7 +3,8 @@
 - Goal: make the modular contract explicit: overlap is allowed, but the consumer must detect, compare and sync rather than reinstall or duplicate.
 - Done: `README.md` and `docs/standalone.md` now state the rule — detect first, skip current, update older in place, preserve newer/unknown, `-Force` is the explicit reinstall, `-NoUpdate` keeps valid bytes, and shared runtimes/payloads are reused.
 - Verified: a second `-Only pe-recon` run logs `skip pe-recon local|1.9.1|...`; the bundle end-to-end path reused the shared Python 3.14.10 and installed only the selected tool.
-- Next: publish 1.9.2; no installer logic changed, only the documented contract and the version marker.
+- Next: none; the release and bundle sync path are verified.
+- Release: `v1.9.2` at `344b78b63e9bfd1e4d64ba243438798c558617b4`; asset `Reverse-This-1.9.2.zip`, 127,144 bytes, sha256 `46ccb89c3ae332bfa7584b30f278a8dd8ca18e96a7833ecc5eb449445816878a`. Bundle path updated the seeded 1.9.1 kit to 1.9.2, reused shared Python 3.14.10 and passed Doctor.
 - Limits: the rule is documented and spot-verified for `pe-recon` and shared Python; the existing PowerShell suites cover owner receipts, shared runtimes and update/pin boundaries.
 
 # Reverse THIS! 1.9.1 updater allowlist fix (2026-10-31)
