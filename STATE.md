@@ -3,7 +3,8 @@
 - Goal: detect drift from the Starter Bundle and Skyrim Forge without syncing or writing to them.
 - Done: `scripts/check_companions.py` reads the bundle's `reverse-this` floor, asset template and owner plus the Forge ownership link; `.github/workflows/companions.yml` runs it weekly and on demand; `docs/companions.md` documents it.
 - Validation: the check passes against the live contracts; catalog, encyclopedia, kit and delivery tests pass.
-- Next: publish 1.9.5, refresh the local kit, and run the check once more.
+- Next: none; v1.9.5 is published, the local kit is refreshed and the scheduled companion check passes.
+- Release: `v1.9.5` at `3466cfde41e9981f01e4b2e929de019a2607c57a`; asset `Reverse-This-1.9.5.zip`, 128,710 bytes, sha256 `2145d7cf24e5aa8d6ef4b2d4a38321282601e600232b59f6862c9329991840bc`. Local kit 84/84 at 1.9.5; `install.cmd -Doctor` 84/84; companions workflow and bundle 1.9.4 → 1.9.5 passed.
 - Limits: a network failure reports `UNKNOWN` (exit 2), not drift; the check reads `main` and does not pin companion commits.
 
 # Reverse THIS! 1.9.4 final wording audit (2026-10-31)
