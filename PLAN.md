@@ -1,3 +1,7 @@
+# Current 1.9.4 final wording audit — 2026-10-31
+
+Goal: remove the stale "five providers" count, clarify `um` reuse, and make the no-launcher test deterministic. No runtime behavior changed. See STATE.md.
+
 # Current 1.9.3 agent-first startup — 2026-10-31
 
 Goal: install once and ask; the agent runs the shim, not the user. `ghidra-mcp-up --launch` now resolves the kit, waits for both layers when configured, and points to `analyzeHeadless` when MCP is not configured. See STATE.md.

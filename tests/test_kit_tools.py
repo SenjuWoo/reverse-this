@@ -42,7 +42,9 @@ class KitTools(unittest.TestCase):
         env = os.environ.copy()
         for key in ("GHIDRA_MCP_CMD", "GHIDRA_MCP_WAIT", "REVERSE_THIS_KIT_ROOT"):
             env.pop(key, None)
-        result = run([sys.executable, str(KIT / "ghidra_mcp_up.py"), "--launch"], env=env, timeout=30)
+        with tempfile.TemporaryDirectory(prefix="rt-no-launcher-") as td:
+            env["REVERSE_THIS_KIT_ROOT"] = td
+            result = run([sys.executable, str(KIT / "ghidra_mcp_up.py"), "--launch"], env=env, timeout=30)
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertIn("analyzeHeadless", result.stdout)
 

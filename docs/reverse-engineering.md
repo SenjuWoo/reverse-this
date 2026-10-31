@@ -1,6 +1,6 @@
 # Reverse-engineering routes, on demand
 
-Pick the operation, not every tool with an RE label. All five providers use
+Pick the operation, not every tool with an RE label. All supported providers use
 these same CLIs; no RE MCP is registered globally by this recipe.
 
 ## Agent runs the tools

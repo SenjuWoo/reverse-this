@@ -1,9 +1,17 @@
+# Reverse THIS! 1.9.4 final wording audit (2026-10-31)
+
+- Goal: remove the last outdated count and make the no-launcher test deterministic before handoff.
+- Done: `docs/reverse-engineering.md` says "all supported providers" instead of the stale "five"; `docs/companions.md` says the kit may reuse an existing `um` installation; the no-launcher test now points `REVERSE_THIS_KIT_ROOT` at an empty temp kit.
+- Validation: catalog, encyclopedia, kit, delivery and the full PowerShell gate.
+- Next: publish 1.9.4 and refresh the local kit; no runtime behavior changed.
+
 # Reverse THIS! 1.9.3 agent-first startup (2026-10-31)
 
 - Goal: one-click install, then the agent runs what it needs; the user never starts a server or GUI by hand.
 - Done: README "Using it"; `AGENTS.md` and `docs/reverse-engineering.md` say the agent runs the shim itself. `ghidra-mcp-up --launch` resolves the kit root, waits for both layers when a launcher exists, and returns an optional-MCP message pointing to `analyzeHeadless` when none is configured. The Ghidra recipe is marked optional and agent-run.
 - Validation: `test_kit_tools` 5/5 including the no-launcher regression; catalog, encyclopedia and delivery still pass.
-- Next: publish 1.9.3, update the live kit, then re-run Doctor and the smoke tests.
+- Next: none; 1.9.3 is published and the local kit is updated.
+- Release: `v1.9.3` at `3a771738a7d06f5c3ec58eb12cddfc4d2eb21da9`; asset `Reverse-This-1.9.3.zip`, 128,590 bytes, sha256 `c1ce0d8699297bba668e7b93a3b467d0a227fca064324449458ecdf7697e37f2`. Local kit 84/84 at 1.9.3; bundle path updated 1.9.2 → 1.9.3 and passed Doctor.
 - Limits: Ghidra MCP still requires a GhidraMCP bridge to be configured; unattended Ghidra work uses `analyzeHeadless`, which needs no server.
 
 # Reverse THIS! 1.9.2 overlap/sync rule (2026-10-31)

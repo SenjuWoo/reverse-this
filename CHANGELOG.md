@@ -1,3 +1,9 @@
+## 1.9.4 (2026-10-31)
+
+- Correct the last stale provider count: `docs/reverse-engineering.md` now says "all supported providers" instead of "five".
+- Clarify that the kit may reuse an existing `um` installation rather than claiming it consumes one.
+- Make the no-launcher Ghidra MCP test deterministic by pointing `REVERSE_THIS_KIT_ROOT` at an empty temporary kit.
+
 ## 1.9.3 (2026-10-31)
 
 - Make the agent-first path explicit: the README says install once and then ask; `AGENTS.md` and `docs/reverse-engineering.md` say the agent runs the shim itself and never asks the user to start a server or open a GUI.

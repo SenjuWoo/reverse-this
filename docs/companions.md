@@ -2,7 +2,7 @@
 
 Use the three independent repositories together when their tasks overlap; who owns what is stated once, in the [bundle README](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle#ownership). This kit owns app/game binary analysis, extractors, instrumentation and REA.
 
-Reverse THIS! contributes 7-Zip and DirectXTex; another forge may reference `sandbox/bin/7z.cmd` and the DirectXTex tools instead of installing a second copy. This kit consumes `UABS_PYTHON`, `UABS_TOOL_ROOTS` and an existing `um` installation; it does not install Skyrim tools or provider skills. The bundle's optional `reverse` pack calls this installer; a Reverse THIS! release does not require a bundle release.
+Reverse THIS! contributes 7-Zip and DirectXTex; another forge may reference `sandbox/bin/7z.cmd` and the DirectXTex tools instead of installing a second copy. This kit consumes `UABS_PYTHON` and `UABS_TOOL_ROOTS` and may reuse an existing `um` installation; it does not install Skyrim tools or provider skills. The bundle's optional `reverse` pack calls this installer; a Reverse THIS! release does not require a bundle release.
 
 Each installs independently and consumes verified existing installations. The workbench's standalone prerequisites are described in [standalone.md](standalone.md). Companion recommendations do not install a second provider stack, grant trust, register all MCP schemas or run an upstream account setup command.
 
