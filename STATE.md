@@ -3,7 +3,8 @@
 - Goal: remove the last outdated count and make the no-launcher test deterministic before handoff.
 - Done: `docs/reverse-engineering.md` says "all supported providers" instead of the stale "five"; `docs/companions.md` says the kit may reuse an existing `um` installation; the no-launcher test now points `REVERSE_THIS_KIT_ROOT` at an empty temp kit.
 - Validation: catalog, encyclopedia, kit, delivery and the full PowerShell gate.
-- Next: publish 1.9.4 and refresh the local kit; no runtime behavior changed.
+- Next: none; v1.9.4 is published and the local kit is refreshed.
+- Release: `v1.9.4` at `6c6a927a260ccd1f6774c50da787d20796f84f2a`; asset `Reverse-This-1.9.4.zip`, 128,592 bytes, sha256 `dc240d79a2e240cda4f08ea40d061bc408a3b21b46f3dc7713997805ed402a2d`. Local kit 84/84 at 1.9.4; `install.cmd -Doctor` 84/84; bundle path updated 1.9.3 → 1.9.4 and passed Doctor.
 
 # Reverse THIS! 1.9.3 agent-first startup (2026-10-31)
 
