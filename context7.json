@@ -1,0 +1,15 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "AI Game Modding & Reverse Engineering Encyclopedia",
+  "description": "Deterministic engine fingerprints, passthrough shader math, IPC seqlocks, wildcard AOB signatures, and Ghidra/Frida reverse engineering workflows for AI coding agents.",
+  "folders": ["encyclopedia"],
+  "excludeFolders": ["sandbox", "bin", ".git", "tests", "node_modules", "**/temp"],
+  "excludeFiles": ["CHANGELOG.md", "LICENSE"],
+  "rules": [
+    "Evaluate the 6-Tier Modding Route Escalation Ladder in encyclopedia/ROUTING.md (Tier 1 data overrides -> Tier 2 loader APIs -> Tier 3 managed patching -> Tier 4 native proxy DLL/IAT hook -> Tier 5 headless sim/decomp library -> Tier 6 concurrent shared-memory passthrough) and stop at the lowest viable tier.",
+    "Installation is not execution: prove every hook, proxy DLL and shader injection with a Downstream Sink canary (Present(), a UI text sink, or a frame-counter log) before claiming success.",
+    "Validate Tier 4-6 native hooks and passthrough shaders in the offline harness (fake D3D11 host + IPC link test) and back up saves before a live single-player run.",
+    "Scope IAT hooks to the target executable module only, with narrow path/flag predicates; anti-cheat is a risk decision: check the game's current policy, keep online changes cosmetic and free of competitive advantage, record the account risk, and note that memory injection can trigger detection even when the visual result is harmless; preserve FILE_FLAG_NO_BUFFERING on CreateFileW.",
+    "Treat every limit as scoped to the named tool, version and mechanism. If a newer tool or runtime removes it, verify and update the card instead of repeating the old limit; see encyclopedia/CLAIMS.md."
+  ]
+}

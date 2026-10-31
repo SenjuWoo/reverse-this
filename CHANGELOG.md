@@ -1,3 +1,13 @@
+## 1.9.0 (2026-10-31)
+
+- Add the Context7-indexed `encyclopedia/`: engine fingerprint cards (Creation, Unreal, Unity, RAGE), the 6-tier route ladder, IPC seqlock header and Python reader, ReShade reprojection template, WARP reversed-Z harness, IPC link harness, proxy-entity bridge, Ghidra/Frida/AOB recipes, version-pinned game notes and an error registry.
+- Add the `local-script` catalog method and three helpers: `pe-recon` (JSON PE fingerprint), `aob-gen` (wildcard AOB signature) and `ghidra-mcp-up` (Ghidra plugin 8080 / MCP 8081 probe). They install from `kit/` with generated Python shims; `aob-gen` pulls the `capstone` catalog tool automatically.
+- Correct the draft plan: BSA is Skyrim and BA2 is Fallout 4/Starfield; GhidraMCP's Ghidra-side HTTP is 8080 and the MCP bridge is 8081; a ReShade effect's depth input is read-only (as of the 6.x runtime), with an add-on or draw hook as the route to geometry; stripping `FILE_FLAG_NO_BUFFERING` is unsafe; `pefile` is not required for AOB mapping. See `encyclopedia/VALIDATION.md`.
+- Tests: encyclopedia contract and link check, local helper harnesses (C++ only when g++ is present), and the product ZIP now includes the `kit/` helpers.
+- Add `encyclopedia/CLAIMS.md`: every limit names its tool, version, mechanism and escape hatch, and the encyclopedia test rejects permanent "impossible" wording. Limits are dated observations, not hard blockers.
+- Add `encyclopedia/anticheat-risk.md`: anti-cheat is a dated risk tier, not a blanket ban. It records the Marvel Rivals 2026-10-15 mod policy and the Monster Hunter Wilds modification warning, with cosmetic-only and no-competitive-advantage rules and an explicit account-risk decision.
+- Document modular composition: the Starter Bundle is the base (providers, shared compilers/runtimes, general skills, GitHub/work hygiene), Reverse THIS! is the optional RE layer, and Skyrim Forge/other forges own game-specific authoring. The README and `AGENTS.md` state the ownership matrix and shared-payload contract. The product ZIP now includes `context7.json` and `encyclopedia/` so the local Context7 fallback works offline.
+
 ## 1.8.0 (2026-10-31)
 
 - Add 21 tools for the gaps that generic app and game work kept hitting. Native: UPX, YARA, GoReSym, Dependencies, Rizin, System Informer and FLOSS. JVM/Android: Vineflower and uber-apk-signer. Unity scripting: UnityPy. Engines: WolvenKit (GUI and CLI), Mod Engine 2, Smithbox, Crowbar, BSPSource, Source 2 Viewer (GUI and CLI), UndertaleModTool (GUI and CLI) and RPFM.

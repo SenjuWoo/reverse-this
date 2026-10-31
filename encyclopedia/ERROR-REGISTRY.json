@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "updated": "2026-10-31",
+  "errors": [
+    {
+      "id": "fxc-missing",
+      "signature": "fxc.exe : The system cannot find the file specified / 'fxc' is not recognized",
+      "cause": "The Windows SDK shader compiler is not on PATH; the versioned Windows Kits directory is not searched.",
+      "fix": "Enumerate C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.*\\x64\\fxc.exe, pick the newest version, and invoke it by absolute path. Do not add the SDK bin directory to PATH globally.",
+      "verify": "fxc.exe /? prints the compiler banner; the build log shows the absolute path used."
+    },
+    {
+      "id": "spawn-enoent",
+      "signature": "Error: spawn ENOENT in an MCP client or Node child_process",
+      "cause": "The client launched a bare command name and the process environment has no PATH entry for it.",
+      "fix": "Resolve the executable with where.exe (or Get-Command) and store the absolute path in the MCP server configuration. Use the same absolute path for the interpreter and the script.",
+      "verify": "The MCP server starts from a shell with an empty PATH; the configured path is absolute and exists."
+    },
+    {
+      "id": "frida-silent-hook",
+      "signature": "Interceptor.attach succeeds but onEnter never fires; the game behaves normally",
+      "cause": "The hooked wrapper/constructor is not on the executed path, or the game uses a different module/thread/copy of the object.",
+      "fix": "Apply the Downstream Sink Protocol: attach a counter and backtrace at Present()/EndScene/UI sink, walk the stack to the real producer, and hook that leaf function. Confirm the module base and RVA.",
+      "verify": "The sink counter advances and the leaf hook logs the expected arguments; disabling the hook restores the original behavior."
+    },
+    {
+      "id": "passthrough-geometry-swimming",
+      "signature": "Guest geometry slides or swims against the host camera; near objects lag behind far objects",
+      "cause": "The guest pose is applied without the camera matrix, or the host/guest depth conventions or units differ.",
+      "fix": "Embed the guest view-projection and camera world matrix in the shared-memory header; reproject with the inverse guest VP and the host VP; convert units once; add the one-frame pose-lag term. Validate with fake_host_d3d11.exe.",
+      "verify": "A static guest landmark stays on the same host pixel during a pure camera rotation; a translation test keeps the floor contact point stable."
+    },
+    {
+      "id": "defender-single-file-installer",
+      "signature": "Windows Defender flags a PyInstaller one-file mod installer as Trojan:Win32/Wacatac or similar",
+      "cause": "One-file self-extractors unpack to a temp directory and execute, a pattern that matches generic heuristics; the signature is usually a false positive.",
+      "fix": "Ship a one-folder build (PyInstaller --onedir) instead of --onefile, sign the executable if possible, publish SHA256SUMS, and document the expected hash. Do not tell users to disable Defender.",
+      "verify": "The folder build scans clean on VirusTotal (or the vendor confirms the false positive); the published hash matches the downloaded file."
+    },
+    {
+      "id": "reshade-depth-inverted",
+      "signature": "ReShade depth effects are inverted, sky is near, or AO/DOF works inside-out",
+      "cause": "The host uses a reversed-Z depth buffer and the shader assumes standard 0..1 depth.",
+      "fix": "Set the depth-reversed flag (GTA V, UE4/5, many D3D11/12 titles) and linearize with near*far/(near + raw*(far-near)); verify with a readback.",
+      "verify": "A near object reads a smaller linear depth than a far object; fake_host_d3d11.exe passes both draw orders."
+    },
+    {
+      "id": "ipc-torn-frame",
+      "signature": "Pose or depth values jump, matrices contain impossible values, or the reader sees half an update",
+      "cause": "The reader copied the payload while the writer was updating it, or the sequence counter was not checked.",
+      "fix": "Use the seqlock protocol: writer stores odd seq, payload, even seq; reader retries when seq is odd or changed. Keep the payload trivially copyable and the sequence 32-bit atomic.",
+      "verify": "ipc_link_test.exe passes 50,000 frames with no torn read; a deliberate writer pause still yields a clean previous frame."
+    },
+    {
+      "id": "proxy-double-load",
+      "signature": "Two overlays fight for dxgi.dll/d3d11.dll, or the game loads the proxy twice and hooks fire twice",
+      "cause": "Two tools claim the same proxy slot, or the loader is copied into both the game root and a subdirectory.",
+      "fix": "Keep one owner per proxy name; check loaded modules before injecting; use the loader's documented proxy name and remove duplicate copies.",
+      "verify": "The module list shows one instance of the proxy; the hook counter advances once per frame."
+    }
+  ]
+}

@@ -23,6 +23,7 @@ jobs:
       - name: catalog contract
         run: |
           python tests/test_catalog.py
+          python tests/test_encyclopedia.py
           python tests/test_delivery.py
 
   installer-tests:
@@ -54,6 +55,8 @@ jobs:
         run: ./tests/test_dotnet_prerequisite.ps1
       - name: standalone ownership, runtime and source-update boundaries
         run: ./tests/test_standalone.ps1
+      - name: local helper checks
+        run: python tests/test_kit_tools.py
 
   installer:
     runs-on: ubuntu-latest

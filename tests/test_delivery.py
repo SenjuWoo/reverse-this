@@ -24,7 +24,7 @@ class ProductTests(unittest.TestCase):
             def git(*args):
                 return subprocess.run(['git','-C',str(root),*args],check=True,capture_output=True)
             git('init','-q');git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid')
-            for name in builder.PRODUCT_FILES|{'catalog/tools.json','STATE.md','CHANGELOG.txt','tests/private.py','docs/CHANGELOG.md'}:
+            for name in builder.PRODUCT_FILES|builder.ENCYCLOPEDIA_REQUIRED|{'catalog/tools.json','STATE.md','CHANGELOG.txt','tests/private.py','docs/CHANGELOG.md'}:
                 p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('1.0.0' if name=='VERSION' else 'original')
             git('add','.');git('commit','-qm','fixture')
             (root/'docs/private.txt').write_text('untracked private');(root/'sandbox').mkdir();(root/'sandbox/secret.txt').write_text('private')
@@ -35,7 +35,7 @@ class ProductTests(unittest.TestCase):
             with zipfile.ZipFile(a) as archive:
                 prefix='Reverse-This-1.0.0/'
                 names={n.removeprefix(prefix) for n in archive.namelist()}
-                self.assertEqual(names,builder.PRODUCT_FILES|{'catalog/tools.json','RELEASE.json'})
+                self.assertEqual(names,builder.PRODUCT_FILES|builder.ENCYCLOPEDIA_REQUIRED|{'catalog/tools.json','RELEASE.json'})
                 self.assertEqual(archive.read(prefix+'README.md'),b'original')
                 manifest=json.loads(archive.read(prefix+'RELEASE.json'))
                 self.assertEqual(manifest['commit'],receipt['commit'])

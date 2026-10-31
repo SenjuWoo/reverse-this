@@ -29,13 +29,16 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | Live process, handle and module inspection | System Informer | Needs the same privilege as the target; kernel protections can block it. |
 | Obfuscated or runtime strings | FLOSS | Recovered strings can be decoys; emulation may not reach every code path. |
 | Scripted native analysis | Rizin (`rizin`, `rz-bin`, `rz-diff`, `rz-asm`) | Command syntax differs from radare2; check the installed version's help. |
+| PE fingerprint and proxy planning | `pe-recon` | JSON only; confirm the runtime import set before choosing a proxy DLL. |
+| AOB signature generation | `aob-gen` | Validate uniqueness in two builds; a signature is not a patch. |
+| Ghidra MCP operation | `ghidra-mcp-up` and the Ghidra recipe | 8080 is the Ghidra plugin, 8081 is the MCP bridge; neither is a decompiler by itself. |
 | JVM decompilation, second opinion | Vineflower | Compare with JADX output; neither restores the original source. |
 | APK signing | uber-apk-signer | You supply the key; a debug key is not a release identity. |
 | Scripted Unity asset work | UnityPy | Type trees are Unity-version specific; this is a library, not a GUI. |
 | Source models and maps | Crowbar, BSPSource | Format and game support vary; materials and mounts are separate. |
 | Source 2 assets | Source 2 Viewer (GUI and CLI) | Supports current VPK/resource versions; not every resource type exports. |
 | REDengine archives and assets | WolvenKit (GUI and CLI) | Game-version support and archive format changes matter. |
-| FromSoftware mods | Mod Engine 2, Smithbox | Per-game offsets and regulation versions; online/anti-cheat use is out of scope. |
+| FromSoftware mods | Mod Engine 2, Smithbox | Per-game offsets and regulation versions; online/anti-cheat use needs the current policy check in `encyclopedia/anticheat-risk.md`. |
 | GameMaker games | UndertaleModTool (GUI and CLI) | `data.win` version support varies; not every runner build is covered. |
 | Total War packs | RPFM | Schemas are per game; verify the pack version before writing. |
 | App behavior recon and clean-room rebuild | replica-skill (`replica-recon`, `-diff`, `-test`, others) | MIT Claude skills with stdlib Python helpers. They work from public pages, screenshots and your own account; they do not analyze binaries. The installer resolves the current default branch to a full immutable commit, records that archive identity and its SHA-256, and reuses the recorded version with `-NoUpdate`; review the selected source before use. Rebuilding features is not a licence to copy code, assets or branding. |
@@ -72,6 +75,8 @@ The game-specific SDKs, fighting-game tools and art editors remain in the catalo
 | Source 2 Viewer | [ValveResourceFormat/ValveResourceFormat](https://github.com/ValveResourceFormat/ValveResourceFormat) | MIT; single-file GUI exe and Windows x64 CLI zip. |
 | UndertaleModTool | [UnderminersTeam/UndertaleModTool](https://github.com/UnderminersTeam/UndertaleModTool) | GPL-3.0; self-contained Windows GUI and CLI zips. |
 | RPFM | [Frodo45127/rpfm](https://github.com/Frodo45127/rpfm) | MIT; Windows x64 zip with `rpfm_ui.exe`. |
+| Capstone | [capstone-engine/capstone](https://github.com/capstone-engine/capstone) | BSD-3-Clause; Python package in a venv; used by `aob-gen`. |
+| Local kit helpers | `kit/` in this repository | MIT; Python standard library, plus Capstone for `aob-gen`. |
 
 Selecting `capa`, `capa-rules` or `capa-source` for installation updates the entire matched capa group in one transaction. Plan and Doctor still list/check the individual catalog entries.
 

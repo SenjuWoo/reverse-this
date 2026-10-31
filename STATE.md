@@ -1,3 +1,15 @@
+# Reverse THIS! 1.9.0 encyclopedia + local helpers (2026-10-31)
+
+- Goal: make the workbench's knowledge queryable by Context7 and give agents three deterministic local helpers, without weakening the catalog rules.
+- Done: `context7.json` plus `encyclopedia/` (engine cards, 6-tier ladder, IPC seqlock, ReShade reprojection template, WARP/IPC harnesses, proxy bridge, Ghidra/Frida/AOB recipes, game notes, error registry). New `local-script` catalog method installs `pe-recon`, `aob-gen` and `ghidra-mcp-up` from `kit/`; `capstone` is the only new package dependency.
+- Corrected the Gemini draft: BSA vs BA2, Ghidra MCP 8080/8081, ReShade effect depth is read-only as of the 6.x runtime (add-on/draw hook is the route), unsafe `CreateFileW` flag stripping, `pefile` not required. Details in `encyclopedia/VALIDATION.md`.
+- Added `encyclopedia/CLAIMS.md`: every limit is scoped to tool, version and mechanism with an escape hatch and a re-test trigger; the encyclopedia test rejects permanent "impossible" wording.
+- Added `encyclopedia/anticheat-risk.md`: anti-cheat is a risk tier, not a blanket ban, with dated Marvel Rivals and Monster Hunter Wilds policy evidence, cosmetic-only guidance and an explicit account-risk decision.
+- Added modular composition docs: bundle base, Reverse THIS! optional RE layer, Forge specialist; ownership matrix, shared `UABS_PYTHON`/`UABS_TOOL_ROOTS` reuse, 7-Zip/DirectXTex reuse, no provider or ledger writes. Product ZIP now ships `context7.json` and `encyclopedia/` for the offline Context7 fallback.
+- Validation: catalog 84; `test_encyclopedia` (including the claims policy) and `test_kit_tools` pass; `ipc_link_test.exe` and `fake_host_d3d11.exe` compile and pass; `pe-recon`, `aob-gen` and `ghidra-mcp-up` install into an isolated root and Doctor verifies their receipts.
+- Next: run the full gate, then publish through the normal VERSION/CHANGELOG workflow if wanted. No live kit refresh or publication yet.
+- Limits: the ReShade template was not compiled by ReShade here; it is syntax-reviewed and marked as post-process only. The game field notes are design records with hashes marked not recorded. Ghidra/Frida recipes are not exercised against a live target.
+
 # Reverse THIS! 1.8.0 catalog expansion (2026-10-31)
 
 - Goal: close the remaining generic app and game-modding gaps without weakening the one-asset, digest-verified install rules.

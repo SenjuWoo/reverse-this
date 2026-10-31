@@ -792,7 +792,9 @@ function Write-Shim {
         [string]$JavaHome,
         [bool]$JavaJar = $false,
         [string]$DotNetHome,
-        [string]$NodeHome
+        [string]$NodeHome,
+        [string]$PythonExe,
+        [bool]$PythonScript = $false
     )
     $rel = (Resolve-Path -LiteralPath $Target).Path
     $from = (Resolve-Path -LiteralPath $BinDir).Path
@@ -813,7 +815,8 @@ function Write-Shim {
     if ($NodeHome) { $lines += 'set "PATH=' + $NodeHome.Replace('%', '%%') + ';%PATH%"' }
     # Chain batch targets directly; CALL expands percent signs in paths a second time.
     $call = ''
-    if ($JavaJar) { $call = '"%JAVA_HOME%\bin\java.exe" -jar ' }
+    if ($PythonScript) { $call = '"' + $PythonExe.Replace('%', '%%') + '" ' }
+    elseif ($JavaJar) { $call = '"%JAVA_HOME%\bin\java.exe" -jar ' }
     $arguments = if ($Name -eq 'capa') { '-r "' + (Get-ToolDirectory 'capa-rules').Replace('%','%%') + '" -s "' + (Join-Path (Get-ToolDirectory 'capa-source') 'sigs').Replace('%','%%') + '" %*' } else { '%*' }
     $lines += $call + '"%~dp0' + $relative + '" ' + $arguments
     $lines += 'exit /b %errorlevel%'
@@ -958,13 +961,52 @@ function Install-Shims {
         if ($Tool.needs_jdk) { $java = $script:JavaHome }
         $dotnet = if ($Tool.method -eq 'dotnet-tool') { $script:DotNetHome } else { $null }
         $nodeHome = if ($Tool.method -eq 'npm-tool') { Split-Path -Parent (Initialize-SharedNode ($Tool.id -eq 'rea')).node } else { $null }
+        $pythonExe = $null
+        if ($shim.python_script) {
+            if ($Tool.python -and $Tool.python -ne 'shared') {
+                $pythonExe = Join-Path (Get-ToolDirectory ([string]$Tool.python)) 'Scripts\python.exe'
+                if (-not (Test-Path -LiteralPath $pythonExe -PathType Leaf)) {
+                    throw "$($Tool.id) python runtime $($Tool.python) is not installed"
+                }
+            } else {
+                $pythonExe = Initialize-SharedPython
+            }
+        }
         if ($shim.require_path -and ($file.FullName -notmatch $shim.require_path)) {
             throw "$($Tool.id) shim $($shim.name) resolved to $($file.FullName)"
         }
-        $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java -JavaJar ([bool]$shim.java_jar) -DotNetHome $dotnet -NodeHome $nodeHome
+        $cmd = Write-Shim -Name $shim.name -Target $file.FullName -JavaHome $java -JavaJar ([bool]$shim.java_jar) -DotNetHome $dotnet -NodeHome $nodeHome -PythonExe $pythonExe -PythonScript ([bool]$shim.python_script)
         $made[$shim.name] = Get-RelativeKitPath $cmd
     }
     return $made
+}
+
+function Install-LocalScriptTool {
+    param($Tool)
+    $source = Join-Path $SourceRoot ([string]$Tool.script)
+    if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "missing local script $($Tool.script)" }
+    $dest = Get-ToolDirectory $Tool.id
+    $hash = Get-Sha256Hex $source
+    $marker = 'local|{0}|{1}' -f $kitVersion, $hash.Substring(0, 16)
+    if (Test-AlreadyInstalled -Dest $dest -Marker $marker) {
+        Write-Log "skip $($Tool.id) $marker"
+        return $script:CachedRecord
+    }
+    $stage = Join-Path $TmpDir ('local-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $stage | Out-Null
+    Copy-Item -LiteralPath $source -Destination $stage
+    Move-FlattenedStage -Stage $stage -Dest $dest
+    $shims = Install-Shims -Tool $Tool -Dest $dest
+    Write-Marker -Dest $dest -Marker $marker
+    return [pscustomobject]@{
+        id = $Tool.id
+        version = $kitVersion
+        asset = [string]$Tool.script
+        sha256 = $hash
+        hash_source = 'local'
+        dir = Get-RelativeKitPath $dest
+        shims = $shims
+    }
 }
 
 function Install-GitHubZipTool {
@@ -1562,6 +1604,7 @@ function Install-One {
         'npm-tool' { Install-NpmTool $Tool }
         'github-archive' { Install-GitHubArchive $Tool }
         'virtualltek-portable' { Install-FighterFactory $Tool }
+        'local-script' { Install-LocalScriptTool $Tool }
         default { throw "unknown method $($Tool.method)" }
     }
     if ($row -is [array] -or -not $row -or $row.id -ne $Tool.id) { throw "invalid install result: $($Tool.id)" }
@@ -1716,6 +1759,7 @@ if ($pythonTools.Count) {
     Initialize-SharedPython | Out-Null
 }
 if (@($selected | Where-Object { $_.method -eq 'npm-tool' }).Count) { Initialize-SharedNode ($selected.id -contains 'rea') | Out-Null }
+if (@($selected | Where-Object { $_.method -eq 'local-script' -and $_.python -eq 'shared' }).Count) { Initialize-SharedPython | Out-Null }
 $ok = @()
 $bad = @()
 $index = 0

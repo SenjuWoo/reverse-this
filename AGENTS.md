@@ -14,6 +14,16 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 
 `Install-Modkit.ps1 -Plan` prints the catalog without network or writes. Normal runs update old owned release/pip/npm/NuGet tools while preserving pins, newer valid versions and rollback backups. `-NoUpdate` retains installed versions; missing selections can install. `-Doctor`/`-Offline` check receipts/files without network, setup or writes, not runtime behavior. Add `-DebugLog` for detailed diagnostics. The workbench provisions its own missing shared prerequisites; the bundle is optional. Read `docs/standalone.md` before changing ownership or using external tool receipts, and `docs/companions.md` for task routing and snapshot provenance.
 
+## Composition
+
+This repository is the optional reverse-engineering layer. It owns REA, the analysis payload catalog, `sandbox/bin` shims, the target workspace and the encyclopedia. It does not own provider setup, shared compilers/runtimes, general skills or GitHub/work-hygiene routing (the Starter Bundle owns those), and it does not own Skyrim records, Papyrus, assets, xEdit, LOOT, the Creation Kit or houseCARL (Skyrim Forge and other forges own those).
+
+- Route Skyrim work to Forge; route provider, general-skill and GitHub work to the bundle.
+- Reuse `UABS_PYTHON`, `UABS_TOOL_ROOTS` and an existing `um` installation. Do not install a second base interpreter beside a working one.
+- Do not edit another owner's ledger, provider settings, trust, model choices or MCP profiles.
+- 7-Zip and DirectXTex are this kit's payloads; another forge may reference `sandbox/bin/7z.cmd` and the DirectXTex tools instead of duplicating them.
+- Each repository releases independently; the bundle's optional `reverse` pack calls this installer rather than copying its catalog.
+
 ## Paths
 
 | Path | Use |
@@ -64,6 +74,9 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Scripted binary analysis | `sandbox/bin/rizin.cmd`, `rz-bin.cmd`, `rz-diff.cmd`, `rz-asm.cmd` |
 | Live process, handle and module view | `sandbox/bin/systeminformer.cmd` |
 | Obfuscated strings | `sandbox/bin/floss.cmd` |
+| PE fingerprint (JSON) | `sandbox/bin/pe-recon.cmd` |
+| AOB signature | `sandbox/bin/aob-gen.cmd` |
+| Ghidra MCP status | `sandbox/bin/ghidra-mcp-up.cmd` |
 | Frame capture | `sandbox/bin/renderdoccmd.cmd` |
 | Hook, new C++ | `sandbox/tools/safetyhook` |
 | Hook, C | `sandbox/tools/minhook` |
@@ -98,6 +111,8 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Clean-room app recon / rebuild / parity diff (web and mobile app behavior, not binaries) | `sandbox/tools/replica-skill/replica-*` skills; load with `Copy-Item -Recurse sandbox\tools\replica-skill\replica-* $HOME\.claude\skills\`. Behavior only: do not copy the target's code, assets or copy. |
 
 Ghidra, JADX, Apktool, Kaitai, Vineflower, BSPSource and uber-apk-signer shims set `JAVA_HOME` to the JDK the installer recorded. Use their shims. BSPSource needs Java 24+, Vineflower 17+ and uber-apk-signer 8+. ASAR needs Node 22.12+ and npm; capa and FLOSS need Python 3.10+, LIEF 3.9+, UnityPy 3.8+. capa uses `flare-capa` in a venv, with released `capa-rules` and the signature-bearing `capa-source` archive installed automatically even for `-Only capa`; its shim supplies the rules and signature directories. The source archive excludes the separate malware testfiles submodule. JADX does not guarantee complete decompilation; PyInstaller extraction produces files and bytecode, not automatically readable source. Confirm capa matches against actual code or observed behavior.
+
+The `encyclopedia/` directory is the Context7-indexed knowledge base: engine cards, the 6-tier route ladder, IPC/shader blueprints, Ghidra/Frida/AOB recipes, game field notes and the error registry. Read `encyclopedia/ROUTING.md` before choosing a route. `pe-recon`, `aob-gen` and `ghidra-mcp-up` are `local-script` tools copied from `kit/`; `aob-gen` depends on the `capstone` catalog tool and `ghidra-mcp-up` probes 8080 (Ghidra plugin) and 8081 (MCP bridge), not 8080/mcp. Document limits as dated observations: name the tool, version, mechanism and escape hatch, and update the card when a newer tool removes the limit. Do not write "impossible" or "no way"; see `encyclopedia/CLAIMS.md`. Anti-cheat is a risk tier, not a blanket ban: read `encyclopedia/anticheat-risk.md`, record the current policy date and the account risk, keep online changes cosmetic and reversible, and do not ship competitive-advantage changes.
 
 Consult `docs/coverage.md` for optional tools and missing domains. `Start-IsolatedLab.ps1 -Plan` previews Windows Sandbox settings without writing files. Actual launch requires that Windows feature on a supported Pro/Enterprise/Education edition; Windows Home needs a separate VM. The launcher maps tools/input read-only, disables networking and other host integration, and only shares `sandbox/work/isolated` writable. It never starts a target. Host JDK/.NET/Python/Node prerequisites are not copied, so verify each guest tool before claiming it works there.
 
@@ -135,7 +150,7 @@ Use those for the workflow. Use this repo for the tools on disk. The current Sta
 
 Do not commit or publish game files or decompiled output. The kit does not contain game executables. TheoryEngine and the Sleeping Dogs SDK are source. HD2 and R2API are the public mod tools. Whether a mod can be published is the user's call.
 
-Distinguish recovery from reimplementation: native decompilers output approximations, extracted bytecode may not decompile, and absent source/assets/build systems cannot be invented. Reverse engineering does not grant permission to relicense third-party code as open source. Record provenance and license separately from technical findings, and keep target files and private analysis out of releases.
+Distinguish recovery from reimplementation: native decompilers output approximations, extracted bytecode may not decompile, and absent source/assets/build systems cannot be invented from nothing: recover them from the target or an archive, or reconstruct them and label the reconstruction. Reverse engineering does not grant permission to relicense third-party code as open source. Record provenance and license separately from technical findings, and keep target files and private analysis out of releases.
 
 ## When a tool fails
 

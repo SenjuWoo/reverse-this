@@ -62,6 +62,8 @@ The installer resolves the current official release at install time. This page i
 - Source 2 Viewer's `Source2Viewer.exe` and `cli-windows-x64.zip`; GUI and CLI are separate catalog entries.
 - UndertaleModTool's `UndertaleModTool_v*-Windows.zip` and `UTMT_CLI_v*-Windows.zip`; GUI and CLI are separate catalog entries.
 - RPFM's `rpfm-v*-x86_64-pc-windows-msvc.zip`; the shim is `rpfm_ui.exe`.
+- Capstone (`capstone`) in its own venv; the Python disassembly engine behind `aob-gen`.
+- `pe-recon`, `aob-gen` and `ghidra-mcp-up` from `kit/`, installed as `local-script` catalog tools with generated Python shims. The encyclopedia and `context7.json` are repository content, not installed payloads.
 
 ## Left out
 

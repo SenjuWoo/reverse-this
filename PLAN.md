@@ -1,3 +1,7 @@
+# Current 1.9.0 encyclopedia — 2026-10-31
+
+Goal: a Context7-indexed encyclopedia plus three deterministic local helpers, with the draft plan's technical errors corrected. Catalog 84 tools; `local-script` installs `pe-recon`, `aob-gen` and `ghidra-mcp-up`. See STATE.md for validation and limits.
+
 # Current 1.8.0 catalog expansion — 2026-10-31
 
 Goal: the catalog covers the remaining generic app and game-modding gaps with the same one-asset, digest-verified rules. Added 21 tools (80 total); re-verified all 41 existing GitHub-release patterns against current upstream releases. See STATE.md for validation and limits.

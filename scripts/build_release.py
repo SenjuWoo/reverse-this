@@ -5,7 +5,10 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCT_FILES = {'VERSION','LICENSE','README.md','AGENTS.md','CLAUDE.md','Install-Modkit.ps1',
-                 'Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd','catalog/asset-pattern-fixtures.json'}
+                 'Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd','catalog/asset-pattern-fixtures.json',
+                 'context7.json','kit/README.md','kit/pe_recon.py','kit/aob_gen.py','kit/ghidra_mcp_up.py'}
+# The encyclopedia ships with the kit so the local Context7 fallback works offline.
+ENCYCLOPEDIA_REQUIRED = {'encyclopedia/README.md','encyclopedia/ROUTING.md','encyclopedia/ERROR-REGISTRY.json'}
 
 
 def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:
@@ -15,7 +18,7 @@ def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:
     with zipfile.ZipFile(io.BytesIO(raw)) as source:
         for entry in source.infolist():
             name = entry.filename
-            if entry.is_dir() or not (name in PRODUCT_FILES or name.startswith(('catalog/','docs/'))):
+            if entry.is_dir() or not (name in PRODUCT_FILES or name.startswith(('catalog/','docs/','encyclopedia/'))):
                 continue
             rel = PurePosixPath(name)
             if rel.is_absolute() or '..' in rel.parts or '\\' in name or ':' in name or ((entry.external_attr >> 16) & 0o170000) == 0o120000:
@@ -26,7 +29,7 @@ def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:
             if rel.suffix.casefold() in {'.ps1','.cmd','.bat'}:
                 data = data.replace(b'\r\n',b'\n').replace(b'\n',b'\r\n')
             files[name] = data
-    required = PRODUCT_FILES | {'catalog/tools.json'}
+    required = PRODUCT_FILES | ENCYCLOPEDIA_REQUIRED | {'catalog/tools.json'}
     if not required <= files.keys():
         raise ValueError('Missing product files: '+str(sorted(required-files.keys())))
     version = files['VERSION'].decode('utf-8-sig').strip()

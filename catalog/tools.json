@@ -646,6 +646,14 @@
       "shims": []
     },
     {
+      "id": "capstone",
+      "name": "Capstone disassembly library",
+      "job": "Python disassembly engine used by aob-gen.",
+      "method": "pip-venv",
+      "package": "capstone",
+      "shims": []
+    },
+    {
       "id": "frosty-editor",
       "name": "Frosty Editor",
       "job": "Frostbite mod editor. The stable release, not the rewrite.",
@@ -1069,6 +1077,54 @@
           "name": "rea",
           "exe_glob": "rea.cmd",
           "prefer_path": "node_modules/.bin"
+        }
+      ]
+    },
+    {
+      "id": "pe-recon",
+      "name": "PE reconnaissance",
+      "job": "JSON PE fingerprint: bitness, graphics APIs, anti-cheat markers, RTTI and proxy candidates.",
+      "method": "local-script",
+      "script": "kit/pe_recon.py",
+      "python": "shared",
+      "shims": [
+        {
+          "name": "pe-recon",
+          "exe_glob": "pe_recon.py",
+          "python_script": true
+        }
+      ]
+    },
+    {
+      "id": "aob-gen",
+      "name": "AOB signature generator",
+      "job": "Wildcard AOB signature from a binary RVA or byte pattern; masks relocatable bytes only.",
+      "method": "local-script",
+      "script": "kit/aob_gen.py",
+      "python": "capstone",
+      "requires": [
+        "capstone"
+      ],
+      "shims": [
+        {
+          "name": "aob-gen",
+          "exe_glob": "aob_gen.py",
+          "python_script": true
+        }
+      ]
+    },
+    {
+      "id": "ghidra-mcp-up",
+      "name": "Ghidra MCP status",
+      "job": "Check or launch the local Ghidra MCP stack (8080 plugin, 8081 streamable HTTP).",
+      "method": "local-script",
+      "script": "kit/ghidra_mcp_up.py",
+      "python": "shared",
+      "shims": [
+        {
+          "name": "ghidra-mcp-up",
+          "exe_glob": "ghidra_mcp_up.py",
+          "python_script": true
         }
       ]
     }

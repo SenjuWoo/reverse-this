@@ -15,6 +15,7 @@ METHODS = {
     "npm-tool",
     "github-archive",
     "virtualltek-portable",
+    "local-script",
 }
 UNPACK = {None, "7z", "msi-admin", "nsis-app64", "raw"}
 
@@ -108,6 +109,16 @@ def main():
 
     installable = set(ids)
     for tool in catalog["tools"]:
+        if tool["method"] == "local-script":
+            script = tool.get("script")
+            if not script or not (ROOT / script).is_file():
+                errors.append("{0} has no local script".format(tool["id"]))
+            python = tool.get("python")
+            if python not in (["shared"] + ids):
+                errors.append("{0} has unknown python {1}".format(tool["id"], python))
+            for shim in tool.get("shims", []):
+                if not shim.get("python_script"):
+                    errors.append("{0} shim is not a python script".format(tool["id"]))
         for dependency in tool.get("requires", []):
             if dependency not in installable or dependency == tool["id"]:
                 errors.append("{0} has invalid dependency {1}".format(tool["id"], dependency))

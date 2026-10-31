@@ -2,12 +2,37 @@
 
 One click installs a Windows reverse-engineering and modding workbench with stable commands in `sandbox/bin`. It covers native and .NET apps, Android/Java bytecode, PyInstaller packages, binary formats, and game engines from Unreal and Unity to Source, REDengine, FromSoftware, GameMaker and Total War.
 
-`sandbox` is a workspace folder, not process isolation. Tools run with your account's permissions. Use a separate VM or Windows Sandbox when a target requires isolation. This kit does not promise to recover original source, a working build, missing assets, symbols or keys; decompilation does not change ownership or licensing.
+`sandbox` is a workspace folder, not process isolation. Tools run with your account's permissions. Use a separate VM or Windows Sandbox when a target requires isolation. This kit does not guarantee recovery of original source, a working build, missing assets, symbols or keys; decompilation does not change ownership or licensing.
 
-This is the tool bench. It is meant to be used with:
+No capability limit in this repository is permanent: each is scoped to a tool, version and mechanism in [encyclopedia/CLAIMS.md](encyclopedia/CLAIMS.md). The catalog is a convenience, not a permission system: a tool you supply in `sandbox/manual/<name>/` is usable without being in the catalog.
+
+## Modular composition
+
+Reverse THIS! is the optional reverse-engineering layer. It installs and runs alone; it does not require the Starter Bundle, Skyrim Forge, or any other forge, and none of them require it. Install only the layers you need:
+
+| Layer | Owns | Works alone |
+|---|---|---|
+| [Ultimate AI Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) | providers, shared compilers/runtimes, general skills, GitHub and work-hygiene routing, presentation | yes |
+| Reverse THIS! (this repo) | REA, the analysis payload catalog, `sandbox/bin` shims, the target workspace and the encyclopedia | yes |
+| [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) and other forges | game-specific authoring, records, Papyrus, assets and game MCPs | yes |
+
+The boundaries are deliberate:
+
+- **One owner per tool.** This catalog has no Skyrim tools; xEdit, LOOT, the Creation Kit, houseCARL and Skyrim records stay with Forge. Forge may reference this kit's `sandbox/bin/7z.cmd` and DirectXTex tools instead of installing a second copy.
+- **One shared runtime.** When the bundle's `UABS_PYTHON` is set, this installer reuses it. Otherwise it resolves one compatible base interpreter for its own use and never creates a second one beside a working installation. `UABS_TOOL_ROOTS` is honored.
+- **No provider writes.** This installer never edits AI-provider settings, trust, model choices, MCP profiles or another owner's ledger.
+- **No version coupling.** Each repository releases independently. The bundle's optional `reverse` pack downloads this repo's latest verified release at or above its floor and calls this installer; a Reverse THIS! release never requires a bundle release.
+- **No hard dependency.** `install.cmd` works on a clean Windows machine; `-InstallRoot` creates an isolated second kit. Use the bundle when you want the shared base, Forge when you want Skyrim authoring, and this kit when you want the RE bench — any subset.
+
+## Encyclopedia and Context7
+
+`context7.json` at the repository root points [Context7](https://context7.com) at `encyclopedia/`: engine fingerprint cards, coordinate and depth conventions, IPC/shader blueprints, Ghidra/Frida/AOB recipes, version-pinned game notes, and an error registry. The encyclopedia ships at the kit root in the release and is indexed by Context7; the installer does not copy it into `sandbox/`. The 6-tier route ladder and the downstream-sink rule live in `encyclopedia/ROUTING.md`; every limit is scoped to a tool, version and escape hatch in `encyclopedia/CLAIMS.md`; anti-cheat risk tiers are in `encyclopedia/anticheat-risk.md`.
+
+This is the tool bench. It works alone and composes with:
 
 - [universal-modder](https://github.com/rehan-remade/universal-modder), for game reconnaissance, engine routes, builds, runtime checks and field notes
-- [Ultimate AI Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle), for provider setup, skills, scoped MCPs and task routing
+- [Ultimate AI Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle), for provider setup, shared compilers/runtimes, skills, scoped MCPs and task routing
+- [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) and other game forges, for game-specific authoring and specialist toolchains
 
 The current Starter Bundle already provides `um` and the shared `universal-modder` skill. Reuse that installation. Reverse THIS! supplies the analysis tools; it does not install another fal MCP, rewrite provider configuration or grant project trust. Paid fal generation is optional and separate from local analysis.
 
@@ -64,6 +89,8 @@ Open the agent in this folder. It reads `AGENTS.md`. If the chat is somewhere el
 
 Native: Ghidra (GUI and `analyzeHeadless`), ImHex, Detect It Easy (`diec`), x64dbg, PE-bear, RenderDoc (`renderdoccmd` and `qrenderdoc`), Rizin (`rizin`, `rz-bin`, `rz-diff`, `rz-asm`), System Informer, Dependencies (CLI and GUI), UPX, YARA (`yara` and `yarac`), GoReSym, FLOSS, MinHook, SafetyHook sources, Frida.
 
+Local helpers: `pe-recon` prints a JSON PE fingerprint (bitness, graphics APIs, anti-cheat markers, RTTI, proxy candidates); `aob-gen` turns an RVA or byte pattern into a wildcard AOB signature; `ghidra-mcp-up` probes the Ghidra plugin (8080) and MCP bridge (8081). They are `local-script` catalog tools copied from `kit/`, and they do not execute the target.
+
 Apps and formats: JADX (`jadx`, `jadx-gui`) for Android/Java bytecode; Vineflower for a second JVM decompile; Apktool for APK resource/smali decode and rebuild; `uber-apk-signer` for signing rebuilt APKs; `asar` for Electron archives; capa for static executable capability triage; Kaitai Struct compiler (`kaitai-struct-compiler`) for binary parsers; `wasm-tools` for WebAssembly; and `pyinstxtractor-ng` for extracting PyInstaller packages. capa uses the official `flare-capa` Python package with released rules in `sandbox/tools/capa-rules` and library-identification signatures in `sandbox/tools/capa-source/sigs`. Both dependencies install automatically, including for `-Only capa`; its shim supplies both paths. LIEF is a Python library in `sandbox/tools/lief`; use its `Scripts/python.exe` to import `lief`. UnityPy is the same pattern for Unity assets under `sandbox/tools/unitypy`. Extraction and capability matches need further analysis; they are not reconstructed source or proof of behavior.
 
 .NET and Unity: ilspycmd, ILSpy, dnSpyEx, AssetRipper, Il2CppDumper, UABEA, BepInEx 5, MelonLoader, and the matching UnityExplorer plugins.
@@ -114,6 +141,8 @@ Run these checks from a source checkout:
 
 ```powershell
 python tests/test_catalog.py
+python tests/test_encyclopedia.py
+python tests/test_kit_tools.py
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -SelfTest
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -Plan
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\test_installer.ps1
