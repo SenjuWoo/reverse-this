@@ -61,6 +61,14 @@ The doctor checks files and records. Downloads are digest-verified when installe
 
 Updates retain replaced tool payloads under `sandbox/backups/<id>-<unique-id>`. The previous installed manifest is saved as `sandbox/installed.json.pre-<kit-version>.json`. Failed updates restore the saved payload when one exists. Keep these backups until the replacement works on your target; they are local state, not release files.
 
+## Using it
+
+Double-click `install.cmd` once. After that, ask the AI; it resolves `%LOCALAPPDATA%\ReverseThis\kit.json`, reads `sandbox/installed.json`, and runs the `sandbox/bin` shims. You do not start individual tools or servers.
+
+- Ghidra native analysis runs through `analyzeHeadless`; no server is required.
+- Ghidra MCP is optional. `ghidra-mcp-up --launch` waits for both layers only when a bridge is configured; otherwise the AI uses `analyzeHeadless`.
+- GUI tools are launched by the AI when the task needs them. If an agent asks you to run a start command, that is a kit bug, not a setup step.
+
 ## Isolated target work
 
 The optional launcher uses Windows Sandbox when that feature is available on a supported Pro, Enterprise or Education edition. Windows Home users need a separate VM for isolation:

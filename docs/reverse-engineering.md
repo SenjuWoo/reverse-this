@@ -3,6 +3,15 @@
 Pick the operation, not every tool with an RE label. All five providers use
 these same CLIs; no RE MCP is registered globally by this recipe.
 
+## Agent runs the tools
+
+The user installs once and then asks. Do not hand the user a command list or ask them to start a server.
+
+- Resolve the kit pointer, read `sandbox/installed.json`, and call the `sandbox/bin` shim.
+- Ghidra native decompile: `analyzeHeadless`; no server is required.
+- Ghidra MCP is optional. `ghidra-mcp-up --launch` waits only when a bridge is configured; otherwise use `analyzeHeadless`.
+- GUI tools are launched by the agent when the task needs them. If a shim fails, read its log and report the exact error.
+
 | Need | First choice |
 | --- | --- |
 | Identify an unfamiliar game, engine, loader and modding route | Installed `um scan "<verified game folder>" --format json`; Universal Modder guide |

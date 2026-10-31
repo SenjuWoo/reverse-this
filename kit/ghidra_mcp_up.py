@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ghidra_mcp_up.py — check or launch the local Ghidra MCP stack.
+"""ghidra_mcp_up.py — check or launch the optional local Ghidra MCP stack.
 
 The stack has two layers:
   Ghidra plugin HTTP   127.0.0.1:8080  (GhidraMCP extension)
@@ -8,7 +8,11 @@ The stack has two layers:
 Usage:
     python ghidra_mcp_up.py            # JSON status, exit 0 only if both answer
     python ghidra_mcp_up.py --text     # one line per layer
-    python ghidra_mcp_up.py --launch   # run GHIDRA_MCP_CMD or the manual start.cmd
+    python ghidra_mcp_up.py --launch   # start GHIDRA_MCP_CMD or an optional start.cmd,
+                                       # wait for both layers, then print status
+
+Unattended Ghidra work does not need this stack: use analyzeHeadless. MCP is an
+optional interactive bridge; the agent starts it only when a launcher exists.
 """
 
 from __future__ import annotations
@@ -17,13 +21,28 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 GHIDRA_URL = "http://127.0.0.1:8080/"
 MCP_URL = "http://127.0.0.1:8081/mcp"
-MANUAL_START = Path("sandbox/manual/ghidra-mcp/start.cmd")
+
+
+def kit_root() -> Path:
+    """Resolve the kit from env, then from this file, then from the cwd."""
+    explicit = os.environ.get("REVERSE_THIS_KIT_ROOT")
+    if explicit:
+        return Path(explicit)
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        if (parent / "sandbox").is_dir() and (parent / "catalog").is_dir():
+            return parent
+    return Path.cwd()
+
+
+MANUAL_START = kit_root() / "sandbox/manual/ghidra-mcp/start.cmd"
 
 
 def probe(url: str, timeout: float = 1.5) -> dict:
@@ -38,32 +57,59 @@ def probe(url: str, timeout: float = 1.5) -> dict:
         return {"url": url, "up": False, "status": None, "error": str(exc)}
 
 
-def main(argv: list[str]) -> int:
-    if "--launch" in argv:
-        command = os.environ.get("GHIDRA_MCP_CMD")
-        if command:
-            subprocess.Popen(command, shell=True)
-            print(json.dumps({"launched": command}))
-            return 0
-        if MANUAL_START.exists():
-            subprocess.Popen([str(MANUAL_START)], shell=True)
-            print(json.dumps({"launched": str(MANUAL_START)}))
-            return 0
+def snapshot() -> dict:
+    ghidra = probe(GHIDRA_URL)
+    mcp = probe(MCP_URL)
+    return {
+        "ghidra_plugin": ghidra,
+        "mcp_bridge": mcp,
+        "ready": ghidra["up"] and mcp["up"],
+    }
+
+
+def launch() -> int:
+    status = snapshot()
+    if status["ready"]:
+        print(json.dumps(status, indent=2))
+        return 0
+
+    command = os.environ.get("GHIDRA_MCP_CMD")
+    if not command and MANUAL_START.is_file():
+        command = str(MANUAL_START)
+    if not command:
         print(
             json.dumps(
                 {
-                    "error": "no launcher configured",
-                    "fix": "set GHIDRA_MCP_CMD or create sandbox/manual/ghidra-mcp/start.cmd",
+                    "error": "no Ghidra MCP launcher configured",
+                    "optional": True,
+                    "fix": "Use analyzeHeadless for unattended Ghidra analysis. "
+                    "Set GHIDRA_MCP_CMD only if a Ghidra MCP bridge is installed.",
                 }
             )
         )
         return 2
 
-    ghidra = probe(GHIDRA_URL)
-    mcp = probe(MCP_URL)
-    status = {"ghidra_plugin": ghidra, "mcp_bridge": mcp, "ready": ghidra["up"] and mcp["up"]}
+    subprocess.Popen(command, shell=True)
+    wait = int(os.environ.get("GHIDRA_MCP_WAIT", "60"))
+    deadline = time.monotonic() + max(0, wait)
+    while True:
+        status = snapshot()
+        if status["ready"]:
+            print(json.dumps({"launched": command, **status}, indent=2))
+            return 0
+        if time.monotonic() >= deadline:
+            print(json.dumps({"launched": command, **status}, indent=2))
+            return 1
+        time.sleep(2)
+
+
+def main(argv: list[str]) -> int:
+    if "--launch" in argv:
+        return launch()
+
+    status = snapshot()
     if "--text" in argv:
-        for name, row in (("ghidra", ghidra), ("mcp", mcp)):
+        for name, row in (("ghidra", status["ghidra_plugin"]), ("mcp", status["mcp_bridge"])):
             state = "up" if row["up"] else "down"
             print(f"{name}: {state} {row['url']} status={row['status']}")
     else:

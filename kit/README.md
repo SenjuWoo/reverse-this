@@ -8,7 +8,7 @@ the selected script into `sandbox/tools/<id>/` and writes a versionless shim in
 |---|---|---|---|
 | `pe_recon.py` | `pe-recon.cmd` | shared Python, stdlib only | JSON PE fingerprint: bitness, graphics APIs, anti-cheat markers, RTTI strings, proxy DLL candidates |
 | `aob_gen.py` | `aob-gen.cmd` | `capstone` venv | Wildcard AOB signature from an RVA or byte pattern; masks relocatable bytes only |
-| `ghidra_mcp_up.py` | `ghidra-mcp-up.cmd` | shared Python, stdlib only | Probes the Ghidra plugin (8080) and MCP bridge (8081); optional launcher |
+| `ghidra_mcp_up.py` | `ghidra-mcp-up.cmd` | shared Python, stdlib only | Probes the Ghidra plugin (8080) and MCP bridge (8081); `--launch` waits only when `GHIDRA_MCP_CMD` or an optional start.cmd exists. MCP is optional; unattended Ghidra uses `analyzeHeadless`. |
 
 ## Install
 
@@ -25,11 +25,11 @@ Python; the installer provisions it when missing.
 pe-recon "C:\Games\Target\Target.exe"
 aob-gen "C:\Games\Target\Target.exe" --rva 0x1A2B30 --instructions 24
 ghidra-mcp-up
-ghidra-mcp-up --launch   # uses GHIDRA_MCP_CMD or sandbox/manual/ghidra-mcp/start.cmd
+ghidra-mcp-up --launch   # waits for both layers when GHIDRA_MCP_CMD or an optional start.cmd exists
 ```
 
 ## Rules
 
 - These helpers read files and print JSON; they do not execute the target.
 - `aob-gen` returns a signature, not a patch. Validate uniqueness in two builds.
-- `ghidra-mcp-up` probes; it does not pretend to start a server that is not configured.
+- `ghidra-mcp-up` probes; it does not pretend to start a server that is not configured. If no launcher exists, use `analyzeHeadless` and leave MCP off.

@@ -24,6 +24,16 @@ This repository is the optional reverse-engineering layer. It owns REA, the anal
 - 7-Zip and DirectXTex are this kit's payloads; another forge may reference `sandbox/bin/7z.cmd` and the DirectXTex tools instead of duplicating them.
 - Each repository releases independently; the bundle's optional `reverse` pack calls this installer rather than copying its catalog.
 
+## Run it yourself
+
+The user installs once (`install.cmd`) and then asks. Do not hand the user a command list or ask them to start a server.
+
+- Resolve the kit pointer, read `sandbox/installed.json`, and call the `sandbox/bin` shim.
+- Native decompile: `analyzeHeadless.cmd`; no server is required.
+- Ghidra MCP is optional. Run `ghidra-mcp-up.cmd --launch` only when a bridge is configured; if it reports no launcher, use `analyzeHeadless` and say MCP is optional. Do not ask the user to install or start it.
+- GUI tools (Ghidra, x64dbg, ImHex, RenderDoc): launch them yourself when the task needs the GUI; do not ask the user to open them.
+- If a shim fails, read its log and report the exact error. Do not offload the command to the user.
+
 ## Paths
 
 | Path | Use |
@@ -76,7 +86,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Obfuscated strings | `sandbox/bin/floss.cmd` |
 | PE fingerprint (JSON) | `sandbox/bin/pe-recon.cmd` |
 | AOB signature | `sandbox/bin/aob-gen.cmd` |
-| Ghidra MCP status | `sandbox/bin/ghidra-mcp-up.cmd` |
+| Ghidra MCP status (optional) | `sandbox/bin/ghidra-mcp-up.cmd` |
 | Frame capture | `sandbox/bin/renderdoccmd.cmd` |
 | Hook, new C++ | `sandbox/tools/safetyhook` |
 | Hook, C | `sandbox/tools/minhook` |

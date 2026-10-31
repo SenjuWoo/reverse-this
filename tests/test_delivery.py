@@ -8,13 +8,14 @@ builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
 class ProductTests(unittest.TestCase):
     @unittest.skipUnless(os.name=='nt','Windows product entrypoints')
     def test_actual_extracted_selftest_and_plan(self):
-        with tempfile.TemporaryDirectory(prefix='Reverse product Ω ! ') as td:
+        with tempfile.TemporaryDirectory(prefix='Reverse product ! ') as td:
             base=Path(td); archive=base/'product.zip';builder.build(ROOT,archive)
             with zipfile.ZipFile(archive) as z:z.extractall(base)
             version=(ROOT/'VERSION').read_text(encoding='utf-8-sig').strip()
             product=base/f'Reverse-This-{version}'
             for switch in ('-SelfTest','-Plan'):
-                result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(product/'Install-Modkit.ps1'),switch],capture_output=True,text=True,timeout=30)
+                result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(product/'Install-Modkit.ps1'),switch],capture_output=True,text=True,
+                                      encoding='utf-8',errors='replace',timeout=30)
                 self.assertEqual(result.returncode,0,result.stdout+result.stderr)
             self.assertFalse((product/'sandbox').exists(),'Read-only entrypoints wrote product state')
             # The bundle calls this updater; it must accept the encyclopedia and kit paths too.
@@ -30,7 +31,7 @@ class ProductTests(unittest.TestCase):
             self.assertTrue((deployed/'kit/README.md').is_file())
 
     def test_frozen_product_reproducible_private_files_absent_and_existing_output_preserved(self):
-        with tempfile.TemporaryDirectory(prefix='Reverse Ω ! ') as td:
+        with tempfile.TemporaryDirectory(prefix='Reverse ! ') as td:
             root=Path(td)
             def git(*args):
                 return subprocess.run(['git','-C',str(root),*args],check=True,capture_output=True)

@@ -1,3 +1,7 @@
+# Current 1.9.3 agent-first startup — 2026-10-31
+
+Goal: install once and ask; the agent runs the shim, not the user. `ghidra-mcp-up --launch` now resolves the kit, waits for both layers when configured, and points to `analyzeHeadless` when MCP is not configured. See STATE.md.
+
 # Current 1.9.2 overlap/sync rule — 2026-10-31
 
 Goal: make overlap explicit and safe: one owner, detect before install, skip current, update older in place, preserve newer/unknown, never duplicate. README and `docs/standalone.md` state it; the second `pe-recon` install and the bundle shared-Python path were spot-verified. See STATE.md.

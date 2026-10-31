@@ -9,9 +9,15 @@
 
 The MCP client talks to `8081/mcp`, not `8080/mcp`. The bridge talks to the Ghidra plugin on `8080`. Verify each layer separately.
 
+This recipe is optional and agent-run. The user does not start these processes. Prefer `analyzeHeadless` for unattended work; use MCP only when a Ghidra GUI bridge is already configured. The agent tries `ghidra-mcp-up --launch` first and falls back to headless when no launcher exists.
+
 ## Start
 
 ```powershell
+# Agent path: wait for both layers when a launcher is configured.
+ghidra-mcp-up --launch
+
+# Fallback, only when a GhidraMCP bridge is installed:
 # 1. Ghidra with the GhidraMCP extension installed; open the target project.
 #    Keep the Ghidra GUI responsive: do not open modal dialogs while indexing.
 
@@ -31,7 +37,7 @@ curl.exe -s -X POST http://127.0.0.1:8081/mcp `
   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"reverse-this\",\"version\":\"1\"}}}'
 ```
 
-The kit's `ghidra-mcp-up.cmd` probes both ports and prints the exact failing layer.
+The kit's `ghidra-mcp-up.cmd` probes both ports and prints the exact failing layer. It is optional: `analyzeHeadless` needs no server.
 
 ## Operating rules
 

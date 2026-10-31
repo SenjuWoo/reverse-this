@@ -1,3 +1,9 @@
+## 1.9.3 (2026-10-31)
+
+- Make the agent-first path explicit: the README says install once and then ask; `AGENTS.md` and `docs/reverse-engineering.md` say the agent runs the shim itself and never asks the user to start a server or open a GUI.
+- `ghidra-mcp-up --launch` now resolves the kit root, waits for both layers when a launcher exists, and when none is configured returns an optional-MCP message pointing to `analyzeHeadless` instead of a missing manual start file. Added a regression test for the no-launcher path.
+- Ghidra MCP is documented as optional; unattended Ghidra analysis uses `analyzeHeadless`, so one-click install needs no server setup.
+
 ## 1.9.2 (2026-10-31)
 
 - Document the overlap and synchronization rule: detect the shared tool or runtime first, skip a current copy, update an older owned copy in place, preserve a newer or unknown copy, and never create a parallel installation. `-Force` is the explicit reinstall.

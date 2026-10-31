@@ -1,3 +1,11 @@
+# Reverse THIS! 1.9.3 agent-first startup (2026-10-31)
+
+- Goal: one-click install, then the agent runs what it needs; the user never starts a server or GUI by hand.
+- Done: README "Using it"; `AGENTS.md` and `docs/reverse-engineering.md` say the agent runs the shim itself. `ghidra-mcp-up --launch` resolves the kit root, waits for both layers when a launcher exists, and returns an optional-MCP message pointing to `analyzeHeadless` when none is configured. The Ghidra recipe is marked optional and agent-run.
+- Validation: `test_kit_tools` 5/5 including the no-launcher regression; catalog, encyclopedia and delivery still pass.
+- Next: publish 1.9.3, update the live kit, then re-run Doctor and the smoke tests.
+- Limits: Ghidra MCP still requires a GhidraMCP bridge to be configured; unattended Ghidra work uses `analyzeHeadless`, which needs no server.
+
 # Reverse THIS! 1.9.2 overlap/sync rule (2026-10-31)
 
 - Goal: make the modular contract explicit: overlap is allowed, but the consumer must detect, compare and sync rather than reinstall or duplicate.

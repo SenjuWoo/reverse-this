@@ -17,8 +17,8 @@ BLUE = ROOT / "encyclopedia/blueprints"
 KIT = ROOT / "kit"
 
 
-def run(args, cwd=None, timeout=120):
-    return subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+def run(args, cwd=None, timeout=120, env=None):
+    return subprocess.run(args, cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
 
 
 class KitTools(unittest.TestCase):
@@ -37,6 +37,14 @@ class KitTools(unittest.TestCase):
         result = run([sys.executable, str(BLUE / "ipc_seqlock.py")])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("PASS", result.stdout)
+
+    def test_ghidra_mcp_launch_without_launcher(self):
+        env = os.environ.copy()
+        for key in ("GHIDRA_MCP_CMD", "GHIDRA_MCP_WAIT", "REVERSE_THIS_KIT_ROOT"):
+            env.pop(key, None)
+        result = run([sys.executable, str(KIT / "ghidra_mcp_up.py"), "--launch"], env=env, timeout=30)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("analyzeHeadless", result.stdout)
 
     def test_cpp_harnesses(self):
         gxx = shutil.which("g++")
