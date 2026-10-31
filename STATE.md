@@ -1,3 +1,11 @@
+# Reverse THIS! 1.9.5 companion auto-check (2026-10-31)
+
+- Goal: detect drift from the Starter Bundle and Skyrim Forge without syncing or writing to them.
+- Done: `scripts/check_companions.py` reads the bundle's `reverse-this` floor, asset template and owner plus the Forge ownership link; `.github/workflows/companions.yml` runs it weekly and on demand; `docs/companions.md` documents it.
+- Validation: the check passes against the live contracts; catalog, encyclopedia, kit and delivery tests pass.
+- Next: publish 1.9.5, refresh the local kit, and run the check once more.
+- Limits: a network failure reports `UNKNOWN` (exit 2), not drift; the check reads `main` and does not pin companion commits.
+
 # Reverse THIS! 1.9.4 final wording audit (2026-10-31)
 
 - Goal: remove the last outdated count and make the no-launcher test deterministic before handoff.

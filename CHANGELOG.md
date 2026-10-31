@@ -1,3 +1,8 @@
+## 1.9.5 (2026-10-31)
+
+- Add `scripts/check_companions.py` and the scheduled `companions` workflow: a read-only check of the Starter Bundle's reverse-this floor, asset template and owner, plus the Skyrim Forge ownership link. It reports drift without syncing or writing to either repository.
+- Document the check in `docs/companions.md`.
+
 ## 1.9.4 (2026-10-31)
 
 - Correct the last stale provider count: `docs/reverse-engineering.md` now says "all supported providers" instead of "five".

@@ -6,6 +6,8 @@ Reverse THIS! contributes 7-Zip and DirectXTex; another forge may reference `san
 
 Each installs independently and consumes verified existing installations. The workbench's standalone prerequisites are described in [standalone.md](standalone.md). Companion recommendations do not install a second provider stack, grant trust, register all MCP schemas or run an upstream account setup command.
 
+Run `python scripts/check_companions.py` (source checkout) or the scheduled `companions` workflow to read the published bundle floor, asset template and Forge ownership link. It only reads; it never writes to either repository.
+
 The supplied `Tools` folder was inspected on 2026-10-26. These are observations of those local snapshots, not claims that their folder names identify the latest upstream revision:
 
 | Snapshot | Verified manifest/license | Task and reuse decision |

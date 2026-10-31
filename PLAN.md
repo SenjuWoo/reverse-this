@@ -1,3 +1,7 @@
+# Current 1.9.5 companion auto-check — 2026-10-31
+
+Goal: detect bundle/Forge contract drift without syncing. `scripts/check_companions.py` and the weekly `companions` workflow read the bundle floor/asset template and Forge ownership link; network failure is `UNKNOWN`, not drift. See STATE.md.
+
 # Current 1.9.4 final wording audit — 2026-10-31
 
 Goal: remove the stale "five providers" count, clarify `um` reuse, and make the no-launcher test deterministic. No runtime behavior changed. See STATE.md.
