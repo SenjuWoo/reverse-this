@@ -17,6 +17,17 @@ class ProductTests(unittest.TestCase):
                 result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(product/'Install-Modkit.ps1'),switch],capture_output=True,text=True,timeout=30)
                 self.assertEqual(result.returncode,0,result.stdout+result.stderr)
             self.assertFalse((product/'sandbox').exists(),'Read-only entrypoints wrote product state')
+            # The bundle calls this updater; it must accept the encyclopedia and kit paths too.
+            digest=hashlib.sha256(archive.read_bytes()).hexdigest()
+            deployed=base/'deployed'
+            result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'Update-ReverseThis.ps1'),
+                                   '-Destination',str(deployed),'-Archive',str(archive),'-Sha256',digest],capture_output=True,text=True,
+                                  encoding='utf-8',errors='replace',timeout=120)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertEqual((deployed/'VERSION').read_text(encoding='utf-8-sig').strip(),version)
+            self.assertTrue((deployed/'context7.json').is_file())
+            self.assertTrue((deployed/'encyclopedia/README.md').is_file())
+            self.assertTrue((deployed/'kit/README.md').is_file())
 
     def test_frozen_product_reproducible_private_files_absent_and_existing_output_preserved(self):
         with tempfile.TemporaryDirectory(prefix='Reverse Ω ! ') as td:

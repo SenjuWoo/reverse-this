@@ -1,3 +1,8 @@
+## 1.9.1 (2026-10-31)
+
+- Fix `Update-ReverseThis.ps1` so its public-source allowlist accepts `encyclopedia/` and `kit/`. Without this, the bundle's optional `reverse` pack verified the 1.9.0 archive and then refused it as an unsafe source path.
+- Add a delivery test that deploys the built product through `Update-ReverseThis.ps1` and checks `VERSION`, `context7.json`, `encyclopedia/` and `kit/`.
+
 ## 1.9.0 (2026-10-31)
 
 - Add the Context7-indexed `encyclopedia/`: engine fingerprint cards (Creation, Unreal, Unity, RAGE), the 6-tier route ladder, IPC seqlock header and Python reader, ReShade reprojection template, WARP reversed-Z harness, IPC link harness, proxy-entity bridge, Ghidra/Frida/AOB recipes, version-pinned game notes and an error registry.

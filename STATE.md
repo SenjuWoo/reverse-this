@@ -1,3 +1,11 @@
+# Reverse THIS! 1.9.1 updater allowlist fix (2026-10-31)
+
+- Goal: make the 1.9.0 encyclopedia/kit payload deployable through the owner updater and the bundle's optional `reverse` pack.
+- Done: `Update-ReverseThis.ps1` now accepts `encyclopedia/` and `kit/`; the delivery test deploys the built product through that updater and checks the version, `context7.json`, `encyclopedia/` and `kit/`.
+- Validation: local gate and `test_delivery`; the published 1.9.0 asset was verified, but its updater rejected the archive, so 1.9.1 supersedes it. 1.9.0 remains published and is never replaced.
+- Next: publish 1.9.1, then verify the bundle's `Install-ReverseThis.ps1` path against the new asset.
+- Limits: none new; the 1.9.0 updater defect is fixed and covered by the delivery test.
+
 # Reverse THIS! 1.9.0 encyclopedia + local helpers (2026-10-31)
 
 - Goal: make the workbench's knowledge queryable by Context7 and give agents three deterministic local helpers, without weakening the catalog rules.

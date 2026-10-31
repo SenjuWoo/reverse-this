@@ -17,7 +17,7 @@ function Write-SourceUpdateLog {
 # Only repository source paths are eligible; release manifests never authorize private or Git writes.
 function Test-PublicSourcePath {
     param([string]$Path)
-    return $Path -match '^(?:[A-Za-z][A-Za-z0-9.-]*\.(?:ps1|cmd|md|txt|json)|VERSION|LICENSE|\.(?:gitattributes|gitignore)|(?:catalog|docs|tests|\.github)/[^:]+)$' -and
+    return $Path -match '^(?:[A-Za-z][A-Za-z0-9.-]*\.(?:ps1|cmd|md|txt|json)|VERSION|LICENSE|\.(?:gitattributes|gitignore)|(?:catalog|docs|tests|kit|encyclopedia|\.github)/[^:]+)$' -and
         $Path -notmatch '(^|/)\.\.(/|$)|\\|(^|/)\.git(/|$)'
 }
 

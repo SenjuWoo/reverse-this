@@ -1,3 +1,7 @@
+# Current 1.9.1 updater fix — 2026-10-31
+
+Goal: deploy the encyclopedia/kit payload through the owner updater and the bundle's `reverse` pack. `Update-ReverseThis.ps1` now accepts `encyclopedia/` and `kit/`; the delivery test deploys the built product and checks it. See STATE.md for validation and limits.
+
 # Current 1.9.0 encyclopedia — 2026-10-31
 
 Goal: a Context7-indexed encyclopedia plus three deterministic local helpers, with the draft plan's technical errors corrected. Catalog 84 tools; `local-script` installs `pe-recon`, `aob-gen` and `ghidra-mcp-up`. See STATE.md for validation and limits.
