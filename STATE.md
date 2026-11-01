@@ -3,7 +3,8 @@
 - Goal: fill gaps found in the installed game library without bundling unlicensed or unverifiable tools.
 - Done: added `wadtools` (GPL-3.0, 2.96 MB) for League `.wad.client`; documented the League WAD/LTK route and the Naruto CPK/XFBIN/UE4 route; mapped the library's Unity/Unreal/RE/Anvil/REDengine coverage in the existing guides.
 - Validation: `wadtools` listed the installed `DATA.wad.client` (4,653 chunks, 145.6 MB uncompressed); catalog is 87 tools; catalog/fixture checks pass.
-- Next: publish 1.11.0 and refresh the local kit.
+- Next: none; v1.11.0 is published and the local kit is refreshed.
+- Release: `v1.11.0` at `fbf3732e0266adfdd2a617cae7b379430c17dc47`; asset `Reverse-This-1.11.0.zip`, 138,227 bytes, sha256 `013dca643bdf5bfe348f491b633a47e39395b7c9ba917b1cec89beca13645662`. Local kit 87/87 at 1.11.0; `install.cmd -Doctor` 87/87; 73 shims; `wadtools` listed the installed `DATA.wad.client` (4,653 chunks).
 - Limits: LTK Manager, CriPakTools and NSC-Toolbox are manual-only because their licences or releases do not permit clean bundling. Naruto CPK extraction was not run on the 5 GB archives; Shinobi Striker is EAC-protected and League is Vanguard-protected, so online modding risk remains a user decision.
 
 # Reverse THIS! 1.10.0 Nintendo Switch route (2026-11-01)
