@@ -1,3 +1,7 @@
+# Current 1.9.6 currency refresh — 2026-10-31
+
+Goal: fix the stale capa/wasm-tools versions found during the install audit. No runtime behavior changed; see STATE.md.
+
 # Current 1.9.5 companion auto-check — 2026-10-31
 
 Goal: detect bundle/Forge contract drift without syncing. `scripts/check_companions.py` and the weekly `companions` workflow read the bundle floor/asset template and Forge ownership link; network failure is `UNKNOWN`, not drift. See STATE.md.

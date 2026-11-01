@@ -1,3 +1,10 @@
+# Reverse THIS! 1.9.6 currency refresh (2026-10-31)
+
+- Goal: remove the last stale version note found by the install audit.
+- Done: `docs/currency.md` records flare-capa/capa-rules 10.0.0 (2026-10-16) and wasm-tools 1.263.0 (2026-10-30), matching the installed kit; the section is marked refreshed.
+- Validation: structural 84/84 audit, full shim smoke, Doctor 84/84, companions check, catalog/encyclopedia/kit/delivery tests.
+- Next: publish 1.9.6 and refresh the local kit.
+
 # Reverse THIS! 1.9.5 companion auto-check (2026-10-31)
 
 - Goal: detect drift from the Starter Bundle and Skyrim Forge without syncing or writing to them.

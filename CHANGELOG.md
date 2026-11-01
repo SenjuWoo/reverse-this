@@ -1,3 +1,7 @@
+## 1.9.6 (2026-10-31)
+
+- Refresh the dated currency note: `flare-capa` and capa-rules are now 10.0.0 (2026-10-16), and wasm-tools is 1.263.0 (2026-10-30). The installed kit already had both; the documentation was stale.
+
 ## 1.9.5 (2026-10-31)
 
 - Add `scripts/check_companions.py` and the scheduled `companions` workflow: a read-only check of the Starter Bundle's reverse-this floor, asset template and owner, plus the Skyrim Forge ownership link. It reports drift without syncing or writing to either repository.
