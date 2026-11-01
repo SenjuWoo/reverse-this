@@ -1,3 +1,11 @@
+# Reverse THIS! 1.11.0 League/Naruto gap fill (2026-11-01)
+
+- Goal: fill gaps found in the installed game library without bundling unlicensed or unverifiable tools.
+- Done: added `wadtools` (GPL-3.0, 2.96 MB) for League `.wad.client`; documented the League WAD/LTK route and the Naruto CPK/XFBIN/UE4 route; mapped the library's Unity/Unreal/RE/Anvil/REDengine coverage in the existing guides.
+- Validation: `wadtools` listed the installed `DATA.wad.client` (4,653 chunks, 145.6 MB uncompressed); catalog is 87 tools; catalog/fixture checks pass.
+- Next: publish 1.11.0 and refresh the local kit.
+- Limits: LTK Manager, CriPakTools and NSC-Toolbox are manual-only because their licences or releases do not permit clean bundling. Naruto CPK extraction was not run on the 5 GB archives; Shinobi Striker is EAC-protected and League is Vanguard-protected, so online modding risk remains a user decision.
+
 # Reverse THIS! 1.10.0 Nintendo Switch route (2026-11-01)
 
 - Goal: add practical Nintendo Switch extraction and modding tools for the supplied Pokémon titles without claiming an automatic native port.

@@ -1,3 +1,9 @@
+## 1.11.0 (2026-11-01)
+
+- Add `wadtools` (GPL-3.0, 2.96 MB Windows ZIP) for League of Legends/Teamfight Tactics `.wad.client` listing and extraction. Verified against the installed `DATA.wad.client`: 4,653 chunks, 145.6 MB uncompressed.
+- Add the [League WAD/LTK route](docs/league.md) and the [Naruto CPK/XFBIN and UE4 route](docs/naruto-storm.md). Document LTK Manager, CriPakTools and NSC-Toolbox as manual-only where their licences/releases do not permit bundling.
+- Catalog is 87 tools. ReXGlue remains a manual Xbox 360 route.
+
 ## 1.10.0 (2026-11-01)
 
 - Add `nstool` (MIT, 487 KB Windows ZIP) for Nintendo Switch NSP/XCI/NCA/RomFS inspection and extraction.

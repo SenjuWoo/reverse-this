@@ -582,5 +582,13 @@
       "Toolbox.May.31.2025.zip"
     ],
     "expect": "Toolbox-Latest.zip"
+  },
+  "wadtools": {
+    "assets": [
+      "wadtools-0.5.7-linux-x64.zip",
+      "wadtools-0.5.7-macos-x64.zip",
+      "wadtools-0.5.7-windows-x64.zip"
+    ],
+    "expect": "wadtools-0.5.7-windows-x64.zip"
   }
 }

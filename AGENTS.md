@@ -74,6 +74,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | GameMaker `data.win` | `sandbox/bin/undertalemodtool.cmd` or `utmt-cli.cmd` |
 | Switch NSP/XCI/NCA/RomFS | `sandbox/bin/nstool.cmd` |
 | Switch BNTX/common formats | `sandbox/bin/switch-toolbox.cmd` |
+| League `.wad.client` | `sandbox/bin/wadtools.cmd` |
 | Total War packs | `sandbox/bin/rpfm.cmd` |
 | File type | `sandbox/bin/diec.cmd` |
 | Hex | `sandbox/bin/imhex.cmd` |

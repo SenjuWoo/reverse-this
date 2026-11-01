@@ -1155,6 +1155,20 @@
           "exe_glob": "Toolbox.exe"
         }
       ]
+    },
+    {
+      "id": "wadtools",
+      "name": "wadtools",
+      "job": "League of Legends .wad/.wad.client listing and extraction.",
+      "method": "github-release",
+      "repo": "LeagueToolkit/wadtools",
+      "asset_pattern": "^wadtools-[0-9.]+-windows-x64\\.zip$",
+      "shims": [
+        {
+          "name": "wadtools",
+          "exe_glob": "wadtools.exe"
+        }
+      ]
     }
   ],
   "retired": [

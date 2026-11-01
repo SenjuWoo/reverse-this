@@ -1,3 +1,7 @@
+# Current 1.11.0 League/Naruto gap fill — 2026-11-01
+
+Goal: add a verified League WAD extractor and document Naruto CPK/XFBIN plus the installed library's engine gaps. `wadtools` is installed; LTK Manager/CriPakTools/NSC-Toolbox remain manual. See STATE.md.
+
 # Current 1.10.0 Nintendo Switch route — 2026-11-01
 
 Goal: add Switch extraction/modding tools and a realistic native-port route for the Pokémon titles. `nstool` and `switch-toolbox` are installed; the Blender/pkNX/UABEANext routes are documented as manual. See STATE.md for limits.

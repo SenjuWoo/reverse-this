@@ -21,6 +21,7 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | Generic archives | 7-Zip | Proprietary packing and custom compression can require a format-specific tool. |
 | Nintendo Switch NSP/XCI/NCA/RomFS | nstool | Lists and extracts containers; a matching keyset/ticket is required. Verify the title ID and build before extracting. |
 | Switch textures and common formats | Switch Toolbox | BNTX and many common Switch formats; TRMDL viewing is incomplete for Scarlet/Violet (upstream issue #658). Use the Blender importer for Pokémon models. |
+| League of Legends WAD archives | wadtools | Lists and extracts `.wad.client` chunks; path recovery scans `.bin` files and may update its hash-table cache. Read-only extraction does not install a client mod. |
 | Unreal, Godot, Frostbite | FModel, repak, retoc, UAssetGUI, UE4SS; GDRE and Godot; Frosty tools | Check engine/game versions. A source archive or loader is not a supported executable for every game. |
 | Graphics and textures | RenderDoc, DirectXTex | API/driver support and capture compatibility vary; this is not every vendor's profiling suite. |
 | Binary comparison | Ghidra Version Tracking, ImHex, `rz-diff` | Compare the same architecture and record target hashes; generated names are not stable identifiers. |
@@ -101,6 +102,8 @@ These are primary upstream entry points checked on 2026-10-11. Resolve current v
 | Pokémon Switch model conversion | [Pokémon Switch Model Importer/Exporter for Blender](https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender) | Imports TRMDL/TRMSH/TRMBF and animations in Blender 4.x/5.x; no release binary. Z-A models were not working per its README on 2026-11-01. Verify one model before converting a roster. |
 | Pokémon Sword/Shield data editing | [pkNX](https://github.com/kwsch/pkNX) | GPL-3.0; Sword/Shield editing, Scarlet/Violet and Z-A dump-only in the current README. No GitHub release asset; build from source. |
 | Legacy Switch archive/text editing | [Kuriimu2](https://github.com/FanTranslatorsInternational/Kuriimu2) | GPL-3.0; last release 1.2.1 (2021) requires .NET Core 3.1. Use only when its archive plugins match the target; not the default route. |
+| League client mods and skins | [LTK Manager](https://github.com/LeagueToolkit/ltk-manager) | GPL-3.0; the official LeagueToolkit mod manager/IDE, not a portable extractor. It installs a client-side mod setup; this kit does not auto-install it. Authorised cosmetic use only; Vanguard and Riot's terms still apply. |
+| Naruto Storm CPK/XFBIN editing | [CriPakTools](https://github.com/esperknight/CriPakTools), [NSC-Toolbox](https://github.com/TheLeonX/NSC-Toolbox) | CPK list/extract/replace and Storm-specific XFBIN editing. No declared licences and no permissive packaged release for the CPK tool, so both are manual-only; back up archives and test one change. |
 | Xbox 360 XEX/PPC static recompilation | [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk) | BSD-3-Clause-style; a per-game SDK, not a push-button converter. The v0.10.0 Windows ZIP is 44.7 MB, but its official `rexruntime.dll` is a known Defender heuristic false positive (28/71 engines, upstream issue #485, 2026-10-07), so this kit does not auto-install it. Rebuild from the v0.10.0 tag or use the reported-clean nightly after checking hashes; it needs VS 2022 C++/Clang 20, CMake 3.25+ and Ninja, and unresolved functions and kernel imports need manual work. Own game files only. |
 | Rizin GUI | [Cutter](https://github.com/rizinorg/cutter) | GPL-3.0; the `Cutter-v*-Windows-x86_64.zip` GUI over the installed `rizin` CLI. Optional when Ghidra already covers GUI analysis. |
 | Second native decompiler | [RetDec](https://github.com/avast/retdec) | MIT; last release v5.0 (2023) ships a Windows 7z. Ghidra and Rizin are the maintained defaults; use RetDec only for a target where its output helps. |
@@ -114,7 +117,7 @@ These are primary upstream entry points checked on 2026-10-11. Resolve current v
 
 UABS's existing browser, source-navigation and editor routes remain useful after source is available. They are not additional decompilers. Generic development runtimes, compilers, Android SDKs and vendor GPU suites are not all bundled here.
 
-The full Pokémon Switch extraction, modding and native-port route is in [pokemon-switch.md](pokemon-switch.md).
+The full Pokémon Switch extraction, modding and native-port route is in [pokemon-switch.md](pokemon-switch.md). League's WAD/LTK route is in [league.md](league.md), and the Naruto CPK/UE4 route is in [naruto-storm.md](naruto-storm.md).
 
 ## Recovery, reimplementation and publication
 
