@@ -7,8 +7,9 @@
 # Reverse THIS!
 
 <p>
-  <a href="https://github.com/SenjuWoo/reverse-this/releases/latest"><img src="https://img.shields.io/github/v/release/SenjuWoo/reverse-this?label=release&color=33566E&labelColor=0d1117" alt="latest release"></a>
+  <a href="https://github.com/SenjuWoo/reverse-this/actions/workflows/ci.yml"><img src="https://github.com/SenjuWoo/reverse-this/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-33566E?labelColor=0d1117" alt="MIT License"></a>
+  <a href="https://github.com/SenjuWoo/reverse-this/releases/latest"><img src="https://img.shields.io/github/v/release/SenjuWoo/reverse-this?label=release&color=33566E&labelColor=0d1117" alt="latest release"></a>
 </p>
 
 </div>
