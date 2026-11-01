@@ -3,7 +3,8 @@
 - Goal: remove the last stale version note found by the install audit.
 - Done: `docs/currency.md` records flare-capa/capa-rules 10.0.0 (2026-10-16) and wasm-tools 1.263.0 (2026-10-30), matching the installed kit; the section is marked refreshed.
 - Validation: structural 84/84 audit, full shim smoke, Doctor 84/84, companions check, catalog/encyclopedia/kit/delivery tests.
-- Next: publish 1.9.6 and refresh the local kit.
+- Next: none; v1.9.6 is published and the local kit is refreshed.
+- Release: `v1.9.6` at `c34c0fc8b3fd87d981b6db65a984d2d49e854eed`; asset `Reverse-This-1.9.6.zip`, 128,721 bytes, sha256 `51484814aeb4f26e1ef1333fb1369a9ca2f63f3b28e67fa303024af54432b889`. Local kit 84/84 at 1.9.6; `install.cmd -Doctor` 84/84; bundle path updated 1.9.5 → 1.9.6 and passed Doctor. CI was rerun after a parallel push cancelled the first run; the final exact-SHA run is green.
 
 # Reverse THIS! 1.9.5 companion auto-check (2026-10-31)
 
