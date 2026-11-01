@@ -1,3 +1,11 @@
+# Reverse THIS! 1.10.0 Nintendo Switch route (2026-11-01)
+
+- Goal: add practical Nintendo Switch extraction and modding tools for the supplied Pokémon titles without claiming an automatic native port.
+- Done: added `nstool` (NSP/XCI/NCA/RomFS, MIT) and `switch-toolbox` (BNTX/common formats, GPL-3.0); added `docs/pokemon-switch.md`; documented the Blender TRMDL importer, pkNX data limits, Kuriimu2 legacy route and UABEANext nightly. Catalog is 86 tools.
+- Validation: catalog and fixture checks pass; isolated install of both tools succeeded; `nstool --help` and NSP listing work; Switch Toolbox shim targets the extracted `Toolbox.exe`.
+- Next: publish 1.10.0 and refresh the local kit.
+- Limits: these games use Game Freak's proprietary engine, not Unity/UE. There is no auto-converter; native fusion requires a new Godot/Unity/UE5 project. Switch Toolbox TRMDL viewing is incomplete for Scarlet/Violet; the Blender importer says Z-A is not working yet; pkNX edits Sword/Shield only and dumps the newer titles.
+
 # Reverse THIS! 1.9.7 ReXGlue manual route (2026-11-01)
 
 - Goal: decide whether the ReXGlue Xbox 360 SDK belongs in the kit; add it only if small and verified working.

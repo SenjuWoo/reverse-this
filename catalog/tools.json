@@ -1127,6 +1127,34 @@
           "python_script": true
         }
       ]
+    },
+    {
+      "id": "nstool",
+      "name": "nstool",
+      "job": "Nintendo Switch NSP/XCI/NCA/RomFS inspector and extractor.",
+      "method": "github-release",
+      "repo": "jakcron/nstool",
+      "asset_pattern": "^nstool-v[0-9.]+-win_x64\\.zip$",
+      "shims": [
+        {
+          "name": "nstool",
+          "exe_glob": "nstool.exe"
+        }
+      ]
+    },
+    {
+      "id": "switch-toolbox",
+      "name": "Switch Toolbox",
+      "job": "Switch BNTX and common file-format editor (GUI).",
+      "method": "github-release",
+      "repo": "KillzXGaming/Switch-Toolbox",
+      "asset_pattern": "^Toolbox-Latest\\.zip$",
+      "shims": [
+        {
+          "name": "switch-toolbox",
+          "exe_glob": "Toolbox.exe"
+        }
+      ]
     }
   ],
   "retired": [

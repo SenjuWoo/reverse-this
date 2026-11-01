@@ -69,7 +69,8 @@ The installer resolves the current official release at install time. This page i
 
 - `assetstudio`: the AssetStudio repository is archived. Use `assetripper`.
 - `dnspy`: the original dnSpy repository is archived. Use `dnspyex`.
-- `uabe`: original UABE is unsupported. Use `uabea`. UABEANext is the active source tree and publishes no release binary, so it is not unpacked.
+- `uabe`: original UABE is unsupported. Use `uabea`. UABEANext is the active source tree and publishes nightly builds, not a stable release binary; use the nightly or source build for dock support and keep stable UABEA for routine edits.
+- Nintendo Switch: `nstool` v1.9.2 (2024-10-14, MIT) is the compact NSP/XCI/NCA/RomFS extractor; `switch-toolbox` uses the `Toolbox-Latest.zip` asset on the Final release (2024-01-09, GPL-3.0). Switch Toolbox's TRMDL viewing is incomplete for Scarlet/Violet; the Blender importer is the model route.
 - `umodel-ue4`: [UE Viewer / UModel](https://www.gildor.org/en/projects/umodel) supports older Unreal engines and many UE4 games. It remains a manual, target-specific route; `fmodel`, `repak` and `retoc` are this kit's modern defaults. The official page says its license is not determined, so the kit does not redistribute it or label it unsupported across UE4.
 - `cpp2il-2022-binary`: Cpp2IL's latest stable binary is 2022.0.7, but [2022.1.0-pre-release.21](https://github.com/SamboyCoding/Cpp2IL/releases/tag/2022.1.0-pre-release.21) published Windows binaries on 2026-02-22. Its version prefix is not its publication year. Keep `il2cppdumper` as the automatic default; the current Cpp2IL preview is a manual alternative for targets needing its newer metadata support.
 - `ue4ss-stable`: the stable UE4SS tag lags the experimental release. The kit installs `ue4ss` from `experimental-latest`.

@@ -565,5 +565,22 @@
       "rpfm-v5.3.3.flatpak"
     ],
     "expect": "rpfm-v5.3.3-x86_64-pc-windows-msvc.zip"
+  },
+  "nstool": {
+    "assets": [
+      "nstool-v1.9.2-macos_arm64.zip",
+      "nstool-v1.9.2-macos_x86_64.zip",
+      "nstool-v1.9.2-ubuntu_x86_64.zip",
+      "nstool-v1.9.2-win_x64.zip",
+      "nstool-v1.9.2-win_x86.zip"
+    ],
+    "expect": "nstool-v1.9.2-win_x64.zip"
+  },
+  "switch-toolbox": {
+    "assets": [
+      "Toolbox-Latest.zip",
+      "Toolbox.May.31.2025.zip"
+    ],
+    "expect": "Toolbox-Latest.zip"
   }
 }

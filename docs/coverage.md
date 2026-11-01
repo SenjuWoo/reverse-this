@@ -19,6 +19,8 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | Programmable PE/ELF/Mach-O parsing and patching | LIEF Python library | Use the isolated `sandbox/tools/lief/Scripts/python.exe`; this library has no CLI shim. Verify modified files before running them. |
 | Undocumented binary formats | ImHex, Kaitai Struct compiler | Write and validate a format specification; generated parsers need a language runtime. Kaitai is not an automatic format detector. |
 | Generic archives | 7-Zip | Proprietary packing and custom compression can require a format-specific tool. |
+| Nintendo Switch NSP/XCI/NCA/RomFS | nstool | Lists and extracts containers; a matching keyset/ticket is required. Verify the title ID and build before extracting. |
+| Switch textures and common formats | Switch Toolbox | BNTX and many common Switch formats; TRMDL viewing is incomplete for Scarlet/Violet (upstream issue #658). Use the Blender importer for Pokémon models. |
 | Unreal, Godot, Frostbite | FModel, repak, retoc, UAssetGUI, UE4SS; GDRE and Godot; Frosty tools | Check engine/game versions. A source archive or loader is not a supported executable for every game. |
 | Graphics and textures | RenderDoc, DirectXTex | API/driver support and capture compatibility vary; this is not every vendor's profiling suite. |
 | Binary comparison | Ghidra Version Tracking, ImHex, `rz-diff` | Compare the same architecture and record target hashes; generated names are not stable identifiers. |
@@ -95,6 +97,10 @@ These are primary upstream entry points checked on 2026-10-11. Resolve current v
 | Source 2 tools not covered by the viewer | [Source 2 SDK / ValveResourceFormat source](https://github.com/ValveResourceFormat/ValveResourceFormat) | Build from source when a resource type or game version is newer than the released binaries. |
 | RE Engine mods | [REFramework](https://github.com/praydog/REFramework) | MIT; releases are one ZIP per game (RE2, RE3, RE4, RE7, RE8, DD2, MH Wilds, SF6 and others). Pick the game's asset; a single pattern cannot select all of them. |
 | GTA V modding | [CodeWalker](https://github.com/dexyfex/CodeWalker) | The repository publishes no GitHub release. Use the author's published build; verify its provenance. |
+| Modern Unity asset/bundle editing | [UABEANext](https://github.com/nesrak1/UABEANext) | MIT; active UABEA fork with dock support. It has no stable GitHub release; use the nightly build linked from its README or build from source. Keep the installed UABEA build for stable edits. |
+| Pokémon Switch model conversion | [Pokémon Switch Model Importer/Exporter for Blender](https://github.com/ChicoEevee/Pokemon-Switch-Model-Importer-Blender) | Imports TRMDL/TRMSH/TRMBF and animations in Blender 4.x/5.x; no release binary. Z-A models were not working per its README on 2026-11-01. Verify one model before converting a roster. |
+| Pokémon Sword/Shield data editing | [pkNX](https://github.com/kwsch/pkNX) | GPL-3.0; Sword/Shield editing, Scarlet/Violet and Z-A dump-only in the current README. No GitHub release asset; build from source. |
+| Legacy Switch archive/text editing | [Kuriimu2](https://github.com/FanTranslatorsInternational/Kuriimu2) | GPL-3.0; last release 1.2.1 (2021) requires .NET Core 3.1. Use only when its archive plugins match the target; not the default route. |
 | Xbox 360 XEX/PPC static recompilation | [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk) | BSD-3-Clause-style; a per-game SDK, not a push-button converter. The v0.10.0 Windows ZIP is 44.7 MB, but its official `rexruntime.dll` is a known Defender heuristic false positive (28/71 engines, upstream issue #485, 2026-10-07), so this kit does not auto-install it. Rebuild from the v0.10.0 tag or use the reported-clean nightly after checking hashes; it needs VS 2022 C++/Clang 20, CMake 3.25+ and Ninja, and unresolved functions and kernel imports need manual work. Own game files only. |
 | Rizin GUI | [Cutter](https://github.com/rizinorg/cutter) | GPL-3.0; the `Cutter-v*-Windows-x86_64.zip` GUI over the installed `rizin` CLI. Optional when Ghidra already covers GUI analysis. |
 | Second native decompiler | [RetDec](https://github.com/avast/retdec) | MIT; last release v5.0 (2023) ships a Windows 7z. Ghidra and Rizin are the maintained defaults; use RetDec only for a target where its output helps. |
@@ -107,6 +113,8 @@ These are primary upstream entry points checked on 2026-10-11. Resolve current v
 | Actual isolation | [Windows Sandbox](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/), a separate VM | `Start-IsolatedLab.ps1 -Plan` previews this kit's configuration. Launch requires the Windows feature on a supported Pro/Enterprise/Education edition; Windows Home needs a separate VM. Tools and optional input are read-only, only `sandbox/work/isolated` is shared writable, and networking/clipboard are disabled. No target starts at logon. Host runtimes are not copied; use a prepared VM when the route needs them. |
 
 UABS's existing browser, source-navigation and editor routes remain useful after source is available. They are not additional decompilers. Generic development runtimes, compilers, Android SDKs and vendor GPU suites are not all bundled here.
+
+The full Pokémon Switch extraction, modding and native-port route is in [pokemon-switch.md](pokemon-switch.md).
 
 ## Recovery, reimplementation and publication
 

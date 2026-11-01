@@ -1,3 +1,7 @@
+# Current 1.10.0 Nintendo Switch route — 2026-11-01
+
+Goal: add Switch extraction/modding tools and a realistic native-port route for the Pokémon titles. `nstool` and `switch-toolbox` are installed; the Blender/pkNX/UABEANext routes are documented as manual. See STATE.md for limits.
+
 # Current 1.9.7 ReXGlue manual route — 2026-11-01
 
 Goal: evaluate ReXGlue for Xbox 360-to-PC workflows. Added as a manual route only; the official Windows release is a known Defender false positive and is not auto-installed. See STATE.md.

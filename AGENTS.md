@@ -72,6 +72,8 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | FromSoftware mod loading | `sandbox/bin/modengine2.cmd` |
 | FromSoftware params/maps | `sandbox/bin/smithbox.cmd` |
 | GameMaker `data.win` | `sandbox/bin/undertalemodtool.cmd` or `utmt-cli.cmd` |
+| Switch NSP/XCI/NCA/RomFS | `sandbox/bin/nstool.cmd` |
+| Switch BNTX/common formats | `sandbox/bin/switch-toolbox.cmd` |
 | Total War packs | `sandbox/bin/rpfm.cmd` |
 | File type | `sandbox/bin/diec.cmd` |
 | Hex | `sandbox/bin/imhex.cmd` |
