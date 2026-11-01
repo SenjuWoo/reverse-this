@@ -1,3 +1,7 @@
+## 1.9.7 (2026-11-01)
+
+- Add a manual Xbox 360 XEX/PPC static-recompilation route for ReXGlue. It is not auto-installed: the official v0.10.0 Windows ZIP is 44.7 MB, and its `rexruntime.dll` is a known Defender heuristic false positive (28/71 engines, upstream issue #485). The route documents source/nightly verification, Visual Studio 2022/Clang 20, CMake, Ninja and the manual per-game work.
+
 ## 1.9.6 (2026-10-31)
 
 - Refresh the dated currency note: `flare-capa` and capa-rules are now 10.0.0 (2026-10-16), and wasm-tools is 1.263.0 (2026-10-30). The installed kit already had both; the documentation was stale.

@@ -1,3 +1,7 @@
+# Current 1.9.7 ReXGlue manual route — 2026-11-01
+
+Goal: evaluate ReXGlue for Xbox 360-to-PC workflows. Added as a manual route only; the official Windows release is a known Defender false positive and is not auto-installed. See STATE.md.
+
 # Current 1.9.6 currency refresh — 2026-10-31
 
 Goal: fix the stale capa/wasm-tools versions found during the install audit. No runtime behavior changed; see STATE.md.

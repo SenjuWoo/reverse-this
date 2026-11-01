@@ -1,3 +1,11 @@
+# Reverse THIS! 1.9.7 ReXGlue manual route (2026-11-01)
+
+- Goal: decide whether the ReXGlue Xbox 360 SDK belongs in the kit; add it only if small and verified working.
+- Done: inspected v0.10.0 (44.7 MB Windows ZIP), upstream wiki and issue #485. It is a per-game static-recompilation SDK, not a push-button converter. The official `rexruntime.dll` is a known Defender heuristic false positive (28/71 engines), so it is documented as a manual route in `docs/coverage.md`, not added to the catalog or installer.
+- Validation: catalog/encyclopedia/kit tests, delivery, installer gate; the route names the Visual Studio 2022/Clang 20, CMake 3.25+ and Ninja prerequisites and the manual unresolved-function work.
+- Next: publish 1.9.7 and refresh the local kit.
+- Limits: the Windows release was not executed; Defender quarantined the ZIP as `Trojan:Win32/Suschil!rfn`. The source/nightly route is documented, not runtime-verified here.
+
 # Reverse THIS! 1.9.6 currency refresh (2026-10-31)
 
 - Goal: remove the last stale version note found by the install audit.
