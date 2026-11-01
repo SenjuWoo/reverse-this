@@ -1,4 +1,17 @@
+<p align="center">
+  <img src="assets/mark.svg" width="72" height="72" alt="Reverse THIS!">
+</p>
+
+<div align="center">
+
 # Reverse THIS!
+
+<p>
+  <a href="https://github.com/SenjuWoo/reverse-this/releases/latest"><img src="https://img.shields.io/github/v/release/SenjuWoo/reverse-this?label=release&color=33566E&labelColor=0d1117" alt="latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-33566E?labelColor=0d1117" alt="MIT License"></a>
+</p>
+
+</div>
 
 One click installs a Windows reverse-engineering and modding workbench with stable commands in `sandbox/bin`. It covers native and .NET apps, Android/Java bytecode, PyInstaller packages, binary formats, and game engines from Unreal and Unity to Source, REDengine, FromSoftware, GameMaker and Total War.
 
