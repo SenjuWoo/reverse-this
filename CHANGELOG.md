@@ -1,3 +1,8 @@
+## 1.12.1 (2026-11-01)
+
+- Clarify the QuickBMS NPK route: create the output folder first, because QuickBMS prompts for confirmation and fails in non-interactive shells.
+- Correct the vgmstream licence wording in `docs/currency.md`.
+
 ## 1.12.0 (2026-11-01)
 
 - Add NeoX NPK coverage: `neoxtractor` (GUI, AGPL-3.0, 75 MB) and `quickbms` (GPL-2.0, 16 MB). QuickBMS extracted `Once Human\res_global-normal_pack_17.npk` with a community NXPK BMS script; NeoXtractor is the out-of-box GUI route.

@@ -14,11 +14,16 @@ but keys, compression and config differ by game and build.
 
 QuickBMS needs a `.bms` script. The kit does not redistribute a Once Human
 script because the community script used for the test has no declared licence.
-Download a script from a source you trust, inspect it, and run:
+Download a script from a source you trust, inspect it, create the output folder
+first, and run:
 
 ```text
-quickbms.exe <script.bms> "<game>\res_global-normal_pack_*.npk" "<output>"
+mkdir out
+quickbms.exe <script.bms> "<game>\res_global-normal_pack_*.npk" "out"
 ```
+
+QuickBMS asks for confirmation when the output folder does not exist and fails
+in non-interactive shells, so create it up front.
 
 `neoxtractor` is the out-of-box GUI route; QuickBMS is the scriptable route.
 Neither is a universal decrypter: a game-specific key/config may still be
