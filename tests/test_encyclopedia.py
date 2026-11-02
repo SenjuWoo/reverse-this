@@ -18,6 +18,7 @@ REQUIRED = [
     "encyclopedia/engines/unity-mono-il2cpp.md",
     "encyclopedia/engines/rage-gta5.md",
     "encyclopedia/engines/pokemon-switch.md",
+    "encyclopedia/engines/neox.md",
     "encyclopedia/blueprints/ipc_seqlock.h",
     "encyclopedia/blueprints/ipc_seqlock.py",
     "encyclopedia/blueprints/passthrough_reproject.fxh",

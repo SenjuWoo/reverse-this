@@ -1,3 +1,8 @@
+## 1.13.0 (2026-11-01)
+
+- Add `encyclopedia/engines/neox.md` with the NPK fingerprint, the honest per-title coordinate/depth caveats, the NeoXtractor/QuickBMS/Rime route and verification steps.
+- Encyclopedia is 29 files / 8 registry rows.
+
 ## 1.12.1 (2026-11-01)
 
 - Clarify the QuickBMS NPK route: create the output folder first, because QuickBMS prompts for confirmation and fails in non-interactive shells.

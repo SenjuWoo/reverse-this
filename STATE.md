@@ -1,9 +1,9 @@
-# Reverse THIS! 1.12.1 NeoX and ROR2 toolchain (2026-11-01)
+# Reverse THIS! 1.13.0 NeoX and ROR2 toolchain (2026-11-01)
 
 - Goal: close the NeoX NPK gap and cover the actual source-to-Unity tools used by the Gnar, Ultron and Kisame Risk of Rain 2 projects.
-- Done: added `neoxtractor` and `quickbms` for NeoX NPK; added `ritobin-tools`, `lol2gltf` and `vgmstream` for the League/Gnar pipeline; added `docs/neox.md` and `docs/risk-of-rain-2.md`; catalog is 92 tools.
+- Done: added `neoxtractor` and `quickbms` for NeoX NPK; added `ritobin-tools`, `lol2gltf` and `vgmstream` for the League/Gnar pipeline; added `docs/neox.md`, `docs/risk-of-rain-2.md` and an `encyclopedia/engines/neox.md` card; catalog is 92 tools.
 - Validation: QuickBMS extracted `Once Human/res_global-normal_pack_17.npk` (6 files, PVR textures) with a community NXPK script; all new tool release assets and command entry points were exercised. NeoXtractor is GUI-only.
-- Next: none for 1.12.1; the local kit is installed and Doctor-clean.
+- Next: none for 1.13.0; the local kit is installed and Doctor-clean.
 - Limits: the Once Human BMS script has no declared licence and is not bundled; NeoXtractor may need a per-game XOR key; ltk-tex-utils, BnkExtractor, xfbin_parser, Rime and CUE4Parse are manual routes. No survivor was rebuilt or game-tested from this kit.
 
 # Reverse THIS! 1.11.0 League/Naruto gap fill (2026-11-01)
