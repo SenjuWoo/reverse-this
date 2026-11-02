@@ -5,7 +5,8 @@
 - Done: asset-aware stable-release selection with an explicit fallback log, no permanent tool pin; pinned/unfiltered callers retain their existing behavior. Existing digest, ambiguity and newer-installed protections remain intact.
 - Validation: offline regression suite; live fresh NeoXtractor v3.2 download/digest and cached reuse; full owner update ok=90 failed=0; Doctor verified 92 tool records; NeoXtractor --version returned 3.2. Catalog, encyclopedia, kit, isolation, entrypoint, prerequisite and standalone gates passed.
 - Version/recovery: 1.13.1; existing sandbox/backups and pre-update receipts remain available. Logs: sandbox/log/modkit.log. Run: powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1; verify with -Doctor.
-- Next: exact-commit delivery gate, push and automated CI/release verification.
+- Release: v1.13.1 at 2d2ccfd5ab493f7ecaae5c62581e84cad9871a34; all 8 exact-SHA checks passed, and all three security-alert queries returned zero. Published ZIP is 144419 bytes, SHA-256 d40a282f37fae926821bee45ad3a03b89a7ab5e5d47837b5f05f3b8de117182d; all 52 manifest entries verified. The downloaded installer also passed cached NeoXtractor install and scoped Doctor.
+- Next: no owner-side repair remains; complete bundle rerun belongs to the parallel bundle agent.
 - Limits: the complete bundle installer was not rerun; the parallel bundle agent owns that check. No bundle/provider configuration was edited or app closed.
 
 # Reverse THIS! 1.13.0 NeoX and ROR2 toolchain (2026-11-01)
