@@ -1,4 +1,8 @@
-# Current 1.12.0 NeoX/ROR2 toolchain — 2026-11-01
+# Current 1.13.1 companion install repair — 2026-11-02
+
+Fix the owner-side assetless-release failure without modifying the Starter Bundle. Fresh/cached NeoXtractor installs and the complete local owner update/Doctor pass; publication follows exact-SHA CI. See STATE.md.
+
+# Historical 1.12.0 NeoX/ROR2 toolchain — 2026-11-01
 
 Goal: add NeoX NPK extraction and document the Gnar/Ultron/Kisame source routes. `neoxtractor`, `quickbms`, `ritobin-tools`, `lol2gltf` and `vgmstream` are installed; the remaining project-specific tools are manual. See STATE.md.
 

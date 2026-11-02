@@ -1,3 +1,9 @@
+## 1.13.1 (2026-11-02)
+
+- Fix NeoXtractor breaking the companion install when upstream published v3.3 without binaries. Unpinned GitHub archive tools now select the newest stable release containing their required Windows asset, with a visible fallback log instead of a permanent version pin.
+- Preserve exact release pins, asset-ambiguity failures, digest verification and newer installed payloads. Automatically take a newer release once its matching binary exists.
+- Add offline regression checks for source-only latest releases, paginated history, draft/prerelease exclusion, exact pins, ambiguous assets, missing binaries and API failures. Fresh and cached NeoXtractor installs verified against upstream v3.3/v3.2.
+
 ## 1.13.0 (2026-11-01)
 
 - Add `encyclopedia/engines/neox.md` with the NPK fingerprint, the honest per-title coordinate/depth caveats, the NeoXtractor/QuickBMS/Rime route and verification steps.

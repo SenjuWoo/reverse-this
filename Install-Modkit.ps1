@@ -556,9 +556,27 @@ function Get-GitHubHeaders {
 }
 
 function Get-GitHubRelease {
-    param([string]$Repo, [string]$Release)
+    param([string]$Repo, [string]$Release, [string]$AssetPattern)
     $url = Get-ReleaseApiUrl -Repo $Repo -Release $Release
-    return Invoke-RestMethod -Headers (Get-GitHubHeaders) -Uri $url
+    $latest = Invoke-RestMethod -Headers (Get-GitHubHeaders) -Uri $url
+    if ($Release -or -not $AssetPattern) { return $latest }
+    if (@($latest.assets | Where-Object { $_.name -cmatch $AssetPattern }).Count) {
+        Select-OneAsset -Assets $latest.assets -Pattern $AssetPattern | Out-Null
+        return $latest
+    }
+    # A source-only release is not an installable update; never substitute for an explicit pin.
+    for ($page = 1; ; $page++) {
+        $releases = @(ConvertTo-Array (Invoke-GitHubApi -ApiPath "repos/$Repo/releases?per_page=100&page=$page"))
+        if (-not $releases.Count) { throw "$Repo has no stable release with asset pattern [$AssetPattern]" }
+        foreach ($candidate in $releases) {
+            if ($candidate.draft -or $candidate.prerelease) { continue }
+            if (@($candidate.assets | Where-Object { $_.name -cmatch $AssetPattern }).Count) {
+                Select-OneAsset -Assets $candidate.assets -Pattern $AssetPattern | Out-Null
+                Write-Log "WARN $Repo latest $($latest.tag_name) lacks [$AssetPattern]; using installable stable release $($candidate.tag_name)"
+                return $candidate
+            }
+        }
+    }
 }
 
 function Invoke-GitHubApi {
@@ -1011,7 +1029,7 @@ function Install-LocalScriptTool {
 
 function Install-GitHubZipTool {
     param($Tool)
-    $release = Get-GitHubRelease -Repo $Tool.repo -Release $Tool.release
+    $release = Get-GitHubRelease -Repo $Tool.repo -Release $Tool.release -AssetPattern $Tool.asset_pattern
     $asset = Select-OneAsset -Assets (ConvertTo-Array $release.assets) -Pattern $Tool.asset_pattern
     if ([string]$asset.name -notmatch '^[A-Za-z0-9._+ -]+$') { throw "unsafe asset filename: $($asset.name)" }
     $dest = Get-ToolDirectory $Tool.id

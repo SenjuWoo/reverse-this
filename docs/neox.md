@@ -29,6 +29,14 @@ in non-interactive shells, so create it up front.
 Neither is a universal decrypter: a game-specific key/config may still be
 needed.
 
+## Release selection
+
+On 2026-11-02, upstream NeoXtractor v3.3 was published without release assets;
+v3.2 still supplied the Windows ZIP. Reverse THIS! 1.13.1 selects that newest
+installable stable build and logs the fallback, without pinning NeoXtractor to
+v3.2. A newer stable Windows binary is selected automatically when available.
+The cached v3.2 payload is verified and reused rather than downloaded again.
+
 ## Once Human-specific route
 
 [Rime](https://dtzxporter.com/tools/rime) by DTZxPorter is a dedicated Once

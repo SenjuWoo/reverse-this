@@ -244,6 +244,56 @@ public static class AtomicJsonLockFixture {
     Write-AtomicJson -Path $atomic -Text '{"phase":"final-recovery"}'
     Assert-True ((Get-Content -LiteralPath $atomic -Raw | ConvertFrom-Json).phase -eq 'final-recovery') 'A later atomic write did not recover after lock exhaustion'
 
+    # Source-only latest releases must not hide the newest stable Windows payload.
+    $savedRest = Get-Item Function:\Invoke-RestMethod -ErrorAction SilentlyContinue
+    $savedApi = ${function:Invoke-GitHubApi}
+    try {
+        $script:ReleaseFixture = [pscustomobject]@{ tag_name = 'v3.3'; assets = @() }
+        $script:CompatibleFixture = [pscustomobject]@{ tag_name = 'v3.2'; draft = $false; prerelease = $false; assets = @([pscustomobject]@{ name = 'probe.zip' }) }
+        $script:ReleasePages = 0
+        function Invoke-RestMethod { return $script:ReleaseFixture }
+        function Invoke-GitHubApi {
+            param([string]$ApiPath)
+            $script:ReleasePages++
+            if ($ApiPath -like '*page=1') {
+                # Invoke-RestMethod emits a JSON array as one pipeline object.
+                return ,@(
+                    [pscustomobject]@{ tag_name = 'v4-preview'; draft = $false; prerelease = $true; assets = $script:CompatibleFixture.assets },
+                    [pscustomobject]@{ tag_name = 'v4-draft'; draft = $true; prerelease = $false; assets = $script:CompatibleFixture.assets },
+                    $script:ReleaseFixture
+                )
+            }
+            if ($ApiPath -like '*page=2') { return ,@($script:CompatibleFixture) }
+            return ,@()
+        }
+        $selected = Get-GitHubRelease -Repo 'fixture/repo' -AssetPattern '^probe\.zip$'
+        Assert-True ($selected.tag_name -eq 'v3.2' -and $script:ReleasePages -eq 2) 'An assetless latest release hid the stable Windows build or ignored pagination'
+        $script:ReleasePages = 0
+        $pinned = Get-GitHubRelease -Repo 'fixture/repo' -Release 'v3.3' -AssetPattern '^probe\.zip$'
+        Assert-True ($pinned.tag_name -eq 'v3.3' -and $script:ReleasePages -eq 0) 'An explicit release pin was silently replaced'
+        $unfiltered = Get-GitHubRelease -Repo 'fixture/repo'
+        Assert-True ($unfiltered.tag_name -eq 'v3.3' -and $script:ReleasePages -eq 0) 'An unfiltered release caller changed behavior'
+        $script:ReleaseFixture = $script:CompatibleFixture
+        $selected = Get-GitHubRelease -Repo 'fixture/repo' -AssetPattern '^probe\.zip$'
+        Assert-True ($selected.tag_name -eq 'v3.2' -and $script:ReleasePages -eq 0) 'An installable latest release fetched history'
+        $script:ReleaseFixture = [pscustomobject]@{ tag_name = 'v3.4'; assets = @([pscustomobject]@{ name = 'probe.zip' }, [pscustomobject]@{ name = 'probe.zip' }) }
+        $threw = $false
+        try { Get-GitHubRelease -Repo 'fixture/repo' -AssetPattern '^probe\.zip$' | Out-Null } catch { $threw = $_.Exception.Message -like '*matched 2 assets*' }
+        Assert-True ($threw -and $script:ReleasePages -eq 0) 'Ambiguous latest assets silently fell back'
+        $script:ReleaseFixture = [pscustomobject]@{ tag_name = 'v3.3'; assets = @() }
+        $script:CompatibleFixture.assets = @()
+        $threw = $false
+        try { Get-GitHubRelease -Repo 'fixture/repo' -AssetPattern '^probe\.zip$' | Out-Null } catch { $threw = $_.Exception.Message -like '*no stable release*' }
+        Assert-True $threw 'Missing Windows assets in all releases were accepted'
+        function Invoke-GitHubApi { throw 'fixture network failure' }
+        $threw = $false
+        try { Get-GitHubRelease -Repo 'fixture/repo' -AssetPattern '^probe\.zip$' | Out-Null } catch { $threw = $_.Exception.Message -eq 'fixture network failure' }
+        Assert-True $threw 'Release-history network errors were swallowed'
+    } finally {
+        if ($savedRest) { Set-Item Function:\Invoke-RestMethod -Value $savedRest.ScriptBlock } else { Remove-Item Function:\Invoke-RestMethod }
+        Set-Item Function:\Invoke-GitHubApi -Value $savedApi
+    }
+
     $savedRelease = ${function:Get-GitHubRelease}
     $savedJdk = ${function:Install-Jdk}
     $savedDownload = ${function:Save-Url}
@@ -414,6 +464,8 @@ public static class AtomicJsonLockFixture {
         Write-Utf8 -Path $rawFixture -Text $script:RawFixtureText
         $script:RawDigest = Get-Sha256Hex $rawFixture
         function Get-GitHubRelease {
+            param([string]$Repo, [string]$Release, [string]$AssetPattern)
+            Assert-True ($AssetPattern -eq '^probe_[0-9]+\.jar$') 'The archive installer omitted its required asset pattern'
             return [pscustomobject]@{
                 tag_name = 'v1'; assets = @([pscustomobject]@{
                     name = 'probe_1.jar'; digest = ('sha256:' + $script:RawDigest)

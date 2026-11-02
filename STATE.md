@@ -1,3 +1,13 @@
+# Reverse THIS! 1.13.1 installable-release repair (2026-11-02)
+
+- Goal: fix the Reverse THIS! failure propagated by the bundle, without changing the bundle owner's files.
+- Cause: NeoXtractor v3.3 was published without release assets; the archive installer assumed latest always contained a Windows binary.
+- Done: asset-aware stable-release selection with an explicit fallback log, no permanent tool pin; pinned/unfiltered callers retain their existing behavior. Existing digest, ambiguity and newer-installed protections remain intact.
+- Validation: offline regression suite; live fresh NeoXtractor v3.2 download/digest and cached reuse; full owner update ok=90 failed=0; Doctor verified 92 tool records; NeoXtractor --version returned 3.2. Catalog, encyclopedia, kit, isolation, entrypoint, prerequisite and standalone gates passed.
+- Version/recovery: 1.13.1; existing sandbox/backups and pre-update receipts remain available. Logs: sandbox/log/modkit.log. Run: powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1; verify with -Doctor.
+- Next: exact-commit delivery gate, push and automated CI/release verification.
+- Limits: the complete bundle installer was not rerun; the parallel bundle agent owns that check. No bundle/provider configuration was edited or app closed.
+
 # Reverse THIS! 1.13.0 NeoX and ROR2 toolchain (2026-11-01)
 
 - Goal: close the NeoX NPK gap and cover the actual source-to-Unity tools used by the Gnar, Ultron and Kisame Risk of Rain 2 projects.
