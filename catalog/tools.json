@@ -1169,6 +1169,77 @@
           "exe_glob": "wadtools.exe"
         }
       ]
+    },
+    {
+      "id": "quickbms",
+      "name": "QuickBMS",
+      "job": "Generic archive extractor/reimporter with BMS scripts; used here for NeoX NXPK/NPK.",
+      "method": "github-release",
+      "repo": "LittleBigBug/QuickBMS",
+      "asset_pattern": "^quickbms_win\\.zip$",
+      "shims": [
+        {
+          "name": "quickbms",
+          "exe_glob": "quickbms.exe"
+        }
+      ]
+    },
+    {
+      "id": "neoxtractor",
+      "name": "NeoXtractor",
+      "job": "NeoX NPK/EXPK browser and extractor (GUI).",
+      "method": "github-release",
+      "repo": "NeoXtractor/NeoXtractor",
+      "asset_pattern": "^neoxtractor-windows\\.zip$",
+      "shims": [
+        {
+          "name": "neoxtractor",
+          "exe_glob": "neoxtractor.exe"
+        }
+      ]
+    },
+    {
+      "id": "ritobin-tools",
+      "name": "ritobin-tools",
+      "job": "League of Legends BIN definition conversion and inspection.",
+      "method": "github-release",
+      "repo": "LeagueToolkit/ritobin-tools",
+      "asset_pattern": "^ritobin-tools-[0-9.]+-windows-x64\\.zip$",
+      "shims": [
+        {
+          "name": "ritobin-tools",
+          "exe_glob": "ritobin-tools.exe"
+        }
+      ]
+    },
+    {
+      "id": "lol2gltf",
+      "name": "lol2gltf",
+      "job": "League of Legends SKN/SKL/ANM to glTF conversion.",
+      "method": "github-release",
+      "repo": "Crauzer/lol2gltf",
+      "asset_pattern": "^lol2gltf\\.exe$",
+      "shims": [
+        {
+          "name": "lol2gltf",
+          "exe_glob": "lol2gltf.exe"
+        }
+      ],
+      "unpack": "raw"
+    },
+    {
+      "id": "vgmstream",
+      "name": "vgmstream",
+      "job": "Game audio stream decoder; WEM/WPK/BNK-related routes.",
+      "method": "github-release",
+      "repo": "vgmstream/vgmstream",
+      "asset_pattern": "^vgmstream-win64\\.zip$",
+      "shims": [
+        {
+          "name": "vgmstream",
+          "exe_glob": "vgmstream-cli.exe"
+        }
+      ]
     }
   ],
   "retired": [

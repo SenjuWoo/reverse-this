@@ -1,3 +1,10 @@
+## 1.12.0 (2026-11-01)
+
+- Add NeoX NPK coverage: `neoxtractor` (GUI, AGPL-3.0, 75 MB) and `quickbms` (GPL-2.0, 16 MB). QuickBMS extracted `Once Human\res_global-normal_pack_17.npk` with a community NXPK BMS script; NeoXtractor is the out-of-box GUI route.
+- Add the League source/mod pipeline tools used by the Gnar workspace: `ritobin-tools`, `lol2gltf` and `vgmstream`.
+- Add [docs/neox.md](docs/neox.md) and [docs/risk-of-rain-2.md](docs/risk-of-rain-2.md), covering Once Human NPK, Gnar's League route, Ultron's CUE4Parse/UE5 route, and Kisame's XFBIN/Naruto Storm 4 route.
+- Catalog is 92 tools. Manual-only: Rime (Once Human), ltk-tex-utils, BnkExtractor, xfbin_parser and CUE4Parse where their releases/licences do not permit clean bundling.
+
 ## 1.11.0 (2026-11-01)
 
 - Add `wadtools` (GPL-3.0, 2.96 MB Windows ZIP) for League of Legends/Teamfight Tactics `.wad.client` listing and extraction. Verified against the installed `DATA.wad.client`: 4,653 chunks, 145.6 MB uncompressed.

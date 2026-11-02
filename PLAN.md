@@ -1,3 +1,7 @@
+# Current 1.12.0 NeoX/ROR2 toolchain — 2026-11-01
+
+Goal: add NeoX NPK extraction and document the Gnar/Ultron/Kisame source routes. `neoxtractor`, `quickbms`, `ritobin-tools`, `lol2gltf` and `vgmstream` are installed; the remaining project-specific tools are manual. See STATE.md.
+
 # Current 1.11.0 League/Naruto gap fill — 2026-11-01
 
 Goal: add a verified League WAD extractor and document Naruto CPK/XFBIN plus the installed library's engine gaps. `wadtools` is installed; LTK Manager/CriPakTools/NSC-Toolbox remain manual. See STATE.md.

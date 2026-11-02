@@ -75,6 +75,9 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Switch NSP/XCI/NCA/RomFS | `sandbox/bin/nstool.cmd` |
 | Switch BNTX/common formats | `sandbox/bin/switch-toolbox.cmd` |
 | League `.wad.client` | `sandbox/bin/wadtools.cmd` |
+| League BIN/model | `sandbox/bin/ritobin-tools.cmd`, `lol2gltf.cmd` |
+| Game audio streams | `sandbox/bin/vgmstream.cmd` |
+| NeoX NPK/EXPK | `sandbox/bin/neoxtractor.cmd` or `quickbms.cmd` |
 | Total War packs | `sandbox/bin/rpfm.cmd` |
 | File type | `sandbox/bin/diec.cmd` |
 | Hex | `sandbox/bin/imhex.cmd` |

@@ -590,5 +590,47 @@
       "wadtools-0.5.7-windows-x64.zip"
     ],
     "expect": "wadtools-0.5.7-windows-x64.zip"
+  },
+  "quickbms": {
+    "assets": [
+      "quickbms_linux.zip",
+      "quickbms_macosx.zip",
+      "quickbms_win.zip"
+    ],
+    "expect": "quickbms_win.zip"
+  },
+  "neoxtractor": {
+    "assets": [
+      "neoxtractor-linux.tar.gz",
+      "neoxtractor-macos-arm64.tar.gz",
+      "neoxtractor-macos-x64.tar.gz",
+      "neoxtractor-windows.zip"
+    ],
+    "expect": "neoxtractor-windows.zip"
+  },
+  "ritobin-tools": {
+    "assets": [
+      "ritobin-tools-0.2.3-linux-x64.zip",
+      "ritobin-tools-0.2.3-macos-x64.zip",
+      "ritobin-tools-0.2.3-windows-x64.zip"
+    ],
+    "expect": "ritobin-tools-0.2.3-windows-x64.zip"
+  },
+  "lol2gltf": {
+    "assets": [
+      "lol2gltf.exe"
+    ],
+    "expect": "lol2gltf.exe"
+  },
+  "vgmstream": {
+    "assets": [
+      "foo_input_vgmstream.fb2k-component",
+      "vgmstream-linux.zip",
+      "vgmstream-mac.zip",
+      "vgmstream-wasm.zip",
+      "vgmstream-win.zip",
+      "vgmstream-win64.zip"
+    ],
+    "expect": "vgmstream-win64.zip"
   }
 }
