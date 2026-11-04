@@ -1,3 +1,9 @@
+## 1.13.2 (2026-11-03)
+
+- Read `GH_TOKEN` or `GITHUB_TOKEN` when `gh` is missing or not logged in. Anonymous GitHub API calls are capped at 60 per hour, fewer than one full catalog run needs.
+- The `rea` shim points `GHIDRA_INSTALL_DIR` at the kit Ghidra unless the caller set one. REA 6.8.0 still refuses Ghidra 12.2 (it accepts 12.1.x); upstream main already accepts 12.x, so the Ghidra provider starts working with the next REA release.
+- Correct the docs: Context7 has not indexed `/senjuwoo/reverse-this`, so agents read `encyclopedia/` from disk first. Add an REA row to the agent tool table and refresh the companion snapshot table (REA main, CLI-Anything, Context Mode, CLibDT, zIDK).
+
 ## 1.13.1 (2026-11-02)
 
 - Fix NeoXtractor breaking the companion install when upstream published v3.3 without binaries. Unpinned GitHub archive tools now select the newest stable release containing their required Windows asset, with a visible fallback log instead of a permanent version pin.

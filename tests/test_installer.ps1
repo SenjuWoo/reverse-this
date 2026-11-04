@@ -812,6 +812,25 @@ public static class AtomicJsonLockFixture {
         $env:PATH=$BinDir
         Assert-True ($null -eq (Get-ExternalRea ([pscustomobject]@{id='rea';package_version='6.8.0'}))) 'REA selected its own shim recursively'
     } finally { $env:PATH=$oldPath }
+    $reaTarget = Join-Path $TmpDir 'rea-probe.cmd'
+    Write-Utf8 -Path $reaTarget -Text "@echo off`r`necho %GHIDRA_INSTALL_DIR%`r`n"
+    $reaShim = Write-Shim -Name 'rea' -Target $reaTarget
+    $oldGhidra = $env:GHIDRA_INSTALL_DIR
+    try {
+        $env:GHIDRA_INSTALL_DIR = $null
+        Assert-True ((& cmd /d /c "`"$reaShim`"" | Out-String).Trim() -eq ((Join-Path $BinDir '..\tools\ghidra') -replace '\\\\','\')) 'REA shim did not default to the kit Ghidra'
+        $env:GHIDRA_INSTALL_DIR = 'C:\caller-ghidra'
+        Assert-True ((& cmd /d /c "`"$reaShim`"" | Out-String).Trim() -eq 'C:\caller-ghidra') 'REA shim replaced the caller GHIDRA_INSTALL_DIR'
+    } finally { $env:GHIDRA_INSTALL_DIR = $oldGhidra; Remove-Item -LiteralPath $reaShim -Force -ErrorAction SilentlyContinue }
+    $oldGh=$env:GH_TOKEN; $oldGithub=$env:GITHUB_TOKEN
+    try {
+        function gh { $global:LASTEXITCODE = 1; 'not logged in' }
+        $env:GH_TOKEN=$null; $env:GITHUB_TOKEN='ghs_envtoken1'
+        $script:GitHubTokenChecked=$false
+        Assert-True ((Get-GitHubHeaders).Authorization -eq 'Bearer ghs_envtoken1') 'GITHUB_TOKEN was ignored when gh had no login'
+        $env:GITHUB_TOKEN='bad token'; $script:GitHubTokenChecked=$false
+        Assert-True (-not (Get-GitHubHeaders).ContainsKey('Authorization')) 'A malformed environment token was sent'
+    } finally { Remove-Item Function:\gh -ErrorAction SilentlyContinue; $env:GH_TOKEN=$oldGh; $env:GITHUB_TOKEN=$oldGithub; $script:GitHubTokenChecked=$false }
     Write-Host 'installer regression checks ok'
 } finally {
     $resolved = [IO.Path]::GetFullPath($testRoot)

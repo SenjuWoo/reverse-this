@@ -1,6 +1,6 @@
 # AI Game Modding & Reverse Engineering Encyclopedia
 
-This directory is the Context7-indexed knowledge base for the Reverse THIS! workbench. It is written for an agent that has to make a decision and run a command, not for a reader who wants an overview.
+This directory is the local knowledge base for the Reverse THIS! workbench; read it from disk. `context7.json` makes it indexable by Context7 once the repository is submitted there (not yet indexed as of 2026-11-03). It is written for an agent that has to make a decision and run a command, not for a reader who wants an overview.
 
 ## Start here
 
@@ -39,4 +39,4 @@ encyclopedia/
   ERROR-REGISTRY.json        error signature -> cause -> fix
 ```
 
-Context7 reads this directory because `context7.json` at the repository root sets `"folders": ["encyclopedia"]`. Root markdown is always indexed by Context7; the runtime directories (`sandbox`, `bin`, `.git`, `tests`, `node_modules`, `**/temp`) are excluded.
+When indexed, Context7 reads this directory because `context7.json` at the repository root sets `"folders": ["encyclopedia"]`. Root markdown is always indexed by Context7; the runtime directories (`sandbox`, `bin`, `.git`, `tests`, `node_modules`, `**/temp`) are excluded.

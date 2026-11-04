@@ -550,6 +550,12 @@ function Get-GitHubHeaders {
                 $script:GitHubToken = $tok
             }
         }
+        # Without gh, anonymous API calls cap at 60/hour, fewer than one full catalog run needs.
+        if (-not $script:GitHubToken) {
+            foreach ($candidate in @($env:GH_TOKEN, $env:GITHUB_TOKEN)) {
+                if ($candidate -and $candidate.Trim() -match '^[A-Za-z0-9_]+$') { $script:GitHubToken = $candidate.Trim(); break }
+            }
+        }
     }
     if ($script:GitHubToken) { $headers.Authorization = 'Bearer ' + $script:GitHubToken }
     return $headers
@@ -831,6 +837,11 @@ function Write-Shim {
         $lines += 'set "DOTNET_ROOT_X64=%DOTNET_ROOT%"'
     }
     if ($NodeHome) { $lines += 'set "PATH=' + $NodeHome.Replace('%', '%%') + ';%PATH%"' }
+    if ($Name -eq 'rea') {
+        # REA finds Ghidra only through GHIDRA_INSTALL_DIR; default to the kit's copy, keep a caller's own choice.
+        $lines += 'if not defined GHIDRA_INSTALL_DIR set "GHIDRA_INSTALL_DIR=%~dp0..\tools\ghidra"'
+        if ($script:JavaHome) { $lines += 'if not defined JAVA_HOME set "JAVA_HOME=' + $script:JavaHome.Replace('%', '%%') + '"' }
+    }
     # Chain batch targets directly; CALL expands percent signs in paths a second time.
     $call = ''
     if ($PythonScript) { $call = '"' + $PythonExe.Replace('%', '%%') + '" ' }
