@@ -13,7 +13,8 @@ ENCYCLOPEDIA_REQUIRED = {'encyclopedia/README.md','encyclopedia/ROUTING.md','enc
 
 def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:
     sha = subprocess.check_output(['git','rev-parse',commit+'^{commit}'],cwd=root,text=True).strip()
-    raw = subprocess.check_output(['git','archive','--format=zip',sha],cwd=root)
+    # User-level core.autocrlf or a native core.eol would rewrite text to CRLF on Windows only; builds must match CI byte for byte.
+    raw = subprocess.check_output(['git','-c','core.autocrlf=false','-c','core.eol=lf','archive','--format=zip',sha],cwd=root)
     files = {}
     with zipfile.ZipFile(io.BytesIO(raw)) as source:
         for entry in source.infolist():

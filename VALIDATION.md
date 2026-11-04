@@ -11,6 +11,10 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 | Companion contract | `python scripts/check_companions.py` |
 | Live kit | `Install-Modkit.ps1` then `-Doctor` |
 
+## Comparing a local build with a release
+
+`build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
+
 ## Latest local results (2026-11-03, 1.13.2 candidate, Windows PowerShell 5.1)
 
 All six PowerShell suites and the four Python suites pass; companions check passes; live update ok=90 failed=0 and Doctor clean. PowerShell 7 is covered by CI only (no `pwsh` on this machine).

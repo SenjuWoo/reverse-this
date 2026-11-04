@@ -9,4 +9,5 @@ Scope: whole repository, the installed kit and the supplied `Tools` snapshots. A
 | Context7 | Docs said the encyclopedia was Context7-indexed; `/senjuwoo/reverse-this` does not resolve. | Docs now say local-first; submission is an owner decision. |
 | Ledgers | STATE/PLAN/VALIDATION held 20 stacked "current" sections back to 1.4.1. | Reduced to current state; history lives in CHANGELOG and git. |
 | Installer code | 73 functions, none unused; no Invoke-Expression in product code; only retry backoff sleeps. | No change. |
+| Release builder | `git archive` honoured the user's `core.autocrlf=true`, so local builds shipped CRLF text and never matched CI. | Builder pins autocrlf/eol; local contents now match the release. |
 | Catalog currency | Only `rea` is version-pinned and it equals npm latest; all others resolve latest per run. | No change. |
