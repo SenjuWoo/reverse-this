@@ -830,7 +830,11 @@ public static class AtomicJsonLockFixture {
         Assert-True ((Get-GitHubHeaders).Authorization -eq 'Bearer ghs_envtoken1') 'GITHUB_TOKEN was ignored when gh had no login'
         $env:GITHUB_TOKEN='bad token'; $script:GitHubTokenChecked=$false
         Assert-True (-not (Get-GitHubHeaders).ContainsKey('Authorization')) 'A malformed environment token was sent'
-    } finally { Remove-Item Function:\gh -ErrorAction SilentlyContinue; $env:GH_TOKEN=$oldGh; $env:GITHUB_TOKEN=$oldGithub; $script:GitHubTokenChecked=$false }
+    } finally {
+        Remove-Item Function:\gh -ErrorAction SilentlyContinue; $env:GH_TOKEN=$oldGh; $env:GITHUB_TOKEN=$oldGithub; $script:GitHubTokenChecked=$false
+        # The fake gh sets a failing exit code; CI's `. script` wrapper would report it as the suite result.
+        $global:LASTEXITCODE = 0
+    }
     Write-Host 'installer regression checks ok'
 } finally {
     $resolved = [IO.Path]::GetFullPath($testRoot)
