@@ -9,6 +9,8 @@ Usage:
     python aob_gen.py <file.exe> --pattern "48 8B 05 ?? ?? ?? ??" [--instructions 24]
     python aob_gen.py <file.exe> --offset 0x1200
 
+`--pattern` selects an executable-section match; `--offset` and `--rva` must
+point into an executable section. `matches` counts overlapping starts.
 Output JSON: pattern, rva, instructions, wildcards, unique, matches.
 """
 
@@ -46,30 +48,37 @@ class PE:
         if data[:2] != b"MZ":
             raise ValueError("not a PE: missing MZ")
         self.e_lfanew = u32(data, 0x3C)
-        if data[self.e_lfanew : self.e_lfanew + 4] != b"PE\0\0":
+        if self.e_lfanew + 24 > len(data) or data[self.e_lfanew : self.e_lfanew + 4] != b"PE\0\0":
             raise ValueError("not a PE: missing PE signature")
         coff = self.e_lfanew + 4
         self.machine = u16(data, coff)
         self.section_count = u16(data, coff + 2)
         self.opt_size = u16(data, coff + 16)
         opt = coff + 20
+        if opt + self.opt_size > len(data):
+            raise ValueError("not a PE: optional header exceeds the file")
         self.magic = u16(data, opt)
         self.pe32_plus = self.magic == 0x20B
+        if self.magic not in (0x10B, 0x20B):
+            raise ValueError(f"not a PE: unsupported optional-header magic 0x{self.magic:04X}")
         self.image_base = u64(data, opt + 24) if self.pe32_plus else u32(data, opt + 28)
         self.sections = []
         sec = opt + self.opt_size
+        if self.section_count <= 0 or sec + self.section_count * 40 > len(data):
+            raise ValueError("not a PE: section table exceeds the file")
         for i in range(self.section_count):
             base = sec + i * 40
-            self.sections.append(
-                {
-                    "name": data[base : base + 8].rstrip(b"\0").decode("ascii", "replace"),
-                    "virtual_size": u32(data, base + 8),
-                    "virtual_address": u32(data, base + 12),
-                    "raw_size": u32(data, base + 16),
-                    "raw_offset": u32(data, base + 20),
-                    "characteristics": u32(data, base + 36),
-                }
-            )
+            section = {
+                "name": data[base : base + 8].rstrip(b"\0").decode("ascii", "replace"),
+                "virtual_size": u32(data, base + 8),
+                "virtual_address": u32(data, base + 12),
+                "raw_size": u32(data, base + 16),
+                "raw_offset": u32(data, base + 20),
+                "characteristics": u32(data, base + 36),
+            }
+            if section["raw_size"] and section["raw_offset"] + section["raw_size"] > len(data):
+                raise ValueError(f"not a PE: section {section['name']} exceeds the file")
+            self.sections.append(section)
 
     def executable_ranges(self) -> list[tuple[int, int]]:
         """Raw file ranges for sections the loader may execute."""
@@ -78,6 +87,12 @@ class PE:
             if s["characteristics"] & 0x20000000 and s["raw_size"]:
                 ranges.append((s["raw_offset"], s["raw_offset"] + s["raw_size"]))
         return ranges
+
+    def executable_range_at(self, offset: int) -> tuple[int, int] | None:
+        for start, end in self.executable_ranges():
+            if start <= offset < end:
+                return start, end
+        return None
 
     def rva_to_offset(self, rva: int) -> int | None:
         for s in self.sections:
@@ -92,7 +107,7 @@ class PE:
     def offset_to_rva(self, offset: int) -> int | None:
         for s in self.sections:
             start = s["raw_offset"]
-            if start <= offset < start + s["raw_size"]:
+            if s["raw_size"] and start <= offset < start + s["raw_size"]:
                 return s["virtual_address"] + (offset - start)
         return None
 
@@ -160,6 +175,25 @@ def emit(original: bytes | bytearray, masked: bytearray) -> str:
     return " ".join(parts)
 
 
+def count_overlapping(regex: bytes, data: bytes) -> int:
+    """Count every start offset, including overlaps; short signatures need this."""
+    count = 0
+    start = 0
+    while True:
+        match = re.search(regex, data[start:])
+        if match is None:
+            return count
+        count += 1
+        start += match.start() + 1
+
+
+def positive_instructions(value: str) -> int:
+    number = int(value)
+    if not 1 <= number <= 1000:
+        raise argparse.ArgumentTypeError("instructions must be between 1 and 1000")
+    return number
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file")
@@ -167,7 +201,7 @@ def main(argv: list[str]) -> int:
     source.add_argument("--rva", type=lambda s: int(s, 0))
     source.add_argument("--offset", type=lambda s: int(s, 0))
     source.add_argument("--pattern")
-    parser.add_argument("--instructions", type=int, default=24)
+    parser.add_argument("--instructions", type=positive_instructions, default=24)
     args = parser.parse_args(argv[1:])
 
     if Cs is None:
@@ -184,9 +218,9 @@ def main(argv: list[str]) -> int:
 
     if args.pattern:
         regex, _ = parse_pattern(args.pattern)
-        match = regex.search(data)
+        match = next((m for start, end in pe.executable_ranges() for m in [regex.search(data, start, end)] if m), None)
         if not match:
-            print(json.dumps({"file": str(path), "error": "pattern not found"}))
+            print(json.dumps({"file": str(path), "error": "pattern not found in an executable section"}))
             return 1
         offset = match.start()
     elif args.rva is not None:
@@ -206,6 +240,10 @@ def main(argv: list[str]) -> int:
     if not pe.executable_ranges():
         print(json.dumps({"file": str(path), "error": "PE has no executable section"}))
         return 2
+    exec_range = pe.executable_range_at(offset)
+    if exec_range is None:
+        print(json.dumps({"file": str(path), "error": "offset is not in an executable section"}))
+        return 1
     rva = pe.offset_to_rva(offset)
     if rva is None:
         print(json.dumps({"file": str(path), "error": "offset is not in a mapped section"}))
@@ -215,7 +253,7 @@ def main(argv: list[str]) -> int:
     md = Cs(CS_ARCH_X86, mode)
     md.detail = True
     va = pe.image_base + rva
-    window = data[offset : offset + 4096]
+    window = data[offset : min(exec_range[1], offset + 4096)]
     original = bytearray()
     wildcard_flags = bytearray()
     count = 0
@@ -243,7 +281,7 @@ def main(argv: list[str]) -> int:
     regex = b"".join(b"." if t == "??" else re.escape(bytes([int(t, 16)])) for t in tokens)
     matches = 0
     for start, end in pe.executable_ranges():
-        matches += len(re.findall(regex, data[start:end], re.DOTALL))
+        matches += count_overlapping(regex, data[start:end])
     result = {
         "file": str(path),
         "pattern": text,

@@ -85,6 +85,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Maintain.ps1 failed repairing a stale manifest with a current pointer' }
     $state = Get-Content -LiteralPath (Join-Path $sandbox 'installed.json') -Raw | ConvertFrom-Json
     if ([IO.Path]::GetFullPath($state.kit_root) -ne [IO.Path]::GetFullPath($root)) { throw 'stale manifest was not repaired independently' }
+
+    # An intact manifest is enough evidence for -Apply to regenerate a missing pointer.
+    Remove-Item -LiteralPath $pointer -Force
+    & $hostExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '../Maintain.ps1') -Root $root -PointerPath $pointer -Apply
+    if ($LASTEXITCODE -ne 0) { throw 'Maintain.ps1 failed to regenerate a missing pointer' }
+    if (-not (Test-Path -LiteralPath $pointer)) { throw 'missing pointer was not regenerated' }
+    $receipt = Get-Content -LiteralPath $pointer -Raw | ConvertFrom-Json
+    if ([IO.Path]::GetFullPath($receipt.kit_root) -ne [IO.Path]::GetFullPath($root)) { throw 'regenerated pointer has the wrong owner' }
     Write-Output 'maintenance checks ok'
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue

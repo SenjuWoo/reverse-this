@@ -10,7 +10,7 @@ be fetched.
 from __future__ import annotations
 
 import json
-import sys
+import re
 import urllib.request
 from pathlib import Path
 
@@ -31,40 +31,48 @@ def version_tuple(value: str) -> tuple[int, ...]:
     return tuple((parts + [0, 0, 0])[:3])
 
 
+def documents_reverse_pack(readme: str) -> bool:
+    return bool(re.search(r"(?im)(?:^|[\s`\"'])-Packs\s+[^\n]*\breverse\b", readme))
+
+
+def evaluate(catalog: dict, bundle_readme: str, forge_readme: str, version: str) -> list[str]:
+    errors: list[str] = []
+    entries = [row for row in catalog.get("components", []) if row.get("id") == "reverse-this"]
+    if len(entries) != 1:
+        errors.append("bundle catalog must declare exactly one reverse-this component")
+    else:
+        entry = entries[0]
+        floor = str(entry.get("min_version", ""))
+        if version_tuple(floor) > version_tuple(version):
+            errors.append(f"bundle floor {floor} is newer than this kit {version}")
+        if entry.get("asset_template") != "Reverse-This-{version}.zip":
+            errors.append(f"bundle asset template changed: {entry.get('asset_template')}")
+        github = entry.get("github", {})
+        if (github.get("owner"), github.get("repo")) != ("SenjuWoo", "reverse-this"):
+            errors.append("bundle catalog points at a different repository")
+
+    if "Reverse THIS!" not in bundle_readme:
+        errors.append("bundle README no longer names Reverse THIS!")
+    if not documents_reverse_pack(bundle_readme):
+        errors.append("bundle README no longer documents the reverse pack selection")
+    if "Reverse THIS!" not in forge_readme:
+        errors.append("Forge README no longer names Reverse THIS!")
+    if "bundle README" not in forge_readme:
+        errors.append("Forge README no longer links the bundle ownership section")
+    return errors
+
+
 def main() -> int:
     version = (ROOT / "VERSION").read_text(encoding="utf-8-sig").strip()
-    errors: list[str] = []
     try:
         catalog = json.loads(fetch(BUNDLE_CATALOG))
-        entries = [row for row in catalog.get("components", []) if row.get("id") == "reverse-this"]
-        if len(entries) != 1:
-            errors.append("bundle catalog must declare exactly one reverse-this component")
-        else:
-            entry = entries[0]
-            floor = str(entry.get("min_version", ""))
-            if version_tuple(floor) > version_tuple(version):
-                errors.append(f"bundle floor {floor} is newer than this kit {version}")
-            if entry.get("asset_template") != "Reverse-This-{version}.zip":
-                errors.append(f"bundle asset template changed: {entry.get('asset_template')}")
-            github = entry.get("github", {})
-            if (github.get("owner"), github.get("repo")) != ("SenjuWoo", "reverse-this"):
-                errors.append("bundle catalog points at a different repository")
-
         bundle_readme = fetch(BUNDLE_README)
-        if "Reverse THIS!" not in bundle_readme:
-            errors.append("bundle README no longer names Reverse THIS!")
-        if "skyrim,reverse" not in bundle_readme:
-            errors.append("bundle README no longer documents the reverse pack selection")
-
         forge_readme = fetch(FORGE_README)
-        if "Reverse THIS!" not in forge_readme:
-            errors.append("Forge README no longer names Reverse THIS!")
-        if "bundle README" not in forge_readme:
-            errors.append("Forge README no longer links the bundle ownership section")
     except Exception as exc:  # noqa: BLE001 - a fetch failure is unknown, not drift
         print("UNKNOWN: companion contract could not be fetched: " + str(exc))
         return 2
 
+    errors = evaluate(catalog, bundle_readme, forge_readme, version)
     if errors:
         for error in errors:
             print("DRIFT: " + error)

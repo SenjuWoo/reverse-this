@@ -28,6 +28,8 @@ jobs:
           python tests/test_encyclopedia.py
           python tests/test_delivery.py
           python tests/test_aob_gen.py
+          python tests/test_companions.py
+          python tests/test_ghidra_mcp_up.py
 
   installer-tests:
     name: installer (${{ matrix.shell }})
@@ -68,6 +70,10 @@ jobs:
         run: ./tests/test_maintain.ps1
       - name: scheduled maintenance preview checks
         run: ./tests/test_register_maintenance.ps1
+      - name: Windows release delivery integration
+        env:
+          PSHOST: ${{ matrix.shell == 'pwsh' && 'pwsh' || 'powershell.exe' }}
+        run: python tests/test_delivery.py
 
   installer:
     runs-on: ubuntu-latest

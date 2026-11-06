@@ -16,13 +16,27 @@ function Get-Normalized([string]$Path) {
     if (-not $Path) { return '' }
     return [IO.Path]::GetFullPath($Path).TrimEnd('\')
 }
+function Get-TaskOwner($task) {
+    if (-not $task -or -not $task.Description) { return '' }
+    if ($task.Description -match 'Owner:\s*(.+)$') { return $matches[1].Trim() }
+    return ''
+}
+function Test-ReverseThisTask($task) {
+    if (-not $task) { return $false }
+    if ([string]$task.Description -notmatch '^Reverse THIS! (?:weekly cleanup|maintenance)') { return $false }
+    $action = @($task.Actions)[0]
+    if (-not $action) { return $false }
+    $exe = [IO.Path]::GetFileName([string]$action.Execute).ToLowerInvariant()
+    if ($exe -notin @('powershell.exe', 'pwsh.exe')) { return $false }
+    return [string]$action.Arguments -match 'Maintain\.ps1|EncodedCommand'
+}
 $maintain = Join-Path $Root 'Maintain.ps1'
-if (-not (Test-Path -LiteralPath $maintain -PathType Leaf)) { throw "Maintain.ps1 is missing under $Root" }
 
 if ($Remove) {
     if (-not $PSCmdlet.ShouldProcess($TaskName, 'remove scheduled task')) { exit 0 }
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if ($task) {
+        if (-not (Test-ReverseThisTask $task)) { throw "scheduled task '$TaskName' is not owned by Reverse THIS!; refusing to remove it." }
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
         Write-Host "removed scheduled task: $TaskName"
     } else {
@@ -30,28 +44,37 @@ if ($Remove) {
     }
     exit 0
 }
+if (-not (Test-Path -LiteralPath $maintain -PathType Leaf)) { throw "Maintain.ps1 is missing under $Root" }
 if ($RunNow) {
     if (-not $PSCmdlet.ShouldProcess($maintain, 'run full maintenance now')) { exit 0 }
     & (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File $maintain -All
     exit $LASTEXITCODE
 }
-if ($At -notmatch '^\d{1,2}:\d{2}$') { throw 'At must be HH:mm, for example 03:30.' }
+try { [void][datetime]::ParseExact($At, 'HH:mm', [Globalization.CultureInfo]::InvariantCulture) }
+catch { throw 'At must be a real HH:mm time, for example 03:30.' }
 $logDir = Join-Path $env:LOCALAPPDATA 'ReverseThis'
-New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $log = Join-Path $logDir 'maintenance.log'
-$argument = '-NoProfile -ExecutionPolicy Bypass -Command "& ''{0}'' -All *>> ''{1}''"' -f $maintain, $log
+$escapedMaintain = $maintain.Replace("'", "''")
+$escapedLog = $log.Replace("'", "''")
+$command = "& '$escapedMaintain' -All *>> '$escapedLog'"
+$encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
+$argument = '-NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + $encoded
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argument
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At $At
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
-$description = 'Reverse THIS! weekly cleanup, tool update, and local checks. Owner: ' + $Root
+$description = 'Reverse THIS! maintenance; Owner: ' + $Root
 $existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
 if ($existing) {
-    $oldOwner = if ($existing.Description -match 'Owner:\s*(.+)$') { $matches[1].Trim() } else { '' }
+    if (-not (Test-ReverseThisTask $existing)) {
+        throw "scheduled task '$TaskName' exists but is not owned by Reverse THIS!; refusing to replace it. Choose another -TaskName or remove it with its owner."
+    }
+    $oldOwner = Get-TaskOwner $existing
     if ($oldOwner -and (Get-Normalized $oldOwner) -ne $Root) {
-        Write-Host "existing task targets $oldOwner; re-registering replaces it with $Root."
+        Write-Host "existing Reverse THIS! task targets $oldOwner; re-registering replaces it with $Root."
     }
 }
 if ($PSCmdlet.ShouldProcess($TaskName, 'register weekly maintenance')) {
+    New-Item -ItemType Directory -Force -Path $logDir | Out-Null
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $description -Force | Out-Null
     $registered = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
     Write-Host "registered $($registered.TaskName) weekly at $At (user task; remove with -Remove)"

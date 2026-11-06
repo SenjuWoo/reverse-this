@@ -91,7 +91,13 @@ function Write-AtomicText {
     $temp = $Path + '.new'
     [IO.File]::WriteAllText($temp, $Text, (New-Object Text.UTF8Encoding $false))
     $replacing = Test-Path -LiteralPath $Path
-    if ($replacing) { [IO.File]::Replace($temp, $Path, [NullString]::Value) } else { [IO.File]::Move($temp, $Path) }
+    if ($replacing) {
+        # Antivirus and indexers can briefly hold the old file on Windows.
+        foreach ($attempt in 1..3) {
+            try { [IO.File]::Replace($temp, $Path, [NullString]::Value); return }
+            catch { if ($attempt -eq 3) { throw }; Start-Sleep -Milliseconds 50 }
+        }
+    } else { [IO.File]::Move($temp, $Path) }
 }
 
 # Repair either owner record, or both, from the current checkout. A pointer that
@@ -117,7 +123,16 @@ function Repair-Owner {
         return
     }
 
-    $needPointer = $pointerExists -and (
+    if ($pointerExists -and (Test-ReparsePoint $PointerPath)) {
+        Write-Host "owner pointer is a reparse point; refusing to write through it: $PointerPath"
+        return
+    }
+    if (Test-ReparsePoint $statePath) {
+        Write-Host "installed manifest is a reparse point; refusing to write through it: $statePath"
+        return
+    }
+
+    $needPointer = -not $pointerExists -or (
         -not $receipt.kit_root -or (Get-Normalized ([string]$receipt.kit_root)) -ne $Root -or
         -not $receipt.installed_json -or (Get-Normalized ([string]$receipt.installed_json)) -ne $statePath -or
         -not $receipt.bin -or (Get-Normalized ([string]$receipt.bin)) -ne (Join-Path $Root 'sandbox\bin')
@@ -162,7 +177,11 @@ function Repair-Owner {
         Write-Host "repaired owner records: $Root (state backup: $stateBackup; pointer backup: $pointerBackup)"
     } catch {
         Copy-Item -LiteralPath $stateBackup -Destination $statePath -Force -ErrorAction SilentlyContinue
-        if ($pointerExists) { Copy-Item -LiteralPath $pointerBackup -Destination $PointerPath -Force -ErrorAction SilentlyContinue }
+        if ($pointerExists) {
+            Copy-Item -LiteralPath $pointerBackup -Destination $PointerPath -Force -ErrorAction SilentlyContinue
+        } elseif (Test-Path -LiteralPath $PointerPath) {
+            Remove-Item -LiteralPath $PointerPath -Force -ErrorAction SilentlyContinue
+        }
         throw "owner repair rolled back: $($_.Exception.Message)"
     }
 }

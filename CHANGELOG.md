@@ -1,3 +1,13 @@
+## 1.14.4 (2026-11-06)
+
+- GhidraMCP health now uses the official JSON `/health` envelope; server identity, health and loaded-program state are separate. The MCP bridge probe accepts JSON or Streamable HTTP SSE, validates the initialize ID/result/serverInfo, handles keepalives and fragmented events with time/byte/event bounds, and cleans up sessions best-effort. Ten offline fixtures cover malformed, unrelated, error and oversize responses. No real bridge handshake was available on this machine; `analyzeHeadless` remains the fallback.
+- Scheduled-task registration now refuses an existing task without a Reverse THIS! owner marker and keeps `-Remove` usable without the former `Maintain.ps1`. The task command is encoded rather than interpolating paths into PowerShell source, and `-At` is parsed as a real time.
+- Partial owner repair validates pointer and manifest independently, regenerates a missing pointer from an intact manifest, refuses reparse-point writes, and retries transient Windows file-replace locks.
+- AOB signatures now use overlapping match counts, executable-section selection for `--pattern`, executable-only `--rva`/`--offset`, section-bounded disassembly and structural PE validation. Nine synthetic PE fixtures cover overlaps, header duplicates, multiple executable sections, truncation and unsupported machines.
+- Companion drift checks parse `-Packs reverse` or combined pack examples instead of one brittle literal; offline fixtures gate the parser in regular CI.
+- Windows `test_delivery.py` now runs in both PowerShell matrix jobs via `PSHOST`; the live companion check remains scheduled/manual.
+- Documentation now states that `Maintain.ps1 -Test` is not the full integration suite, and adds a dated compatibility inventory.
+
 ## 1.14.3 (2026-11-06)
 
 - Scheduled maintenance previews: `-RunNow -WhatIf`, `-Remove -WhatIf` and registration `-WhatIf` cannot execute a child process, unregister a task, or falsely report success. Isolated what-if tests never touch real tasks.
