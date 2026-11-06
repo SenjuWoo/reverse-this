@@ -23,17 +23,15 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
-## Latest local results (2026-11-06, 1.14.7 release, Windows PowerShell 5.1)
+## Latest local results (2026-11-06, 1.14.8 release, Windows PowerShell 5.1)
 
-58 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
+59 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
 fixtures, 12 AOB fixtures, 6 PE parser fixtures, 5 kit-tool checks, 4 companion
-fixtures and 11 upstream-report fixtures. All seven PowerShell suites passed,
-including owner-failure propagation, ambiguous-owner refusal, strict task
-templates, wrong-root removal refusal, missing-pointer parent creation, linked
-cleanup refusal and zero-mutation `-WhatIf` previews. Live companion contract
-passed. The extracted product runs `pe_recon.py`, starts `aob_gen.py` and runs
-the packaged upstream checker in offline mode without the source module path.
-Doctor exits 0; existing legacy rows without shim digests emit explicit
-regeneration warnings until the shim receipt is refreshed. PowerShell 7 and the
-Windows delivery path under `PSHOST=pwsh` are covered by CI only; no `pwsh` is
-installed locally.
+fixtures and 12 upstream-report fixtures. Six local PowerShell suites passed
+(installer, standalone, maintenance, scheduled maintenance, entrypoint,
+isolation). The published `Reverse-This-1.14.8.zip` was re-downloaded and its
+SHA-256 verified against `SHA256SUMS.txt`; the extracted product reports
+`packaged checks ok: 1.14.8, 92 tools` and the offline upstream checker returns
+8 rows. The local kit was refreshed (`ok=90 failed=0`) and Doctor exits 0;
+unchanged shims keep their 1.14.7 receipts. PowerShell 7 and `PSHOST=pwsh`
+delivery remain CI-only because no local `pwsh` is installed.
