@@ -94,47 +94,75 @@ function Write-AtomicText {
     if ($replacing) { [IO.File]::Replace($temp, $Path, [NullString]::Value) } else { [IO.File]::Move($temp, $Path) }
 }
 
-# Repair both owner records together; a half-written move is rolled back.
+# Repair either owner record, or both, from the current checkout. A pointer that
+# names another existing kit, or a manifest that is not a usable owner, is ambiguous.
 function Repair-Owner {
-    if (-not (Test-Path -LiteralPath $PointerPath -PathType Leaf)) { return }
-    try { $receipt = Get-Content -LiteralPath $PointerPath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { return }
-    $owner = [string]$receipt.kit_root
-    if (-not $owner -or (Get-Normalized $owner) -eq $Root) { return }
-    if (Test-Path -LiteralPath $owner -PathType Container) {
-        Write-Host "owner pointer names another existing kit; leaving it untouched: $owner"
+    $pointerExists = Test-Path -LiteralPath $PointerPath -PathType Leaf
+    $stateExists = Test-Path -LiteralPath $statePath -PathType Leaf
+    if (-not $pointerExists -and -not $stateExists) { return }
+
+    $receipt = $null
+    $state = $null
+    if ($pointerExists) {
+        try { $receipt = Get-Content -LiteralPath $PointerPath -Raw -Encoding UTF8 | ConvertFrom-Json }
+        catch { Write-Host "owner pointer is unreadable: $PointerPath"; return }
+    }
+    if ($stateExists) {
+        try {
+            $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($state.schema -ne 1 -or -not $state.tools -or -not @($state.tools.PSObject.Properties).Count) { throw 'installed state is not a usable owner manifest' }
+        } catch { Write-Host "owner repair refused: $($_.Exception.Message)"; return }
+    } else {
+        Write-Host "owner repair refused: no installed manifest at $statePath"
         return
     }
-    if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) {
-        Write-Host "owner pointer is stale but this checkout has no installed state: $owner"
+
+    $needPointer = $pointerExists -and (
+        -not $receipt.kit_root -or (Get-Normalized ([string]$receipt.kit_root)) -ne $Root -or
+        -not $receipt.installed_json -or (Get-Normalized ([string]$receipt.installed_json)) -ne $statePath -or
+        -not $receipt.bin -or (Get-Normalized ([string]$receipt.bin)) -ne (Join-Path $Root 'sandbox\bin')
+    )
+    $stateOwner = [string]$state.kit_root
+    $needState = -not $stateOwner -or (Get-Normalized $stateOwner) -ne $Root
+
+    if ($needPointer -and $receipt.kit_root -and (Get-Normalized ([string]$receipt.kit_root)) -ne $Root -and
+        (Test-Path -LiteralPath ([string]$receipt.kit_root) -PathType Container)) {
+        Write-Host "owner pointer names another existing kit; leaving both records untouched: $($receipt.kit_root)"
         return
     }
-    try {
-        $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($state.schema -ne 1 -or -not $state.tools -or -not @($state.tools.PSObject.Properties).Count) { throw 'installed state is not a usable owner manifest' }
-    } catch { Write-Host "owner repair refused: $($_.Exception.Message)"; return }
+    if ($needState -and $stateOwner -and (Get-Normalized $stateOwner) -ne $Root -and
+        (Test-Path -LiteralPath $stateOwner -PathType Container)) {
+        Write-Host "installed manifest names another existing kit; leaving both records untouched: $stateOwner"
+        return
+    }
+    if (-not $needPointer -and -not $needState) { return }
 
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $stateBackup = "$statePath.pre-move-$stamp.json"
-    $pointerBackup = "$PointerPath.pre-move-$stamp"
+    $pointerBackup = if ($pointerExists) { "$PointerPath.pre-move-$stamp" } else { $null }
     Copy-Item -LiteralPath $statePath -Destination $stateBackup
-    Copy-Item -LiteralPath $PointerPath -Destination $pointerBackup
+    if ($pointerExists) { Copy-Item -LiteralPath $PointerPath -Destination $pointerBackup }
     try {
-        $state.kit_root = $Root
-        Write-AtomicText -Path $statePath -Text ($state | ConvertTo-Json -Depth 100)
-        $new = [ordered]@{
-            java_home = $receipt.java_home
-            bin = (Join-Path $Root 'sandbox\bin')
-            installed_json = $statePath
-            kit_root = $Root
+        if ($needState) {
+            $state.kit_root = $Root
+            Write-AtomicText -Path $statePath -Text ($state | ConvertTo-Json -Depth 100)
         }
-        Write-AtomicText -Path $PointerPath -Text ($new | ConvertTo-Json)
+        if ($needPointer -or $needState) {
+            $new = [ordered]@{
+                java_home = if ($receipt) { $receipt.java_home } else { $state.java_home }
+                bin = (Join-Path $Root 'sandbox\bin')
+                installed_json = $statePath
+                kit_root = $Root
+            }
+            Write-AtomicText -Path $PointerPath -Text ($new | ConvertTo-Json)
+        }
         $readState = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
         $readPointer = Get-Content -LiteralPath $PointerPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ((Get-Normalized $readState.kit_root) -ne $Root -or (Get-Normalized $readPointer.kit_root) -ne $Root) { throw 'repaired owner records did not read back consistently' }
-        Write-Host "repaired owner records: $Root (backups: $stateBackup, $pointerBackup)"
+        Write-Host "repaired owner records: $Root (state backup: $stateBackup; pointer backup: $pointerBackup)"
     } catch {
         Copy-Item -LiteralPath $stateBackup -Destination $statePath -Force -ErrorAction SilentlyContinue
-        Copy-Item -LiteralPath $pointerBackup -Destination $PointerPath -Force -ErrorAction SilentlyContinue
+        if ($pointerExists) { Copy-Item -LiteralPath $pointerBackup -Destination $PointerPath -Force -ErrorAction SilentlyContinue }
         throw "owner repair rolled back: $($_.Exception.Message)"
     }
 }

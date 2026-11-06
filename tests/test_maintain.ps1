@@ -77,6 +77,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Maintain.ps1 failed without cleanup candidates' }
     $state = Get-Content -LiteralPath (Join-Path $sandbox 'installed.json') -Raw | ConvertFrom-Json
     if ([IO.Path]::GetFullPath($state.kit_root) -ne [IO.Path]::GetFullPath($root)) { throw 'manifest repair depended on stale cleanup' }
+
+    # A partially repaired move: the pointer is current but the manifest is stale.
+    $state.kit_root = 'old-root-partial'
+    Set-Content -LiteralPath (Join-Path $sandbox 'installed.json') -Value ($state | ConvertTo-Json -Depth 8) -Encoding ASCII
+    & $hostExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '../Maintain.ps1') -Root $root -PointerPath $pointer -Apply
+    if ($LASTEXITCODE -ne 0) { throw 'Maintain.ps1 failed repairing a stale manifest with a current pointer' }
+    $state = Get-Content -LiteralPath (Join-Path $sandbox 'installed.json') -Raw | ConvertFrom-Json
+    if ([IO.Path]::GetFullPath($state.kit_root) -ne [IO.Path]::GetFullPath($root)) { throw 'stale manifest was not repaired independently' }
     Write-Output 'maintenance checks ok'
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue

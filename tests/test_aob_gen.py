@@ -3,10 +3,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-try:
-    from capstone import CS_ARCH_X86, CS_MODE_64, Cs
-except ImportError:  # pragma: no cover - CI without the optional kit venv
-    Cs = None
+from capstone import CS_ARCH_X86, CS_MODE_64, Cs
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("aob_gen", ROOT / "kit/aob_gen.py")
@@ -14,7 +11,6 @@ aob_gen = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(aob_gen)
 
 
-@unittest.skipIf(Cs is None, "capstone is not installed")
 class AobFixtures(unittest.TestCase):
     def decode(self, hexbytes):
         md = Cs(CS_ARCH_X86, CS_MODE_64)

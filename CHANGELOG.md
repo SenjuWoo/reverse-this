@@ -1,3 +1,10 @@
+## 1.14.3 (2026-11-06)
+
+- Scheduled maintenance previews: `-RunNow -WhatIf`, `-Remove -WhatIf` and registration `-WhatIf` cannot execute a child process, unregister a task, or falsely report success. Isolated what-if tests never touch real tasks.
+- Owner repair now validates the pointer and `installed.json` independently; a current pointer with a stale manifest is repaired without requiring cleanup candidates, with backups and rollback.
+- Re-registering the optional weekly task reports an obsolete owner before replacing it; its absolute task path remains visible and fails in Task Scheduler if the old checkout is gone instead of running stale source.
+- AOB fixtures now require a pinned test dependency (`capstone==5.0.9`); both CI jobs install it and the three encoding tests are mandatory rather than skipped.
+
 ## 1.14.2 (2026-11-06)
 
 - Log the optional weekly maintenance task output to `%LOCALAPPDATA%\ReverseThis\maintenance.log` and document removal with `-Remove`. This is the only change after the 1.14.1 correctness release.

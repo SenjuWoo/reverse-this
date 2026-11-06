@@ -1,0 +1,2 @@
+# Test-only dependency for the AOB regression fixtures. Not shipped in the kit.
+capstone==5.0.9

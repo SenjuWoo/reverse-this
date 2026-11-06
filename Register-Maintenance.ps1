@@ -12,10 +12,15 @@ param(
 $ErrorActionPreference = 'Stop'
 if (-not $Root) { $Root = Split-Path -Parent $MyInvocation.MyCommand.Path }
 $Root = [IO.Path]::GetFullPath($Root).TrimEnd('\')
+function Get-Normalized([string]$Path) {
+    if (-not $Path) { return '' }
+    return [IO.Path]::GetFullPath($Path).TrimEnd('\')
+}
 $maintain = Join-Path $Root 'Maintain.ps1'
 if (-not (Test-Path -LiteralPath $maintain -PathType Leaf)) { throw "Maintain.ps1 is missing under $Root" }
 
 if ($Remove) {
+    if (-not $PSCmdlet.ShouldProcess($TaskName, 'remove scheduled task')) { exit 0 }
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if ($task) {
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
@@ -26,6 +31,7 @@ if ($Remove) {
     exit 0
 }
 if ($RunNow) {
+    if (-not $PSCmdlet.ShouldProcess($maintain, 'run full maintenance now')) { exit 0 }
     & (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File $maintain -All
     exit $LASTEXITCODE
 }
@@ -38,6 +44,13 @@ $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argument
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At $At
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
 $description = 'Reverse THIS! weekly cleanup, tool update, and local checks. Owner: ' + $Root
+$existing = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+if ($existing) {
+    $oldOwner = if ($existing.Description -match 'Owner:\s*(.+)$') { $matches[1].Trim() } else { '' }
+    if ($oldOwner -and (Get-Normalized $oldOwner) -ne $Root) {
+        Write-Host "existing task targets $oldOwner; re-registering replaces it with $Root."
+    }
+}
 if ($PSCmdlet.ShouldProcess($TaskName, 'register weekly maintenance')) {
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description $description -Force | Out-Null
     $registered = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
