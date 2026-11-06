@@ -30,12 +30,14 @@ uvx --from git+https://github.com/LaurieWired/GhidraMCP ghidra-mcp `
 ## Verify
 
 ```powershell
-curl.exe -s http://127.0.0.1:8080/methods | Select-Object -First 1
+curl.exe -s http://127.0.0.1:8080/health
 curl.exe -s -X POST http://127.0.0.1:8081/mcp `
   -H "Content-Type: application/json" `
   -H "Accept: application/json, text/event-stream" `
   -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"reverse-this\",\"version\":\"1\"}}}'
 ```
+
+`/` is not a registered GhidraMCP endpoint and normally returns `404 UNKNOWN_ENDPOINT`. A healthy `/health` response is JSON with `success` and a `data` object containing `status`, `version`, `ghidra_version`, `mode`, `capabilities` and `program`. The bridge may answer the initialize request as ordinary JSON or as a `text/event-stream`; `ghidra-mcp-up` handles both, validates `serverInfo.name` (the bridge identifies itself as `ghidra-mcp`), and cleans up its probe session best-effort. A reachable HTTP port alone is not proof of a working bridge.
 
 The kit's `ghidra-mcp-up.cmd` probes both ports and prints the exact failing layer. It is optional: `analyzeHeadless` needs no server.
 
