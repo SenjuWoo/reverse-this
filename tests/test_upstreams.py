@@ -1,6 +1,8 @@
 # Offline tests for the read-only upstream currency report.
 import hashlib
 import json
+import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -70,6 +72,20 @@ class CurrencyTests(unittest.TestCase):
         values, evidence = check_upstreams.probe_installed()
         self.assertEqual(values["rea"], "6.8.0")
         self.assertEqual(evidence["rea"]["status"], "valid")
+
+
+    def test_selected_java_prefers_a_valid_java_home_over_mismatched_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            home = Path(td)
+            java = home / "bin" / ("java.exe" if os.name == "nt" else "java")
+            java.parent.mkdir()
+            java.write_text("", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"JAVA_HOME": str(home)}),                  mock.patch.object(shutil, "which", return_value="C:/other/java.exe"),                  mock.patch.object(check_upstreams, "_java_version_at", side_effect=lambda p: "21" if str(p) == str(java) else "25"):
+                self.assertEqual(check_upstreams._selected_java(), (str(java), "JAVA_HOME"))
+                evidence = check_upstreams._java_evidence()
+                self.assertEqual(evidence["path_version"], "25")
+                self.assertEqual(evidence["home_version"], "21")
+                self.assertEqual(evidence["selected_source"], "JAVA_HOME")
 
     def test_empty_malformed_and_escaping_digests_are_never_valid(self):
         for bad in ("", "abc", "0" * 63, "g" * 64):

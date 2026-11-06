@@ -173,46 +173,51 @@ def _parse_java_major(text: str) -> str | None:
     return str(parsed[0]) if parsed else None
 
 
-def _java_home_version() -> str | None:
-    home = os.environ.get("JAVA_HOME")
-    if not home:
-        return None
-    candidate = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
-    if not candidate.is_file():
-        return None
+def _java_version_at(path: str) -> str | None:
     try:
-        result = subprocess.run([str(candidate), "-version"], capture_output=True, text=True, timeout=5)
-    except (OSError, subprocess.SubprocessError):
-        return None
-    return _parse_java_major((result.stdout or "") + "\n" + (result.stderr or ""))
-
-
-def _java_evidence() -> dict[str, str | None]:
-    path = shutil.which("java")
-    return {
-        "path": path,
-        "path_version": _observed_java() if path else None,
-        "home": os.environ.get("JAVA_HOME"),
-        "home_version": _java_home_version(),
-    }
-
-
-def _observed_java() -> str | None:
-    java = shutil.which("java")
-    if not java:
-        home = os.environ.get("JAVA_HOME")
-        candidate = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java") if home else None
-        if candidate and candidate.is_file():
-            java = str(candidate)
-    if not java:
-        return None
-    try:
-        result = subprocess.run([java, "-version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run([path, "-version"], capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
         return None
     if not result.stdout and not result.stderr:
         return None
     return _parse_java_major((result.stdout or "") + "\n" + (result.stderr or ""))
+
+
+def _selected_java() -> tuple[str | None, str | None]:
+    """The JDK REA/Ghidra actually use: a valid JAVA_HOME, else PATH."""
+    home = os.environ.get("JAVA_HOME")
+    if home:
+        candidate = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
+        if candidate.is_file():
+            return str(candidate), "JAVA_HOME"
+    path = shutil.which("java")
+    return (path, "PATH") if path else (None, None)
+
+
+def _java_home_version() -> str | None:
+    home = os.environ.get("JAVA_HOME")
+    if not home:
+        return None
+    candidate = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
+    return _java_version_at(str(candidate)) if candidate.is_file() else None
+
+
+def _java_evidence() -> dict[str, str | None]:
+    path = shutil.which("java")
+    selected, source = _selected_java()
+    return {
+        "path": path,
+        "path_version": _java_version_at(path) if path else None,
+        "home": os.environ.get("JAVA_HOME"),
+        "home_version": _java_home_version(),
+        "selected": selected,
+        "selected_source": source,
+    }
+
+
+def _observed_java() -> str | None:
+    selected, _ = _selected_java()
+    return _java_version_at(selected) if selected else None
 
 
 def _sha256(path: Path) -> str:

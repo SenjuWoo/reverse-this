@@ -6,12 +6,12 @@ boundaries below are reviewed.
 
 | Component | Installed / baseline | Catalog policy | Upstream stable | Status | Evidence |
 |---|---|---|---|---|---|
-| Ghidra | 12.2 + JDK 25 | current official GitHub release | 12.2 | verified installed; not re-smoked this pass | `-Doctor`, deal/PE workflows |
-| REA (`rea-agents`) | 6.8.0 | exact npm pin + integrity | 6.8.0 | stable is compatible only with the Ghidra 12.1 line + JDK 21; the installed 12.2/JDK 25 pair is not a verified REA pair | npm install, `rea doctor` |
+| Ghidra | 12.2 + JDK 25; isolated 12.1.4 for REA | current official GitHub release | 12.2 | 12.2 remains the kit default; 12.1.4 + JDK 25 passed REA doctor and a read-only `notepad.exe` analysis | `-Doctor`, REA doctor, MCP `binary_overview` |
+| REA (`rea-agents`) | 6.8.0 | exact npm pin + integrity | 6.8.0 | stable verified with the official Ghidra 12.1.4 line and JDK 25; 12.2/JDK 25 is still not a verified REA pair | `rea doctor`, real analysis, MCP initialize/tool call |
 | ILSpy GUI | 11.2 self-contained | current GitHub release | 11.2 | verified installed; no GUI launch this pass | catalog/receipts |
 | `ilspycmd` | 11.2.0.10050 | current NuGet tool | 11.2.0.10050 | verified installed; .NET 10 required | catalog/receipts |
 | .NET SDK | 10 (observed SDK list retained) | stable shared prerequisite | 10 | all installed SDK lines are parsed; highest suitable SDK is reported | `tests/test_upstreams.py` |
-| Java/JDK | 25 observed | isolated compatible route for stable REA | Ghidra 12.1 line declares its own bounds | `within-ghidra-bounds` is not REA compatibility; installed 12.2 declares Java 25 minimum and is outside REA 6.8.0's stable pair | `scripts/check_upstreams.py` |
+| Java/JDK | 25 observed via `JAVA_HOME` | selected JDK, not PATH by default | Ghidra 12.1.4 declares min 21, no max | `within-ghidra-bounds`; verified REA/Ghidra 12.1.4 pairing | `scripts/check_upstreams.py`, `rea doctor` |
 | Capstone | 5.0.9 test baseline | test-only pin in `requirements-test.txt` | 5.0.9 | AOB fixtures pass | `tests/test_aob_gen.py` |
 | GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | current upstream | protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
 

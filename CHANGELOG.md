@@ -1,3 +1,15 @@
+## 1.14.9 (2026-11-06)
+
+- The upstream report selects the JDK REA/Ghidra actually use: a valid
+  `JAVA_HOME` wins over an unrelated `java` on PATH. Evidence now records the
+  PATH version, the JAVA_HOME version, the selected binary and its source.
+- Added a mismatched-JDK regression test: PATH 25 versus JAVA_HOME 21 must report
+  the JAVA_HOME value and `selected_source: JAVA_HOME`.
+- Verified REA 6.8.0 with official Ghidra 12.1.4 alongside the existing 12.2
+  install: JDK 25 satisfies Ghidra's `application.java.min=21`, so no JDK 21 was
+  installed. `rea doctor`, real read-only analysis, and an MCP initialize plus
+  `open_binary`/`binary_overview`/`list_procedures` call passed.
+
 ## 1.14.8 (2026-11-06)
 
 - A file receipt must contain a complete 64-hex SHA-256. Empty, truncated,
