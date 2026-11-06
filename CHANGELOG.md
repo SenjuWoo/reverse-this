@@ -1,3 +1,10 @@
+## 1.13.3 (2026-11-05)
+
+- Follow the moved tool roots and bundle scope split without copying sibling projects: `Github/rea-main`, `Github/CLI-Anything-main`, `Github/context-mode-main`, `Github/CLibDT`, `Github/zIDK`.
+- Document the `Ai tools` game forges, `Github/Unity-MCP-1/2`, Blender, and the `Bundle-Splits` owners (`img2threejs`, `uabs-image-stack`/comfy-kit) as separate owners. Reverse THIS! stays the RE addon; it does not install their templates, MCPs, model assets or game-specific toolchains.
+- Link Risk of Rain 2 authoring to `Tools/Ai tools/Risk-Of-Rain-2-Forge`; extraction/conversion remains in this kit.
+- Catalog remains 92 tools. Local kit at the moved path reports 92 installed, NeoXtractor now v3.3, Doctor clean.
+
 ## 1.13.2 (2026-11-03)
 
 - Read `GH_TOKEN` or `GITHUB_TOKEN` when `gh` is missing or not logged in. Anonymous GitHub API calls are capped at 60 per hour, fewer than one full catalog run needs.

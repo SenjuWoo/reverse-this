@@ -41,6 +41,20 @@ it is documented as a manual route, not auto-installed. Extract the CPK with a
 CPK tool, parse the XFBIN chunks, convert the mesh/textures in Blender or your
 DCC, then import into Unity/R2API.
 
+## Companion authoring owner
+
+`Tools/Ai tools/Risk-Of-Rain-2-Forge` is the independent MIT-licensed
+authoring workbench for this game (WIP). Use it for CLI project scaffolding,
+Unity asset authoring, build/package checks and in-game validation. Reverse
+THIS! supplies extraction and conversion tools only; do not duplicate the
+Forge's templates or mod-manager logic here. Read its `README.md`/`AGENTS.md`
+before creating a project.
+
+For Unity editor automation, one of the `Github\Unity-MCP-1` or
+`Github\Unity-MCP-2` bridges may be used when the task is authoring; neither
+is auto-registered by this kit. Blender 5.2.3 under `Github\blender` is the
+manual DCC path for mesh/rig/glTF work.
+
 ## What the kit does not fake
 
 A model conversion is not a working survivor. You still need Unity prefabs,
