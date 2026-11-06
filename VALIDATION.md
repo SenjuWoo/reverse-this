@@ -23,7 +23,7 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
-## Latest local results (2026-11-06, 1.14.6 candidate, Windows PowerShell 5.1)
+## Latest local results (2026-11-06, 1.14.6 release, Windows PowerShell 5.1)
 
 53 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
 fixtures, 12 AOB fixtures, 6 PE parser fixtures, 5 kit-tool checks, 4 companion
