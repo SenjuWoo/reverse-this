@@ -1,3 +1,16 @@
+## 1.14.8 (2026-11-06)
+
+- A file receipt must contain a complete 64-hex SHA-256. Empty, truncated,
+  non-hex and path-escaping digests are reported `malformed`, never promoted to
+  `installed`.
+- Java compatibility is no longer a hardcoded Java-21 check. The currency report
+  reads the selected Ghidra installation's `application.java.min`/`max` bounds
+  and separates `within-ghidra-bounds`, `outside-ghidra-bounds`,
+  `unverified-bounds` and `missing-java`; it records `JAVA_HOME` and PATH
+  evidence and does not substitute for REA's own doctor.
+- Regression tests cover empty/malformed/traversing receipt digests and Java
+  bounds at 17, 21 and 25 against Ghidra 12.1 and 12.2 metadata.
+
 ## 1.14.7 (2026-11-06)
 
 - The currency report no longer treats catalog pins or the Capstone test pin as installed tools. A tool appears in `installed` only when its owner-state receipt still matches this root, its directory and every receipt hash. Missing, stale, moved, malformed, changed and unverified states remain distinguishable.

@@ -95,14 +95,45 @@ def compatibility_status(component: str, observed: dict[str, str | None]) -> str
     return "not-evaluated"
 
 
-def java_compatibility(observed: dict[str, str | None]) -> str:
+def java_compatibility(observed: dict[str, str | None], bounds: dict[str, int | None] | None = None) -> str:
+    """Report Java evidence separately from REA's authoritative doctor.
+
+    This is not a replacement for `rea doctor`. It only checks the selected
+    JDK against the bounds declared by the selected Ghidra installation.
+    """
     rea = version_tuple(observed.get("rea"))
     java = version_tuple(observed.get("java"))
     if not rea or rea != REA_STABLE:
         return "not-evaluated"
     if not java:
         return "missing-java"
-    return "compatible" if java[0] == REA_JAVA_MAJOR else "unsupported-major"
+    if not bounds or bounds.get("min") is None and bounds.get("max") is None:
+        return "unverified-bounds"
+    minimum = bounds.get("min")
+    maximum = bounds.get("max")
+    if minimum is not None and java[0] < minimum:
+        return "outside-ghidra-bounds"
+    if maximum is not None and java[0] > maximum:
+        return "outside-ghidra-bounds"
+    return "within-ghidra-bounds"
+
+
+def _ghidra_java_bounds(root: Path) -> dict[str, int | None]:
+    properties = root / "Ghidra" / "application.properties"
+    if not properties.is_file():
+        properties = root / "support" / "application.properties"
+    bounds: dict[str, int | None] = {"min": None, "max": None}
+    if not properties.is_file():
+        return bounds
+    try:
+        text = properties.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return bounds
+    for line in text.splitlines():
+        match = re.match(r"^application\.java\.(min|max)\s*=\s*(\d+)", line.strip())
+        if match:
+            bounds[match.group(1)] = int(match.group(2))
+    return bounds
 
 
 def _parse_dotnet_sdks(text: str) -> list[str]:
@@ -140,6 +171,30 @@ def _parse_java_major(text: str) -> str | None:
         value = value[2:]
     parsed = version_tuple(value)
     return str(parsed[0]) if parsed else None
+
+
+def _java_home_version() -> str | None:
+    home = os.environ.get("JAVA_HOME")
+    if not home:
+        return None
+    candidate = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
+    if not candidate.is_file():
+        return None
+    try:
+        result = subprocess.run([str(candidate), "-version"], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return _parse_java_major((result.stdout or "") + "\n" + (result.stderr or ""))
+
+
+def _java_evidence() -> dict[str, str | None]:
+    path = shutil.which("java")
+    return {
+        "path": path,
+        "path_version": _observed_java() if path else None,
+        "home": os.environ.get("JAVA_HOME"),
+        "home_version": _java_home_version(),
+    }
 
 
 def _observed_java() -> str | None:
@@ -191,6 +246,8 @@ def _tool_evidence(root: Path, row: dict, state_root: str | None) -> dict[str, s
     for relative, expected in files.items():
         if not isinstance(relative, str) or not isinstance(expected, str):
             return {"status": "malformed", "reason": "file receipt is malformed"}
+        if not re.fullmatch(r"[0-9a-fA-F]{64}", expected):
+            return {"status": "malformed", "reason": f"receipt hash is not a complete SHA-256: {relative}"}
         candidate = (tool_dir / relative.replace("\\", "/")).resolve()
         try:
             candidate.relative_to(tool_dir)
@@ -198,7 +255,7 @@ def _tool_evidence(root: Path, row: dict, state_root: str | None) -> dict[str, s
             return {"status": "malformed", "reason": "file receipt escapes the tool dir"}
         if not candidate.is_file():
             return {"status": "stale", "reason": f"receipt file is missing: {relative}"}
-        if expected and _sha256(candidate) != expected.lower():
+        if _sha256(candidate) != expected.lower():
             return {"status": "changed", "reason": f"receipt hash differs: {relative}"}
     return {"status": "valid", "version": version, "dir": str(tool_dir)}
 
@@ -241,6 +298,10 @@ def probe_installed():
         if result["status"] == "valid":
             values[component] = result["version"]
 
+    if evidence.get("ghidra", {}).get("status") == "valid":
+        ghidra_dir = Path(evidence["ghidra"]["dir"])
+        evidence["ghidra"]["java_bounds"] = _ghidra_java_bounds(ghidra_dir)
+
     sdks = _observed_dotnet_sdks()
     if sdks:
         values["dotnet"] = sdks[0]
@@ -248,11 +309,12 @@ def probe_installed():
     else:
         evidence["dotnet"] = {"status": "missing", "reason": "dotnet --list-sdks unavailable"}
     java = _observed_java()
+    java_evidence = _java_evidence()
     if java:
         values["java"] = java
-        evidence["java"] = {"status": "probed"}
+        evidence["java"] = {"status": "probed", **java_evidence}
     else:
-        evidence["java"] = {"status": "missing", "reason": "java -version unavailable"}
+        evidence["java"] = {"status": "missing", "reason": "java -version unavailable", **java_evidence}
     return values, evidence
 
 
@@ -336,7 +398,9 @@ def report(timeout: float = 8.0, fetcher=fetch_latest, offline: bool = False):
             "update": update,
             "compatibility": compatibility_status(component, current),
             "install_evidence": evidence.get(component),
-            "java_compatibility": java_compatibility(current) if component == "rea" else None,
+            "java_compatibility": java_compatibility(current, evidence.get("ghidra", {}).get("java_bounds")) if component == "rea" else None,
+            "java_evidence": evidence.get("java"),
+            "ghidra_java_bounds": evidence.get("ghidra", {}).get("java_bounds"),
             "dotnet_sdks": evidence.get("dotnet", {}).get("sdk_versions"),
             "evidence": "official release endpoint" if latest else "unavailable",
             "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

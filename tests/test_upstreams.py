@@ -71,6 +71,22 @@ class CurrencyTests(unittest.TestCase):
         self.assertEqual(values["rea"], "6.8.0")
         self.assertEqual(evidence["rea"]["status"], "valid")
 
+    def test_empty_malformed_and_escaping_digests_are_never_valid(self):
+        for bad in ("", "abc", "0" * 63, "g" * 64):
+            tool = self.receipt_tool()
+            tool["files"]["bin/rea"] = bad
+            self.write_state({"rea": tool})
+            values, evidence = check_upstreams.probe_installed()
+            self.assertNotIn("rea", values, bad)
+            self.assertEqual(evidence["rea"]["status"], "malformed", bad)
+
+        tool = self.receipt_tool()
+        tool["files"] = {"../outside": "0" * 64}
+        self.write_state({"rea": tool})
+        values, evidence = check_upstreams.probe_installed()
+        self.assertNotIn("rea", values)
+        self.assertEqual(evidence["rea"]["status"], "malformed")
+
     def test_stale_executable_and_moved_root_are_not_installed(self):
         self.write_state({"rea": self.receipt_tool(relative="sandbox/tools/rea/bin/missing")})
         values, evidence = check_upstreams.probe_installed()
@@ -143,8 +159,16 @@ class CurrencyTests(unittest.TestCase):
         ]
         for observed, expected in cases:
             self.assertEqual(check_upstreams.compatibility_status("rea", observed), expected, observed)
-        self.assertEqual(check_upstreams.java_compatibility({"rea": "6.8.0", "java": "21"}), "compatible")
-        self.assertEqual(check_upstreams.java_compatibility({"rea": "6.8.0", "java": "25"}), "unsupported-major")
+        self.assertEqual(check_upstreams.java_compatibility(
+            {"rea": "6.8.0", "java": "21"}, {"min": 21, "max": None}), "within-ghidra-bounds")
+        self.assertEqual(check_upstreams.java_compatibility(
+            {"rea": "6.8.0", "java": "25"}, {"min": 21, "max": None}), "within-ghidra-bounds")
+        self.assertEqual(check_upstreams.java_compatibility(
+            {"rea": "6.8.0", "java": "17"}, {"min": 21, "max": None}), "outside-ghidra-bounds")
+        self.assertEqual(check_upstreams.java_compatibility(
+            {"rea": "6.8.0", "java": "25"}, {"min": 21, "max": 25}), "within-ghidra-bounds")
+        self.assertEqual(check_upstreams.java_compatibility(
+            {"rea": "6.8.0", "java": "21"}), "unverified-bounds")
         self.assertEqual(check_upstreams.java_compatibility({"rea": "6.8.0"}), "missing-java")
 
 

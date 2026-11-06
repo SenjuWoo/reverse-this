@@ -11,7 +11,7 @@ boundaries below are reviewed.
 | ILSpy GUI | 11.2 self-contained | current GitHub release | 11.2 | verified installed; no GUI launch this pass | catalog/receipts |
 | `ilspycmd` | 11.2.0.10050 | current NuGet tool | 11.2.0.10050 | verified installed; .NET 10 required | catalog/receipts |
 | .NET SDK | 10 (observed SDK list retained) | stable shared prerequisite | 10 | all installed SDK lines are parsed; highest suitable SDK is reported | `tests/test_upstreams.py` |
-| Java/JDK | 25 observed | isolated compatible route for stable REA | 21 for REA 6.8.0 | warning: not the verified REA pairing | `scripts/check_upstreams.py` |
+| Java/JDK | 25 observed | isolated compatible route for stable REA | Ghidra 12.1 line declares its own bounds | `within-ghidra-bounds` is not REA compatibility; installed 12.2 declares Java 25 minimum and is outside REA 6.8.0's stable pair | `scripts/check_upstreams.py` |
 | Capstone | 5.0.9 test baseline | test-only pin in `requirements-test.txt` | 5.0.9 | AOB fixtures pass | `tests/test_aob_gen.py` |
 | GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | current upstream | protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
 
@@ -39,5 +39,13 @@ boundaries below are reviewed.
    `installed`. Catalog/test pins stay in `baseline`/`catalog_pin`.
 6. A missing real bridge, GUI or game target is recorded as unavailable, not
    reported as a passed runtime test.
+7. Java evidence is not a substitute for REA's doctor. The report reads the
+   selected Ghidra installation's `application.java.min`/`max` bounds and
+   reports `within-ghidra-bounds`, `outside-ghidra-bounds`, `unverified-bounds`
+   or `missing-java`. A JDK that satisfies Ghidra can still be an unsupported
+   REA/Ghidra pairing; no hardcoded Java-21 rule is used. Both `JAVA_HOME` and
+   the `java` on PATH are recorded, including a mismatched pair.
+8. Every file receipt must carry a complete 64-hex SHA-256. Empty, truncated,
+   non-hex or path-escaping digests are `malformed`, never a valid install.
 
 Update this table when a pin changes, and record the date and actual evidence.
