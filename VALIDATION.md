@@ -23,15 +23,37 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
-## Latest local results (2026-11-06, 1.14.8 release, Windows PowerShell 5.1)
+## REA + Ghidra + MCP integration (2026-11-06)
 
-59 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
+- Installed official `Ghidra_12.1.4_build` asset `ghidra_12.1.4_PUBLIC_20260921.zip`
+  side-by-side at `sandbox/tools/ghidra-12.1.4`; SHA-256
+  `ddac49f903da9d5bac833e5cc79395098b9c33cfd3279be5f31bd00387d2d4db`.
+  Its `application.properties` declares `application.java.min=21`, no maximum,
+  so the existing JDK 25 was accepted. No JDK 21 was installed.
+- `GHIDRA_INSTALL_DIR` and `JAVA_HOME` were scoped to that pair for REA.
+  `rea doctor --provider ghidra --json` returned `healthy: true`, Ghidra
+  `12.1.4`, and all Ghidra checks true. `environment_healthy` is false only
+  because optional IDA, JADX and Kuna providers are not configured.
+- Read-only `rea analyze` of a copied `notepad.exe` (SHA-256
+  `468ffe129c395abf6b21a09efdf261910a95fb98aa982ead73caa7b2b684577e`)
+  returned `binary_overview`: 853 procedures, 638 strings, 10 segments, image
+  base `0x140000000`.
+- A real stdio MCP client completed `initialize`, `tools/list` (229 tools,
+  6 prompts), `open_binary`, `binary_overview` and `list_procedures` against the
+  same read-only fixture. `rea mcp doctor` also reported 229/229 tools and
+  `request-flow: ok`.
+- `rea setup --client hermes --yes` registered the server in the active Hermes
+  profile with a backup; `rea doctor` reports the Hermes registration `aligned`
+  and the REA skill installed. A running Hermes session needs a restart before
+  the new MCP server appears as native tools.
+
+## Latest local results (2026-11-06, 1.14.9 release, Windows PowerShell 5.1)
+
+60 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
 fixtures, 12 AOB fixtures, 6 PE parser fixtures, 5 kit-tool checks, 4 companion
-fixtures and 12 upstream-report fixtures. Six local PowerShell suites passed
+fixtures and 13 upstream-report fixtures. Six local PowerShell suites passed
 (installer, standalone, maintenance, scheduled maintenance, entrypoint,
-isolation). The published `Reverse-This-1.14.8.zip` was re-downloaded and its
+isolation). The published `Reverse-This-1.14.9.zip` was re-downloaded and its
 SHA-256 verified against `SHA256SUMS.txt`; the extracted product reports
-`packaged checks ok: 1.14.8, 92 tools` and the offline upstream checker returns
-8 rows. The local kit was refreshed (`ok=90 failed=0`) and Doctor exits 0;
-unchanged shims keep their 1.14.7 receipts. PowerShell 7 and `PSHOST=pwsh`
-delivery remain CI-only because no local `pwsh` is installed.
+`packaged checks ok: 1.14.9, 92 tools`. The local kit was refreshed
+(`ok=90 failed=0`) and Doctor exits 0.
