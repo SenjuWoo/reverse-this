@@ -4,8 +4,8 @@ import argparse, hashlib, io, json, re, subprocess, zipfile
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
-PRODUCT_FILES = {'VERSION','LICENSE','README.md','AGENTS.md','CLAUDE.md','Install-Modkit.ps1',
-                 'Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd','catalog/asset-pattern-fixtures.json',
+PRODUCT_FILES = {'VERSION','LICENSE','README.md','AGENTS.md','CLAUDE.md','Install-Modkit.ps1','Maintain.ps1',
+                 'maintain.cmd','Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd','catalog/asset-pattern-fixtures.json',
                  'context7.json','kit/README.md','kit/pe_recon.py','kit/aob_gen.py','kit/ghidra_mcp_up.py'}
 # The encyclopedia ships with the kit so the local Context7 fallback works offline.
 ENCYCLOPEDIA_REQUIRED = {'encyclopedia/README.md','encyclopedia/ROUTING.md','encyclopedia/ERROR-REGISTRY.json'}

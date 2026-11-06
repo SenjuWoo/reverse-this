@@ -57,6 +57,8 @@ jobs:
         run: ./tests/test_standalone.ps1
       - name: local helper checks
         run: python tests/test_kit_tools.py
+      - name: maintenance retention checks
+        run: ./tests/test_maintain.ps1
 
   installer:
     runs-on: ubuntu-latest

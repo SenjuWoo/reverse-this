@@ -14,6 +14,8 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 
 `Install-Modkit.ps1 -Plan` prints the catalog without network or writes. Normal runs update old owned release/pip/npm/NuGet tools while preserving pins, newer valid versions and rollback backups. `-NoUpdate` retains installed versions; missing selections can install. `-Doctor`/`-Offline` check receipts/files without network, setup or writes, not runtime behavior. Add `-DebugLog` for detailed diagnostics. The workbench provisions its own missing shared prerequisites; the bundle is optional. Read `docs/standalone.md` before changing ownership or using external tool receipts, and `docs/companions.md` for task routing and snapshot provenance.
 
+`maintain.cmd` is dry-run by default. `maintain.cmd -Apply` removes only kit-owned stale temp/cache and rollback copies beyond the newest two per tool, and repairs a stale owner pointer after a directory move. `-UpdateTools` refreshes the catalog and runs Doctor; `-Test` runs local structural checks. It never deletes target work, external tools, `sandbox/manual`, or system temp.
+
 ## Composition
 
 This repository is the optional reverse-engineering layer. It owns REA, the analysis payload catalog, `sandbox/bin` shims, the target workspace and the encyclopedia. It does not own provider setup, shared compilers/runtimes, general skills or GitHub/work-hygiene routing (the Starter Bundle owns those), and it does not own Skyrim records, Papyrus, assets, xEdit, LOOT, the Creation Kit or houseCARL (Skyrim Forge and other forges own those).

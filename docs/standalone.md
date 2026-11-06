@@ -1,8 +1,12 @@
 # Standalone installation and updates
 
-Reverse THIS!, the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) and [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) have independent installers. None is a required parent installation. The bundle is useful for common compilers, AI providers and skills; Forge supplies Skyrim authoring and validation. This workbench supplies REA and analysis tools. Installing it never edits AI-provider settings, trust or credentials. The ownership matrix is in [README § Modular composition](../README.md#modular-composition); the bundle's [companion architecture](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle/blob/main/docs/COMPANION-ARCHITECTURE.md) is the shared cross-repo contract.
+Reverse THIS!, the [Starter Bundle](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle) and [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge) have independent installers. None is a required parent installation. The bundle is useful for common compilers, AI providers and skills; Forge supplies Skyrim authoring and validation. This workbench supplies REA and analysis tools. Installing it never edits AI-provider settings, trust or credentials. The ownership matrix is in [README § A kit, not a silo](../README.md#a-kit-not-a-silo); the bundle's [companion architecture](https://github.com/SenjuWoo/Ultimate-AI-Starter-Bundle/blob/main/docs/COMPANION-ARCHITECTURE.md) is the shared cross-repo contract.
 
 Run `Install-Modkit.ps1` for the catalog or use `-Only rea`, `-Only jadx`, or another catalog ID for the current task. Normal installation resolves current owned pip, npm and NuGet packages as well as release tools. Intentional pins remain pins: REA uses 6.8.0 and its npm integrity; capa uses a matched package/rules/signatures release. A numerically newer valid owned tool is retained. Unknown release labels require their recorded identity rather than an invented ordering.
+
+## Maintenance
+
+`Maintain.ps1` or `maintain.cmd` is dry-run by default. It reports kit-owned temp older than 24 hours, generated `__pycache__`, old `runtime-smoke` runs, installed-state snapshots beyond the newest two, owner-pointer backups beyond the newest three, and tool rollback copies beyond the newest two per tool. `-Apply` removes those items, never target work or system temp. `-UpdateTools` runs the normal installer and Doctor; `-Test` runs the catalog and encyclopedia checks. Run it after moving the checkout: a stale `%LOCALAPPDATA%\ReverseThis\kit.json` is reported and repaired only when the current root has a valid `sandbox/installed.json`.
 
 ## Overlap and synchronization
 

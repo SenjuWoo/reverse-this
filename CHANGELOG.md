@@ -1,3 +1,10 @@
+## 1.14.0 (2026-11-05)
+
+- Add `Maintain.ps1`/`maintain.cmd`: dry-run by default; `-Apply` prunes kit-owned temp, caches and rollback copies with a two-copy recovery floor, repairs a stale owner pointer after a move, `-UpdateTools` refreshes and runs Doctor, and `-Test` runs local checks.
+- Add the maintenance CI job and weekly read-only contract check.
+- Rewrite the README around the add-on model: Bundle recommended but optional, forges independent, no duplicated authoring stacks.
+- Follow the moved `Github/` and `Ai tools/` roots and split owners; NeoXtractor current to v3.3. Catalog remains 92 tools.
+
 ## 1.13.3 (2026-11-05)
 
 - Follow the moved tool roots and bundle scope split without copying sibling projects: `Github/rea-main`, `Github/CLI-Anything-main`, `Github/context-mode-main`, `Github/CLibDT`, `Github/zIDK`.

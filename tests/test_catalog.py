@@ -67,7 +67,7 @@ def main():
     ):
         if needle not in readme or needle not in agents:
             errors.append("missing contract text in README or AGENTS: {0}".format(needle))
-    for needle in ("## Modular composition", "UABS_PYTHON", "Skyrim Forge", "no Skyrim tools"):
+    for needle in ("## A kit, not a silo", "UABS_PYTHON", "Skyrim Forge", "no Skyrim tools"):
         if needle not in readme:
             errors.append("README is missing modular composition text: {0}".format(needle))
 
