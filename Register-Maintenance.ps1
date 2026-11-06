@@ -30,8 +30,10 @@ if ($RunNow) {
     exit $LASTEXITCODE
 }
 if ($At -notmatch '^\d{1,2}:\d{2}$') { throw 'At must be HH:mm, for example 03:30.' }
-
-$argument = '-NoProfile -ExecutionPolicy Bypass -File "' + $maintain + '" -All'
+$logDir = Join-Path $env:LOCALAPPDATA 'ReverseThis'
+New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+$log = Join-Path $logDir 'maintenance.log'
+$argument = '-NoProfile -ExecutionPolicy Bypass -Command "& ''{0}'' -All *>> ''{1}''"' -f $maintain, $log
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argument
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At $At
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew

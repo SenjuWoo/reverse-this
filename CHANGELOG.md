@@ -1,3 +1,7 @@
+## 1.14.2 (2026-11-06)
+
+- Log the optional weekly maintenance task output to `%LOCALAPPDATA%\ReverseThis\maintenance.log` and document removal with `-Remove`. This is the only change after the 1.14.1 correctness release.
+
 ## 1.14.1 (2026-11-06)
 
 - Reject a cached tool when any file bound by its existing receipt is missing or changed. A modified executable can no longer be legitimized by rerunning the installer; Doctor continues to fail changed bytes, and the prior payload remains recoverable.

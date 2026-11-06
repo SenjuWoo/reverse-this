@@ -70,7 +70,7 @@ maintain.cmd -Test        # run local catalog/encyclopedia checks
 maintain.cmd -All         # cleanup + update + tests
 ```
 
-`Maintain.ps1` keeps the newest recovery copies, removes generated junk only under explicitly owned paths (`sandbox/tmp`, `sandbox/backups`, one smoke-run subtree, source `__pycache__`), repairs both the owner pointer and `installed.json` after a move, and never touches target work, tools outside the kit, or system temp. `-Test` works from a released ZIP using its packaged catalog/version checks; it runs the full developer suite when `tests/` is present. A weekly `maintenance` workflow checks the catalog, encyclopedia and bundle contract without writing to any owner. `Register-Maintenance.ps1` optionally registers a user-scoped weekly task; it is not enabled automatically.
+`Maintain.ps1` keeps the newest recovery copies, removes generated junk only under explicitly owned paths (`sandbox/tmp`, `sandbox/backups`, one smoke-run subtree, source `__pycache__`), repairs both the owner pointer and `installed.json` after a move, and never touches target work, tools outside the kit, or system temp. `-Test` works from a released ZIP using its packaged catalog/version checks; it runs the full developer suite when `tests/` is present. A weekly `maintenance` workflow checks the catalog, encyclopedia and bundle contract without writing to any owner. `Register-Maintenance.ps1` optionally registers a user-scoped weekly task; it is not enabled automatically. Its output is appended to `%LOCALAPPDATA%\ReverseThis\maintenance.log`; remove the task with `Register-Maintenance.ps1 -Remove`.
 
 ## Working with an agent
 
