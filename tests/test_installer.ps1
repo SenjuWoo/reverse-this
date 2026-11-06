@@ -150,6 +150,15 @@ try {
     Assert-True (Test-AlreadyInstalled -Dest $dest -Marker 'v1|probe.zip') 'A restored trusted payload was not reusable'
     Assert-True ((Get-ToolReceiptStatus -Row $record -Directory $dest -ToolId 'probe') -eq 'ok') 'A valid receipt was not accepted'
 
+    $record | Add-Member -NotePropertyName shim_sha256 -NotePropertyValue @{ probe = (Get-Sha256Hex $shim) } -Force
+    Assert-True ((Get-ShimStatus -Tool $tool -Row $record) -eq 'ok') 'A correct generated shim was not accepted'
+    $trustedShim = Get-Content -LiteralPath $shim -Raw
+    Write-Utf8 -Path $shim -Text "tampered shim`r`n"
+    Assert-True ((Get-ShimStatus -Tool $tool -Row $record) -eq 'changed:probe') 'A modified generated shim was not detected'
+    Remove-Item -LiteralPath $shim -Force
+    Assert-True ((Get-ShimStatus -Tool $tool -Row $record) -eq 'missing:probe') 'A missing generated shim was not detected'
+    Write-Utf8 -Path $shim -Text $trustedShim
+
     $oldJavaHome = $env:JAVA_HOME
     try {
         $jdk = Find-JdkHome -Major 25
@@ -339,6 +348,7 @@ public static class AtomicJsonLockFixture {
         Remove-Item -LiteralPath $shim -Force
         $recovered = @(Install-One $tool)
         Assert-True ($recovered.Count -eq 1 -and $recovered[0].id -eq 'probe') 'A missing global state lost the recoverable per-tool record'
+        Assert-True ($recovered[0].shim_sha256.probe -eq (Get-Sha256Hex $shim)) 'A cached install did not record its shim digest'
         Assert-True (Test-Path -LiteralPath $shim) 'A missing global state prevented cached shim repair'
         Assert-True ($script:JavaHome -eq $java) 'A cached Java tool did not repair its JDK selection'
         Assert-True ((Get-Content -LiteralPath $shim -Raw).Contains('set "JAVA_HOME=' + $java.Replace('%', '%%') + '"')) 'A repaired Java shim omitted its selected JDK'

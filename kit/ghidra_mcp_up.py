@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -114,7 +115,7 @@ def probe_ghidra(url: str, timeout: float = 1.5) -> dict:
 
 def _sse_message(event: bytes):
     """Return one SSE JSON data payload, or None for comments/keepalives."""
-    lines = event.replace(b"\r\n", b"\n").split(b"\n")
+    lines = event.replace(b"\r\n", b"\n").replace(b"\r", b"\n").split(b"\n")
     data = []
     for line in lines:
         if line.startswith(b"data:"):
@@ -128,11 +129,37 @@ def _sse_message(event: bytes):
 
 
 def _read_sse_response(response, expected_id: int, timeout: float) -> tuple[dict | None, str | None]:
-    """Read bounded SSE until the initialize response, ignoring keepalives."""
+    """Read bounded SSE until the initialize response, ignoring keepalives.
+
+    Chunks are not normalized independently: an event delimiter may be split
+    between two reads. Boundaries are found in the accumulated raw buffer.
+    """
     deadline = time.monotonic() + timeout
+    boundary = re.compile(rb"\r\n\r\n|\n\n|\r\r")
     buf = b""
     total = 0
     events = 0
+
+    def consume(final: bool = False):
+        nonlocal buf, events
+        while True:
+            match = boundary.search(buf)
+            if match is None:
+                break
+            raw, buf = buf[: match.start()], buf[match.end() :]
+            events += 1
+            if events > 64:
+                raise ValueError("too many SSE events before initialize response")
+            message = _sse_message(raw)
+            if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
+                return message
+        if final and buf.strip():
+            message = _sse_message(buf)
+            buf = b""
+            if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
+                return message
+        return None
+
     while total < MAX_BODY and time.monotonic() < deadline:
         try:
             chunk = response.read1(4096)
@@ -143,19 +170,16 @@ def _read_sse_response(response, expected_id: int, timeout: float) -> tuple[dict
         total += len(chunk)
         if total > MAX_BODY:
             return None, f"response exceeded {MAX_BODY} bytes"
-        buf += chunk.replace(b"\r\n", b"\n")
-        while b"\n\n" in buf:
-            raw, buf = buf.split(b"\n\n", 1)
-            events += 1
-            if events > 64:
-                return None, "too many SSE events before initialize response"
-            message = _sse_message(raw)
-            if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
-                return message, None
-    if buf.strip():
-        message = _sse_message(buf)
-        if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
+        buf += chunk
+        message = consume()
+        if message is not None:
             return message, None
+    try:
+        message = consume(final=True)
+    except ValueError as exc:
+        return None, str(exc)
+    if message is not None:
+        return message, None
     return None, "no matching SSE initialize response"
 
 
@@ -203,8 +227,43 @@ def _cleanup_session(url: str, session: str | None, timeout: float) -> None:
         pass
 
 
+def _notify_initialized(url: str, session: str | None, protocol: str | None, timeout: float) -> tuple[bool, str | None]:
+    """Finish the MCP lifecycle; a 2xx means the notification was accepted."""
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+    }
+    if session:
+        headers["Mcp-Session-Id"] = session
+    if protocol:
+        headers["MCP-Protocol-Version"] = protocol
+    payload = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}).encode("utf-8")
+    try:
+        request = urllib.request.Request(url, data=payload, method="POST", headers=headers)
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            if 200 <= response.status < 300:
+                return True, None
+            return False, f"initialized notification returned HTTP {response.status}"
+    except urllib.error.HTTPError as exc:
+        return False, f"initialized notification rejected: HTTP {exc.code}"
+    except Exception as exc:  # noqa: BLE001 - report the failed lifecycle step
+        return False, f"initialized notification failed: {exc}"
+
+
+def _finish_mcp(message, expected_id: int, url: str, status: int, session: str | None) -> dict:
+    result = _mcp_result(message, expected_id, url, status, session)
+    result["initialized"] = False
+    if result.get("identity") == "mcp":
+        ok, error = _notify_initialized(url, session, result.get("protocol"), 2.0)
+        result["initialized"] = ok
+        if not ok:
+            result["healthy"] = False
+            result["error"] = error
+    return result
+
+
 def probe_mcp(url: str, timeout: float = 2.5) -> dict:
-    """Perform an MCP initialize over JSON or Streamable HTTP SSE."""
+    """Perform an initialize and initialized notification over JSON or SSE."""
     expected_id = 1
     payload = json.dumps({
         "jsonrpc": "2.0",
@@ -227,6 +286,7 @@ def probe_mcp(url: str, timeout: float = 2.5) -> dict:
     )
     status = None
     session = None
+    message = None
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             status = response.status
@@ -236,26 +296,27 @@ def probe_mcp(url: str, timeout: float = 2.5) -> dict:
                 message, error = _read_sse_response(response, expected_id, timeout)
                 if error:
                     return {"url": url, "up": True, "status": status, "identity": "unknown",
-                            "healthy": False, "session": bool(session), "error": error}
-                return _mcp_result(message, expected_id, url, status, session)
-            body, read_error = _read_bytes(response)
-            if read_error:
-                return {"url": url, "up": True, "status": status, "identity": "unknown",
-                        "healthy": False, "session": bool(session), "error": read_error}
+                            "healthy": False, "session": bool(session), "initialized": False, "error": error}
+            else:
+                body, read_error = _read_bytes(response)
+                if read_error:
+                    return {"url": url, "up": True, "status": status, "identity": "unknown",
+                            "healthy": False, "session": bool(session), "initialized": False, "error": read_error}
+                try:
+                    message = json.loads(_text(body))
+                except (ValueError, TypeError) as exc:
+                    return {"url": url, "up": True, "status": status, "identity": "unknown",
+                            "healthy": False, "session": bool(session), "initialized": False,
+                            "error": f"malformed MCP JSON: {exc}"}
+        return _finish_mcp(message, expected_id, url, status, session)
     except urllib.error.HTTPError as exc:
         return {"url": url, "up": True, "status": exc.code, "identity": "unknown",
-                "healthy": False, "error": f"HTTP {exc.code}"}
+                "healthy": False, "initialized": False, "error": f"HTTP {exc.code}"}
     except Exception as exc:  # noqa: BLE001 - connection errors are the normal miss
         return {"url": url, "up": False, "status": None, "identity": "unknown",
-                "healthy": False, "error": str(exc)}
+                "healthy": False, "initialized": False, "error": str(exc)}
     finally:
         _cleanup_session(url, session, timeout)
-    try:
-        message = json.loads(_text(body))
-    except (ValueError, TypeError) as exc:
-        return {"url": url, "up": True, "status": status, "identity": "unknown",
-                "healthy": False, "session": bool(session), "error": f"malformed MCP JSON: {exc}"}
-    return _mcp_result(message, expected_id, url, status, session)
 
 
 def snapshot() -> dict:
@@ -267,7 +328,8 @@ def snapshot() -> dict:
         "ready": ghidra.get("identity") == "ghidra"
         and ghidra.get("healthy") is True
         and mcp.get("identity") == "mcp"
-        and mcp.get("healthy") is True,
+        and mcp.get("healthy") is True
+        and mcp.get("initialized") is True,
     }
 
 

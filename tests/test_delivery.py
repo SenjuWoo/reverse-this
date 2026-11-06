@@ -1,7 +1,9 @@
 """Prove product selection excludes private working state, with actual local Git objects."""
-import hashlib, importlib.util, json, os, subprocess, tempfile, unittest, zipfile
+import hashlib, importlib.util, json, os, subprocess, sys, tempfile, unittest, zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/'tests'))
+from test_pe_recon import make_pe
 spec=importlib.util.spec_from_file_location('delivery',ROOT/'scripts/build_release.py')
 builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
 
@@ -37,6 +39,18 @@ class ProductTests(unittest.TestCase):
             self.assertTrue((deployed/'context7.json').is_file())
             self.assertTrue((deployed/'encyclopedia/README.md').is_file())
             self.assertTrue((deployed/'kit/README.md').is_file())
+
+            # Helpers must run from the extracted payload without the source checkout on sys.path.
+            # pe_recon is stdlib-only; aob_gen is shipped but its Capstone engine is an
+            # installed catalog tool, so packaging is proven without assuming that runtime.
+            sample=base/'sample.exe';sample.write_bytes(make_pe())
+            result=subprocess.run([sys.executable,str(product/'kit/pe_recon.py'),str(sample)],capture_output=True,text=True,
+                                  encoding='utf-8',errors='replace',timeout=30,cwd=str(base))
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            json.loads(result.stdout)
+            result=subprocess.run([sys.executable,str(product/'kit/aob_gen.py'),'--help'],capture_output=True,text=True,
+                                  encoding='utf-8',errors='replace',timeout=30,cwd=str(base))
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
 
     def test_frozen_product_reproducible_private_files_absent_and_existing_output_preserved(self):
         with tempfile.TemporaryDirectory(prefix='Reverse ! ') as td:

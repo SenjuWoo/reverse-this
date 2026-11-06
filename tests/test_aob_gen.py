@@ -76,6 +76,18 @@ class AobFixtures(unittest.TestCase):
         md.detail = True
         return list(md.disasm(bytes.fromhex(hexbytes), 0x1000))
 
+    def test_overlapping_wildcards_match_control_bytes_and_empty_pattern_terminates(self):
+        self.assertEqual(aob_gen.count_overlapping(b"\x90.", b"\x90\x00\x90\x0a\x90\x0d\x90\xff"), 4)
+        self.assertEqual(aob_gen.count_overlapping(b"\x90.\x90", b"\x90\x0a\x90"), 1)
+        self.assertEqual(aob_gen.count_overlapping(b".", b"\x00\x0a\x0d\xff"), 4)
+        self.assertEqual(aob_gen.count_overlapping(b"", b"\x90\x90"), 0)
+        self.assertEqual(aob_gen.count_overlapping(b"\x90\x90", b"\x90" * 100000), 99999)
+
+    def test_invalid_pattern_is_structured(self):
+        code, result = self.run_aob(make_pe(b"\x90"), "--pattern", "zz")
+        self.assertEqual(code, 2)
+        self.assertIn("invalid pattern", result["error"])
+
     def test_overlapping_matches_are_not_reported_unique(self):
         code, result = self.run_aob(make_pe(b"\x90\x90\x90"), "--offset", "0x200", "--instructions", "2")
         self.assertEqual(code, 1, result)

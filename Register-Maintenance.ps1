@@ -24,11 +24,20 @@ function Get-TaskOwner($task) {
 function Test-ReverseThisTask($task) {
     if (-not $task) { return $false }
     if ([string]$task.Description -notmatch '^Reverse THIS! (?:weekly cleanup|maintenance)') { return $false }
-    $action = @($task.Actions)[0]
+    $actions = @($task.Actions)
+    if ($actions.Count -ne 1) { return $false }
+    $action = $actions[0]
     if (-not $action) { return $false }
     $exe = [IO.Path]::GetFileName([string]$action.Execute).ToLowerInvariant()
     if ($exe -notin @('powershell.exe', 'pwsh.exe')) { return $false }
-    return [string]$action.Arguments -match 'Maintain\.ps1|EncodedCommand'
+    $arguments = [string]$action.Arguments
+    if ($arguments -match '-EncodedCommand\s+([A-Za-z0-9+/=]+)') {
+        try {
+            $decoded = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($matches[1]))
+        } catch { return $false }
+        return $decoded -match 'Maintain\.ps1' -and $decoded -match '(?:^|\s)-All(?:\s|$)'
+    }
+    return $arguments -match 'Maintain\.ps1' -and $arguments -match '(?:^|\s)-All(?:\s|$)'
 }
 $maintain = Join-Path $Root 'Maintain.ps1'
 
@@ -69,8 +78,12 @@ if ($existing) {
         throw "scheduled task '$TaskName' exists but is not owned by Reverse THIS!; refusing to replace it. Choose another -TaskName or remove it with its owner."
     }
     $oldOwner = Get-TaskOwner $existing
-    if ($oldOwner -and (Get-Normalized $oldOwner) -ne $Root) {
-        Write-Host "existing Reverse THIS! task targets $oldOwner; re-registering replaces it with $Root."
+    if (-not $oldOwner) { throw "scheduled task '$TaskName' has no recognizable owner; refusing to replace it." }
+    if ((Get-Normalized $oldOwner) -ne $Root -and (Test-Path -LiteralPath $oldOwner -PathType Container)) {
+        throw "scheduled task '$TaskName' belongs to another existing checkout at $oldOwner; refusing to replace it."
+    }
+    if ((Get-Normalized $oldOwner) -ne $Root) {
+        Write-Host "existing Reverse THIS! task targets missing owner $oldOwner; re-registering replaces it with $Root."
     }
 }
 if ($PSCmdlet.ShouldProcess($TaskName, 'register weekly maintenance')) {

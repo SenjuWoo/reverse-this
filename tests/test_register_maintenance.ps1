@@ -48,6 +48,25 @@ exit 0
         Remove-Item -LiteralPath $bareRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 
+    # Exercise the ownership predicate without creating a scheduled task.
+    $tokens = $null; $parseErrors = $null
+    $ast = [System.Management.Automation.Language.Parser]::ParseFile($register, [ref]$tokens, [ref]$parseErrors)
+    foreach ($node in $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {
+        . ([scriptblock]::Create($node.Extent.Text))
+    }
+    $decoded = "& 'C:\Kit\Maintain.ps1' -All"
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($decoded))
+    $owned = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + $encoded }) }
+    if (-not (Test-ReverseThisTask $owned)) { throw 'valid encoded Reverse THIS! task was rejected' }
+    $legacy = [pscustomobject]@{ Description = 'Reverse THIS! weekly cleanup, tool update, and local checks. Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-File C:\Kit\Maintain.ps1 -All' }) }
+    if (-not (Test-ReverseThisTask $legacy)) { throw 'valid legacy task was rejected' }
+    $foreign = [pscustomobject]@{ Description = 'Unrelated task'; Actions = @([pscustomobject]@{ Execute = 'cmd.exe'; Arguments = '/c calc.exe' }) }
+    if (Test-ReverseThisTask $foreign) { throw 'foreign task was accepted' }
+    $extra = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + $encoded }, [pscustomobject]@{ Execute = 'cmd.exe'; Arguments = '/c calc.exe' }) }
+    if (Test-ReverseThisTask $extra) { throw 'multi-action task was accepted' }
+    $badEncoded = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('Invoke-WebRequest https://example.invalid')) }) }
+    if (Test-ReverseThisTask $badEncoded) { throw 'unrelated encoded command was accepted' }
+
     Write-Output 'scheduled maintenance preview checks ok'
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue

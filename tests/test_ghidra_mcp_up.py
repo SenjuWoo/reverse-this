@@ -83,7 +83,11 @@ class Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         request = json.loads(self.rfile.read(length) or b"{}")
         request_id = request.get("id", 1)
-        if self.path == "/mcp-json":
+        if request.get("method") == "notifications/initialized" and self.path == "/mcp-notify-reject":
+            self._json({"error": "notification rejected"}, 400)
+        elif self.path == "/mcp-notify-reject":
+            self._json(self._init(request_id=request_id))
+        elif self.path == "/mcp-json":
             self._json(self._init(request_id=request_id))
         elif self.path == "/mcp-session":
             body = json.dumps(self._init(request_id=request_id)).encode()
@@ -106,12 +110,18 @@ class Handler(BaseHTTPRequestHandler):
             )
             if self.path == "/mcp-sse-frag":
                 middle = len(events) // 2
-                self.wfile.write(events[:middle])
-                self.wfile.flush()
-                time.sleep(0.05)
-                self.wfile.write(events[middle:])
+                try:
+                    self.wfile.write(events[:middle])
+                    self.wfile.flush()
+                    time.sleep(0.05)
+                    self.wfile.write(events[middle:])
+                except OSError:
+                    pass
             else:
-                self.wfile.write(events)
+                try:
+                    self.wfile.write(events)
+                except OSError:
+                    pass
             self.close_connection = True
         elif self.path == "/mcp-bad-id":
             self._json(self._init(request_id=request_id + 1))
@@ -208,13 +218,39 @@ class GhidraMcpTests(unittest.TestCase):
         result = ghidra_mcp_up.probe_mcp(self.base + "/mcp-json")
         self.assertEqual(result["identity"], "mcp")
         self.assertTrue(result["healthy"])
+        self.assertTrue(result["initialized"])
         self.assertEqual(result["server_name"], "ghidra-mcp")
         self.assertEqual(result["protocol"], "2025-06-18")
+
+    def test_initialized_notification_rejection_is_unhealthy(self):
+        result = ghidra_mcp_up.probe_mcp(self.base + "/mcp-notify-reject")
+        self.assertEqual(result["identity"], "mcp")
+        self.assertFalse(result["healthy"])
+        self.assertFalse(result["initialized"])
+        self.assertIn("notification", result["error"])
 
     def test_sse_initialize_with_keepalive_and_notification(self):
         result = ghidra_mcp_up.probe_mcp(self.base + "/mcp-sse")
         self.assertEqual(result["identity"], "mcp", result)
         self.assertTrue(result["healthy"])
+        self.assertTrue(result["initialized"])
+
+    def test_sse_parser_tolerates_every_event_split_point(self):
+        message = {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2025-06-18",
+                   "serverInfo": {"name": "ghidra-mcp", "version": "1"}}}
+        event = (b": keepalive\r\n\r\n"
+                 b"event: message\r\n"
+                 b"data: " + json.dumps(message).encode() + b"\r\n\r\n")
+        class FakeResponse:
+            def __init__(self, chunks):
+                self.chunks = list(chunks)
+            def read1(self, _size):
+                return self.chunks.pop(0) if self.chunks else b""
+        for split in range(1, len(event)):
+            with self.subTest(split=split):
+                parsed, error = ghidra_mcp_up._read_sse_response(FakeResponse([event[:split], event[split:]]), 1, 1.0)
+                self.assertIsNone(error)
+                self.assertEqual(parsed["id"], 1)
 
     def test_fragmented_sse_initialize(self):
         result = ghidra_mcp_up.probe_mcp(self.base + "/mcp-sse-frag")

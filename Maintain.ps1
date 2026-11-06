@@ -111,25 +111,28 @@ function Repair-Owner {
     $state = $null
     if ($pointerExists) {
         try { $receipt = Get-Content -LiteralPath $PointerPath -Raw -Encoding UTF8 | ConvertFrom-Json }
-        catch { Write-Host "owner pointer is unreadable: $PointerPath"; return }
+        catch { throw "owner pointer is unreadable: $PointerPath" }
     }
     if ($stateExists) {
         try {
             $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
             if ($state.schema -ne 1 -or -not $state.tools -or -not @($state.tools.PSObject.Properties).Count) { throw 'installed state is not a usable owner manifest' }
-        } catch { Write-Host "owner repair refused: $($_.Exception.Message)"; return }
+        } catch { throw "owner repair refused: $($_.Exception.Message)" }
     } else {
-        Write-Host "owner repair refused: no installed manifest at $statePath"
-        return
+        throw "owner repair refused: no installed manifest at $statePath"
     }
 
     if ($pointerExists -and (Test-ReparsePoint $PointerPath)) {
-        Write-Host "owner pointer is a reparse point; refusing to write through it: $PointerPath"
-        return
+        throw "owner pointer is a reparse point; refusing to write through it: $PointerPath"
     }
     if (Test-ReparsePoint $statePath) {
-        Write-Host "installed manifest is a reparse point; refusing to write through it: $statePath"
-        return
+        throw "installed manifest is a reparse point; refusing to write through it: $statePath"
+    }
+    $pointerParent = Split-Path -Parent $PointerPath
+    if (Test-Path -LiteralPath $pointerParent -PathType Container) {
+        if (Test-ReparsePoint $pointerParent) { throw "owner pointer parent is a reparse point: $pointerParent" }
+    } else {
+        New-Item -ItemType Directory -Force -Path $pointerParent | Out-Null
     }
 
     $needPointer = -not $pointerExists -or (
@@ -143,12 +146,12 @@ function Repair-Owner {
     if ($needPointer -and $receipt.kit_root -and (Get-Normalized ([string]$receipt.kit_root)) -ne $Root -and
         (Test-Path -LiteralPath ([string]$receipt.kit_root) -PathType Container)) {
         Write-Host "owner pointer names another existing kit; leaving both records untouched: $($receipt.kit_root)"
-        return
+        throw "owner pointer names another existing kit: $($receipt.kit_root)"
     }
     if ($needState -and $stateOwner -and (Get-Normalized $stateOwner) -ne $Root -and
         (Test-Path -LiteralPath $stateOwner -PathType Container)) {
         Write-Host "installed manifest names another existing kit; leaving both records untouched: $stateOwner"
-        return
+        throw "installed manifest names another existing kit: $stateOwner"
     }
     if (-not $needPointer -and -not $needState) { return }
 

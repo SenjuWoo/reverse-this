@@ -28,8 +28,10 @@ jobs:
           python tests/test_encyclopedia.py
           python tests/test_delivery.py
           python tests/test_aob_gen.py
+          python tests/test_pe_recon.py
           python tests/test_companions.py
           python tests/test_ghidra_mcp_up.py
+          python tests/test_upstreams.py
 
   installer-tests:
     name: installer (${{ matrix.shell }})
@@ -66,6 +68,10 @@ jobs:
         run: python tests/test_kit_tools.py
       - name: AOB encoding fixtures
         run: python tests/test_aob_gen.py
+      - name: PE parser fixtures
+        run: python tests/test_pe_recon.py
+      - name: currency report fixtures
+        run: python tests/test_upstreams.py
       - name: maintenance retention checks
         run: ./tests/test_maintain.ps1
       - name: scheduled maintenance preview checks

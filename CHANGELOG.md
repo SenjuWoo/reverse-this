@@ -1,3 +1,15 @@
+## 1.14.5 (2026-11-06)
+
+- AOB wildcard matching now compiles one binary regex with `DOTALL` and searches from each previous match's start offset without copying the remaining file. Wildcards match `00`, `0A`, `0D` and `FF`; empty patterns terminate; invalid patterns return a structured JSON error.
+- The MCP SSE reader keeps raw chunk boundaries and finds LF/CRLF/CR event terminators in the accumulated buffer, so an event split at any byte is recognized without EOF. Regression coverage exercises every split point of a valid event, keepalives, multiple data lines and matching JSON-RPC IDs.
+- MCP readiness now completes the lifecycle with `notifications/initialized`, forwards the session and negotiated protocol version, rejects lifecycle failure, and requires identity, health and initialization for `ready=true`. Session cleanup remains best-effort.
+- Scheduled-task validation counts actions, decodes `-EncodedCommand` as UTF-16LE, verifies the actual `Maintain.ps1 -All` invocation, accepts only a recognized legacy action, and refuses another existing checkout's task. Isolated fixtures exercise foreign, multi-action, malformed and valid encoded tasks without touching the real scheduler.
+- Owner repair now fails loudly on ambiguous records, linked paths and missing manifests; `-All` stops before tool updates when ownership validation fails. A missing pointer parent is created only after link checks, with backups and rollback preserved.
+- The installer rejects linked tool files, linked owner ancestors/pointers and linked shim targets. Generated shims now carry a SHA-256 receipt; Doctor detects missing, changed and linked shims, and cached installs regenerate a shim without downloading the large payload. Legacy rows without shim digests are reported explicitly.
+- `pe_recon.py` rejects unsupported optional-header magic, truncated/out-of-bounds headers, directory and section tables, and raw section ranges; anti-cheat and proxy results are labelled indicators/candidates rather than guarantees.
+- Packaging coverage now executes `pe_recon.py` from the extracted release payload and checks that `aob_gen.py` starts without the source module path.
+- Added a read-only `scripts/check_upstreams.py` report for Ghidra, GhidraMCP, REA, ILSpy, `ilspycmd`, .NET and Capstone. It never blocks CI on upstream drift.
+
 ## 1.14.4 (2026-11-06)
 
 - GhidraMCP health now uses the official JSON `/health` envelope; server identity, health and loaded-program state are separate. The MCP bridge probe accepts JSON or Streamable HTTP SSE, validates the initialize ID/result/serverInfo, handles keepalives and fragmented events with time/byte/event bounds, and cleans up sessions best-effort. Ten offline fixtures cover malformed, unrelated, error and oversize responses. No real bridge handshake was available on this machine; `analyzeHeadless` remains the fallback.

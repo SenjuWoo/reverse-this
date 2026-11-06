@@ -23,3 +23,5 @@ jobs:
           python tests/test_catalog.py
           python tests/test_encyclopedia.py
           python scripts/check_companions.py
+      - name: critical upstream currency report
+        run: python scripts/check_upstreams.py --json

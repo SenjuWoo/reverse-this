@@ -69,6 +69,13 @@ function Resolve-OwnerRoot {
     $state = Get-Content -LiteralPath $expectedState -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($state.schema -ne 1 -or -not $state.kit_root -or $state.kit_root.TrimEnd('\') -ne $owner -or -not $state.tools) { throw 'Invalid Reverse THIS! installed owner receipt.' }
     if ((Get-Item -LiteralPath $owner -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Refusing a linked owner root.' }
+    $ancestor = Split-Path -Parent $owner
+    while ($ancestor) {
+        if ((Test-Path -LiteralPath $ancestor) -and ((Get-Item -LiteralPath $ancestor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "Refusing a linked owner ancestor: $ancestor" }
+        $parent = Split-Path -Parent $ancestor
+        if ($parent -eq $ancestor) { break }
+        $ancestor = $parent
+    }
     return $owner
 }
 
@@ -303,18 +310,51 @@ function Get-ToolReceiptStatus {
         $target = [IO.Path]::GetFullPath((Join-Path $root $file.Name))
         if (-not $target.StartsWith($root + '\', [StringComparison]::OrdinalIgnoreCase)) { return 'corrupt' }
         if (-not (Test-Path -LiteralPath $target -PathType Leaf)) { return 'changed' }
+        if ((Get-Item -LiteralPath $target -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { return 'linked' }
         if ($file.Value -notmatch '^[a-fA-F0-9]{64}$' -or (Get-Sha256Hex $target) -ne $file.Value) { return 'changed' }
     }
     return 'ok'
 }
 
 # Bind shims and representative package/source metadata to installed bytes without executing GUI tools.
+function Get-ShimStatus {
+    param($Tool, $Row)
+    $hashes = $null
+    if ($Row -and $Row.PSObject.Properties['shim_sha256']) { $hashes = $Row.shim_sha256 }
+    $legacy = $false
+    $shims = @(ConvertTo-Array $Tool.shims)
+    if (-not $shims.Count) { return 'ok' }
+    foreach ($shim in $shims) {
+        $path = Join-Path $BinDir ($shim.name + '.cmd')
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return "missing:$($shim.name)" }
+        if ((Get-Item -LiteralPath $path -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { return "linked:$($shim.name)" }
+        if (-not $hashes) { $legacy = $true; continue }
+        $hasKey = if ($hashes -is [System.Collections.IDictionary]) { $hashes.ContainsKey($shim.name) } else { $null -ne $hashes.PSObject.Properties[$shim.name] }
+        if (-not $hasKey) { $legacy = $true; continue }
+        $expected = if ($hashes -is [System.Collections.IDictionary]) { $hashes[$shim.name] } else { $hashes.($shim.name) }
+        if ((Get-Sha256Hex $path) -ne [string]$expected) { return "changed:$($shim.name)" }
+    }
+    if ($legacy) { return 'legacy' }
+    return 'ok'
+}
+
+function Set-ShimReceipt {
+    param($Tool, $Row)
+    $shimHashes = @{}
+    foreach ($shim in (ConvertTo-Array $Tool.shims)) {
+        $shimPath = Join-Path $BinDir ($shim.name + '.cmd')
+        if (Test-Path -LiteralPath $shimPath -PathType Leaf) { $shimHashes[$shim.name] = Get-Sha256Hex $shimPath }
+    }
+    $Row | Add-Member -NotePropertyName shim_sha256 -NotePropertyValue $shimHashes -Force
+    return $Row
+}
+
 function Add-ToolReceipt {
     param($Tool, $Row, [string]$Directory)
     $files = @{}
     foreach ($shim in (ConvertTo-Array $Tool.shims)) {
         $file = Find-ToolFile -Root $Directory -Glob $shim.exe_glob -Prefer $shim.prefer_path
-        if ($file) { $files[$file.FullName.Substring($Directory.TrimEnd('\').Length + 1)] = Get-Sha256Hex $file.FullName }
+        if ($file) { $files[$file.FullName.Substring($Directory.TrimEnd([IO.Path]::DirectorySeparatorChar).Length + 1)] = Get-Sha256Hex $file.FullName }
     }
     foreach ($name in @('package-lock.json','Scripts\python.exe')) {
         $file = Join-Path $Directory $name
@@ -322,11 +362,11 @@ function Add-ToolReceipt {
     }
     if (-not $files.Count) {
         $file = Get-ChildItem -LiteralPath $Directory -Recurse -File | Where-Object { $_.Name -notlike '.kit-*' } | Select-Object -First 1
-        if ($file) { $files[$file.FullName.Substring($Directory.TrimEnd('\').Length + 1)] = Get-Sha256Hex $file.FullName }
+        if ($file) { $files[$file.FullName.Substring($Directory.TrimEnd([IO.Path]::DirectorySeparatorChar).Length + 1)] = Get-Sha256Hex $file.FullName }
     }
     $Row | Add-Member -NotePropertyName owner -NotePropertyValue 'reverse-this' -Force
     $Row | Add-Member -NotePropertyName files -NotePropertyValue $files -Force
-    return $Row
+    return Set-ShimReceipt -Tool $Tool -Row $Row
 }
 
 # Keep a numerically newer owned release rather than replacing it with an older channel's artifact.
@@ -867,6 +907,13 @@ function Write-Shim {
     $lines += $call + '"%~dp0' + $relative + '" ' + $arguments
     $lines += 'exit /b %errorlevel%'
     $dest = Join-Path $BinDir ($Name + '.cmd')
+    foreach ($guard in @($BinDir, (Split-Path -Parent $BinDir), $dest)) {
+        if (Test-Path -LiteralPath $guard) {
+            if ((Get-Item -LiteralPath $guard -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+                throw "refusing to write a shim through a reparse point: $guard"
+            }
+        }
+    }
     Write-Utf8 -Path $dest -Text (($lines -join "`r`n") + "`r`n")
     return $dest
 }
@@ -924,7 +971,7 @@ function Test-AlreadyInstalled {
         if ($LASTEXITCODE -ne 0 -or $versionRows.Count -ne 1) { return $false }
         $row.version = ($versionRows[0] -split '\s+')[1]
     }
-    $script:CachedRecord = $row
+    $script:CachedRecord = Set-ShimReceipt -Tool $script:CurrentTool -Row $row
     return $true
 }
 
@@ -940,6 +987,7 @@ function Save-State {
     if (-not $PointerPath) { return }
     $pointer = [pscustomobject]@{}
     if (Test-Path -LiteralPath $PointerPath) {
+        if ((Get-Item -LiteralPath $PointerPath -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "refusing linked owner pointer: $PointerPath" }
         $pointer = Get-Content -LiteralPath $PointerPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $backup = $PointerPath + '.pre-' + $kitVersion
         if (-not (Test-Path -LiteralPath $backup)) { Copy-Item -LiteralPath $PointerPath -Destination $backup }
@@ -1757,6 +1805,7 @@ if ($Doctor) {
                 if ($row.command_sha256 -and (Get-Sha256Hex $row.command) -ne $row.command_sha256) { throw 'external command hash changed' }
             } else {
                 $toolDir = Get-ToolDirectory $tool.id
+                Assert-OwnedToolPath $toolDir
                 Assert-ToolPayload -Tool $tool -Dest $toolDir
                 # The kit executes these binaries against targets, so re-hash every file bound
                 # in the install receipt; a changed one is never trusted as present.
@@ -1774,6 +1823,11 @@ if ($Doctor) {
             foreach ($shim in (ConvertTo-Array $tool.shims)) {
                 if (-not (Test-Path -LiteralPath (Join-Path $BinDir ($shim.name + '.cmd')))) { throw "missing shim $($shim.name)" }
             }
+            $shimStatus = Get-ShimStatus -Tool $tool -Row $row
+            if ($shimStatus -like 'missing:*') { throw "missing shim $($shimStatus.Substring(8))" }
+            if ($shimStatus -like 'changed:*') { throw "changed shim $($shimStatus.Substring(8)); regenerate it with -Only $($tool.id) (no -Force needed)" }
+            if ($shimStatus -like 'linked:*') { throw "linked shim $($shimStatus.Substring(7)); refusing a reparse-point shim" }
+            if ($shimStatus -eq 'legacy') { Write-Host "UNVERIFIED shim $($tool.id): legacy state has no shim digest; regenerate with -Only $($tool.id)" }
             if ($proof -eq 'UNVERIFIED') {
                 Write-Host "UNVERIFIED $($tool.id) $($row.version): no file receipt; reinstall with -Only $($tool.id) -Force to record one"
                 $unverified++

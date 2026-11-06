@@ -175,16 +175,21 @@ def emit(original: bytes | bytearray, masked: bytearray) -> str:
     return " ".join(parts)
 
 
-def count_overlapping(regex: bytes, data: bytes) -> int:
+def count_overlapping(pattern: bytes | re.Pattern[bytes], data: bytes) -> int:
     """Count every start offset, including overlaps; short signatures need this."""
+    compiled = pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.DOTALL)
+    if compiled.pattern == b"":
+        return 0
     count = 0
-    start = 0
-    while True:
-        match = re.search(regex, data[start:])
+    position = 0
+    length = len(data)
+    while position <= length:
+        match = compiled.search(data, position)
         if match is None:
             return count
         count += 1
-        start += match.start() + 1
+        position = match.start() + 1
+    return count
 
 
 def positive_instructions(value: str) -> int:
@@ -217,7 +222,11 @@ def main(argv: list[str]) -> int:
         return 2
 
     if args.pattern:
-        regex, _ = parse_pattern(args.pattern)
+        try:
+            regex, _ = parse_pattern(args.pattern)
+        except (ValueError, TypeError) as exc:
+            print(json.dumps({"file": str(path), "error": f"invalid pattern: {exc}"}))
+            return 2
         match = next((m for start, end in pe.executable_ranges() for m in [regex.search(data, start, end)] if m), None)
         if not match:
             print(json.dumps({"file": str(path), "error": "pattern not found in an executable section"}))
@@ -278,7 +287,7 @@ def main(argv: list[str]) -> int:
 
     text = emit(original, wildcard_flags)
     tokens = text.split()
-    regex = b"".join(b"." if t == "??" else re.escape(bytes([int(t, 16)])) for t in tokens)
+    regex = re.compile(b"".join(b"." if t == "??" else re.escape(bytes([int(t, 16)])) for t in tokens), re.DOTALL)
     matches = 0
     for start, end in pe.executable_ranges():
         matches += count_overlapping(regex, data[start:end])

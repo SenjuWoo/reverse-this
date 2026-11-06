@@ -93,6 +93,30 @@ try {
     if (-not (Test-Path -LiteralPath $pointer)) { throw 'missing pointer was not regenerated' }
     $receipt = Get-Content -LiteralPath $pointer -Raw | ConvertFrom-Json
     if ([IO.Path]::GetFullPath($receipt.kit_root) -ne [IO.Path]::GetFullPath($root)) { throw 'regenerated pointer has the wrong owner' }
+    # A missing pointer parent must be created safely, not treated as a failed repair.
+    $nestedPointer = Join-Path $root 'missing/deep/kit.json'
+    & $hostExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '../Maintain.ps1') -Root $root -PointerPath $nestedPointer -Apply
+    if ($LASTEXITCODE -ne 0) { throw 'Maintain.ps1 failed for a missing pointer parent' }
+    if (-not (Test-Path -LiteralPath $nestedPointer)) { throw 'missing pointer parent was not created' }
+
+    # An owner record naming another existing checkout is ambiguous and must fail.
+    $otherKit = Join-Path $root 'other-kit'
+    New-Item -ItemType Directory -Force -Path $otherKit | Out-Null
+    $ambiguousState = Get-Content -LiteralPath (Join-Path $sandbox 'installed.json') -Raw | ConvertFrom-Json
+    $ambiguousState.kit_root = $otherKit
+    Set-Content -LiteralPath (Join-Path $sandbox 'installed.json') -Value ($ambiguousState | ConvertTo-Json -Depth 8) -Encoding ASCII
+    Set-Content -LiteralPath $pointer -Value ((@{ kit_root = $otherKit; installed_json = (Join-Path $sandbox 'installed.json'); bin = (Join-Path $root 'sandbox/bin') } | ConvertTo-Json)) -Encoding ASCII
+    & $hostExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '../Maintain.ps1') -Root $root -PointerPath $pointer -Apply
+    if ($LASTEXITCODE -eq 0) { throw 'ambiguous owner records were accepted' }
+
+    # -All must not reach the installer after an ownership refusal.
+    $fakeInstaller = Join-Path $root 'Install-Modkit.ps1'
+    Set-Content -LiteralPath $fakeInstaller -Value "Set-Content -LiteralPath (Join-Path '$root' 'ran.txt') -Value 'ran'" -Encoding ASCII
+    & $hostExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '../Maintain.ps1') -Root $root -PointerPath $pointer -All
+    if ($LASTEXITCODE -eq 0) { throw '-All continued after an ownership refusal' }
+    if (Test-Path -LiteralPath (Join-Path $root 'ran.txt')) { throw '-All ran the installer after an ownership refusal' }
+    Remove-Item -LiteralPath $fakeInstaller -Force
+
     Write-Output 'maintenance checks ok'
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
