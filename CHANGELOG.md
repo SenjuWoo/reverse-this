@@ -1,3 +1,10 @@
+## 1.14.7 (2026-11-06)
+
+- The currency report no longer treats catalog pins or the Capstone test pin as installed tools. A tool appears in `installed` only when its owner-state receipt still matches this root, its directory and every receipt hash. Missing, stale, moved, malformed, changed and unverified states remain distinguishable.
+- `.NET` probing parses every `dotnet --list-sdks` line and reports the highest suitable SDK plus the complete observed list, instead of trusting the first line.
+- `--offline` has its own `offline` status. `network-unavailable` is reserved for a failed request.
+- REA compatibility uses the published 6.8.0 policy: Ghidra 12.1.x is compatible, other 12.x lines are incompatible, missing Ghidra is explicit, and an unknown/new REA release is `unknown-version` rather than assumed compatible. Java is reported separately, including the stable REA JDK 21 boundary.
+
 ## 1.14.6 (2026-11-06)
 
 - Scheduled-task ownership now parses the actual generated command template instead of matching text anywhere in the command. Encoded commands are decoded as UTF-16LE and must resolve to `Maintain.ps1 -All` under the recorded owner; comments, unrelated strings, appended commands, wrong executables, extra actions and mismatched owner paths are rejected. Removal requires the task owner to match the current root and still previews without mutating under `-WhatIf`.

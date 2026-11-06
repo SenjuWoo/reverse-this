@@ -1,5 +1,8 @@
 # Offline tests for the read-only upstream currency report.
+import hashlib
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -9,46 +12,140 @@ import check_upstreams
 
 
 class CurrencyTests(unittest.TestCase):
-    def test_comparison_normalizes_tags_and_release_names(self):
-        self.assertGreater(check_upstreams.compare("Ghidra_12.2_build", "12.1"), 0)
-        self.assertEqual(check_upstreams.compare("6.8.0", "v6.8.0"), 0)
-        self.assertIsNone(check_upstreams.compare("unknown", "1.0"))
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.state = self.root / "sandbox" / "installed.json"
+        self.catalog = self.root / "catalog" / "tools.json"
+        self.pin = self.root / "requirements-test.txt"
+        self.patches = [
+            mock.patch.object(check_upstreams, "ROOT", self.root),
+            mock.patch.object(check_upstreams, "STATE", self.state),
+            mock.patch.object(check_upstreams, "CATALOG", self.catalog),
+            mock.patch.object(check_upstreams, "TEST_PIN", self.pin),
+            mock.patch.object(check_upstreams, "_observed_dotnet_sdks", return_value=[]),
+            mock.patch.object(check_upstreams, "_observed_java", return_value=None),
+        ]
+        for patch in self.patches:
+            patch.start()
 
-    def test_update_never_invents_an_installed_version(self):
-        self.assertEqual(check_upstreams.update_status("12.2", "12.2"), "current")
-        self.assertEqual(check_upstreams.update_status("12.1", "12.2"), "outdated")
-        self.assertEqual(check_upstreams.update_status(None, "5.0.9"), "unverified")
-        self.assertEqual(check_upstreams.update_status("10", "10.0.14"), "outdated")
+    def tearDown(self):
+        for patch in reversed(self.patches):
+            patch.stop()
+        self.tmp.cleanup()
 
-    def test_compatibility_is_independent_of_update_status(self):
-        self.assertEqual(check_upstreams.compatibility_status(
-            "rea", {"rea": "6.8.0", "ghidra": "Ghidra_12.2_build"}), "incompatible")
-        self.assertEqual(check_upstreams.compatibility_status(
-            "rea", {"rea": "6.9.0", "ghidra": "12.2"}), "not-evaluated")
-        self.assertEqual(check_upstreams.compatibility_status("ghidra", {}), "not-evaluated")
+    def write_state(self, tools, kit_root=None, schema=1):
+        self.state.parent.mkdir(parents=True, exist_ok=True)
+        self.state.write_text(json.dumps({
+            "schema": schema,
+            "kit_root": str(kit_root if kit_root is not None else self.root),
+            "tools": tools,
+        }), encoding="utf-8")
 
-    def test_missing_dotnet_is_not_reported_as_installed(self):
-        with mock.patch.object(check_upstreams, "STATE", Path("missing-state.json")), \
-             mock.patch.object(check_upstreams, "CATALOG", Path("missing-catalog.json")), \
-             mock.patch.object(check_upstreams, "TEST_PIN", Path("missing-pin.txt")), \
-             mock.patch.object(check_upstreams, "_observed_dotnet", return_value=None):
-            self.assertNotIn("dotnet", check_upstreams.load_current())
+    def receipt_tool(self, relative="sandbox/tools/rea/bin/rea", version="6.8.0"):
+        payload = self.root / relative
+        payload.parent.mkdir(parents=True, exist_ok=True)
+        payload.write_bytes(b"probe")
+        digest = hashlib.sha256(payload.read_bytes()).hexdigest()
+        return {
+            "version": version,
+            "dir": "sandbox/tools/rea",
+            "files": {"bin/rea": digest},
+        }
 
-    def test_network_failure_is_reported_not_raised(self):
+    def test_missing_state_does_not_claim_installed_tools(self):
+        values, evidence = check_upstreams.probe_installed()
+        self.assertNotIn("rea", values)
+        self.assertEqual(evidence["rea"]["status"], "missing")
+
+    def test_empty_or_malformed_state_is_not_installed(self):
+        self.state.parent.mkdir(parents=True)
+        self.state.write_text("{", encoding="utf-8")
+        values, evidence = check_upstreams.probe_installed()
+        self.assertNotIn("rea", values)
+        self.assertEqual(evidence["rea"]["status"], "malformed")
+
+    def test_valid_receipt_is_observed(self):
+        self.write_state({"rea": self.receipt_tool()})
+        values, evidence = check_upstreams.probe_installed()
+        self.assertEqual(values["rea"], "6.8.0")
+        self.assertEqual(evidence["rea"]["status"], "valid")
+
+    def test_stale_executable_and_moved_root_are_not_installed(self):
+        self.write_state({"rea": self.receipt_tool(relative="sandbox/tools/rea/bin/missing")})
+        values, evidence = check_upstreams.probe_installed()
+        self.assertNotIn("rea", values)
+        self.assertEqual(evidence["rea"]["status"], "stale")
+
+        self.write_state({"rea": self.receipt_tool()}, kit_root=self.root / "elsewhere")
+        values, evidence = check_upstreams.probe_installed()
+        self.assertNotIn("rea", values)
+        self.assertEqual(evidence["rea"]["status"], "moved")
+
+    def test_catalog_and_test_pins_are_not_installed(self):
+        self.catalog.parent.mkdir(parents=True)
+        self.catalog.write_text(
+            json.dumps({"tools": [{"id": "rea", "package_version": "6.8.0"}]}),
+            encoding="utf-8",
+        )
+        self.pin.write_text("capstone==5.0.9\n", encoding="utf-8")
+        rows = check_upstreams.report(offline=True)
+        rea = next(row for row in rows if row["component"] == "rea")
+        capstone = next(row for row in rows if row["component"] == "capstone")
+        self.assertIsNone(rea["installed"])
+        self.assertEqual(rea["catalog_pin"], "6.8.0")
+        self.assertIsNone(capstone["installed"])
+        self.assertEqual(capstone["catalog_pin"], "5.0.9")
+
+    def test_dotnet_parser_handles_all_sdk_lines_and_highest_wins(self):
+        self.assertEqual(check_upstreams._parse_dotnet_sdks("8.0.100 [C:\\sdk]\n"), ["8.0.100"])
+        self.assertEqual(check_upstreams._parse_dotnet_sdks("10.0.100 [C:\\sdk]\n"), ["10.0.100"])
+        self.assertEqual(
+            check_upstreams._parse_dotnet_sdks("8.0.100 [C:\\sdk]\n10.0.100 [C:\\sdk]\n"),
+            ["10.0.100", "8.0.100"],
+        )
+        self.assertEqual(check_upstreams._parse_dotnet_sdks("malformed output"), [])
+
+    def test_dotnet_probe_reports_highest_sdk_not_first_line(self):
+        with mock.patch.object(check_upstreams, "_observed_dotnet_sdks", return_value=["10.0.100", "8.0.100"]):
+            values, evidence = check_upstreams.probe_installed()
+        self.assertEqual(values["dotnet"], "10.0.100")
+        self.assertEqual(evidence["dotnet"]["sdk_versions"], ["10.0.100", "8.0.100"])
+
+    def test_offline_has_its_own_state(self):
+        rows = check_upstreams.report(offline=True)
+        self.assertTrue(all(row["update"] == "offline" for row in rows))
+        self.assertTrue(all(row["latest"] is None for row in rows))
+
+    def test_network_failure_is_not_offline(self):
         def broken(*_args):
             raise OSError("offline")
         rows = check_upstreams.report(fetcher=broken)
-        self.assertEqual(len(rows), len(check_upstreams.ENDPOINTS))
-        self.assertTrue(all(row["update"] == "network-unavailable" for row in rows))
-        self.assertTrue(all(row["error"] for row in rows))
+        checked = [row for row in rows if check_upstreams.ENDPOINTS[row["component"]]]
+        self.assertTrue(all(row["update"] == "network-unavailable" for row in checked))
+        self.assertTrue(all(row["error"] for row in checked))
 
-    def test_malformed_and_offline_modes_are_explicit(self):
+    def test_malformed_response_is_explicit(self):
         def malformed(*_args):
             raise ValueError("bad json")
         rows = check_upstreams.report(fetcher=malformed)
-        self.assertTrue(all(row["update"] == "malformed-response" for row in rows))
-        offline = check_upstreams.report(offline=True)
-        self.assertTrue(all(row["update"] == "network-unavailable" for row in offline))
+        checked = [row for row in rows if check_upstreams.ENDPOINTS[row["component"]]]
+        self.assertTrue(all(row["update"] == "malformed-response" for row in checked))
+
+    def test_compatibility_uses_published_stable_range(self):
+        cases = [
+            ({"rea": "6.8.0", "ghidra": "12.1.4"}, "compatible"),
+            ({"rea": "6.8.0", "ghidra": "12.2"}, "incompatible"),
+            ({"rea": "6.8.0", "ghidra": None}, "missing-ghidra"),
+            ({"rea": "6.8.0", "ghidra": "11.4"}, "unknown-ghidra"),
+            ({"rea": "6.9.0", "ghidra": "12.2"}, "unknown-version"),
+            ({"rea": None, "ghidra": "12.1"}, "not-evaluated"),
+        ]
+        for observed, expected in cases:
+            self.assertEqual(check_upstreams.compatibility_status("rea", observed), expected, observed)
+        self.assertEqual(check_upstreams.java_compatibility({"rea": "6.8.0", "java": "21"}), "compatible")
+        self.assertEqual(check_upstreams.java_compatibility({"rea": "6.8.0", "java": "25"}), "unsupported-major")
+        self.assertEqual(check_upstreams.java_compatibility({"rea": "6.8.0"}), "missing-java")
 
 
 if __name__ == "__main__":

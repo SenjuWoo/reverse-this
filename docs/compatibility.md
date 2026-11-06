@@ -7,10 +7,11 @@ boundaries below are reviewed.
 | Component | Installed / baseline | Catalog policy | Upstream stable | Status | Evidence |
 |---|---|---|---|---|---|
 | Ghidra | 12.2 + JDK 25 | current official GitHub release | 12.2 | verified installed; not re-smoked this pass | `-Doctor`, deal/PE workflows |
-| REA (`rea-agents`) | 6.8.0 | exact npm pin + integrity | 6.8.0 | known limitation: rejects Ghidra 12.2 | npm install, `rea doctor` |
+| REA (`rea-agents`) | 6.8.0 | exact npm pin + integrity | 6.8.0 | stable is compatible only with the Ghidra 12.1 line + JDK 21; the installed 12.2/JDK 25 pair is not a verified REA pair | npm install, `rea doctor` |
 | ILSpy GUI | 11.2 self-contained | current GitHub release | 11.2 | verified installed; no GUI launch this pass | catalog/receipts |
 | `ilspycmd` | 11.2.0.10050 | current NuGet tool | 11.2.0.10050 | verified installed; .NET 10 required | catalog/receipts |
-| .NET SDK | 10 | stable shared prerequisite | 10 | verified prerequisite route | `tests/test_dotnet_prerequisite.ps1` |
+| .NET SDK | 10 (observed SDK list retained) | stable shared prerequisite | 10 | all installed SDK lines are parsed; highest suitable SDK is reported | `tests/test_upstreams.py` |
+| Java/JDK | 25 observed | isolated compatible route for stable REA | 21 for REA 6.8.0 | warning: not the verified REA pairing | `scripts/check_upstreams.py` |
 | Capstone | 5.0.9 test baseline | test-only pin in `requirements-test.txt` | 5.0.9 | AOB fixtures pass | `tests/test_aob_gen.py` |
 | GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | current upstream | protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
 
@@ -31,7 +32,11 @@ boundaries below are reviewed.
    `ilspycmd`, .NET and Capstone. It reports observed installed versions,
    catalog/report baselines, latest releases, update status and compatibility
    separately; it never labels an unobserved version as installed, and it never
-   blocks CI merely because an upstream release appeared.
+   blocks CI merely because an upstream release appeared. `--offline` reports
+   `offline`, not a network failure. Installed evidence is a validated state
+   receipt whose `kit_root`, tool directory and receipt hashes still match; a
+   moved, stale, malformed or hashed-mismatched row is never promoted to
+   `installed`. Catalog/test pins stay in `baseline`/`catalog_pin`.
 6. A missing real bridge, GUI or game target is recorded as unavailable, not
    reported as a passed runtime test.
 

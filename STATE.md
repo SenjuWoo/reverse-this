@@ -1,8 +1,8 @@
 # Reverse THIS! state (2026-11-06)
 
 - Goal: one Windows RE/modding workbench with stable `sandbox/bin` shims, one owner kit and preserved private targets.
-- Version: 1.14.6, released at f38a63dc42b87eaeea55faa0bfec9088ca0536c9 (CI, CodeQL and release checks green). ZIP 159,678 bytes, sha256 d76ce410446fcd2f3744067867049c4af4ca59a555659aa331a66d33cd508aae; 57 manifest entries and packaged `Maintain.ps1 -Test`/`-Apply`/upstream checker verified.
-- Local kit: source 1.14.6 at the moved path; last full tool update ok=90 failed=0, 92 catalog tools, NeoXtractor v3.3. Doctor exits 0 but reports legacy shim digests until each shim is refreshed.
+- Version: 1.14.7 release candidate; final commit/ZIP facts are recorded after the release workflow completes.
+- Local kit: source 1.14.7 at the moved path; last full tool update ok=90 failed=0, 92 catalog tools, NeoXtractor v3.3. Doctor exits 0 but reports legacy shim digests until each shim is refreshed.
 - Integrity: cached installs must match every file hash in their existing receipt; changed/missing receipts are rejected and recoverable. Generated shims now carry their own SHA-256 receipt; Doctor detects missing, changed and linked shims. Linked owner roots/ancestors, pointers and tool files are refused.
 - Maintenance: `maintain.cmd` reports; `-Apply` removes only owned temps/caches/rollback copies, refuses reparse points, honors `.install.lock`, and repairs either owner record independently with backups. Ambiguous or failed ownership repair stops `-All` before tool updates. A missing pointer parent is created after link checks. `-Test` works from the packaged ZIP; `Register-Maintenance.ps1` is explicit opt-in, honors `-WhatIf` for run/remove/register, and logs to `%LOCALAPPDATA%\ReverseThis\maintenance.log`.
 - Scheduled task: it stores an absolute owner path and refuses a task without the Reverse THIS! owner marker. Validation requires one action, a recognized PowerShell host, and a decoded `Maintain.ps1 -All` invocation under the recorded owner; comments, substrings, appended commands, wrong paths and extra actions are rejected. Removal requires the recorded owner to match the current root. After moving the kit, re-register from the new root; the old task fails visibly instead of running stale source.
@@ -10,7 +10,7 @@
 - Windows delivery: `test_delivery.py` runs in both PowerShell 5.1 and 7 CI jobs through `PSHOST`; the live companion check stays scheduled/manual. `scripts/check_upstreams.py` ships in the product, reports observed/baseline/update/compatibility separately, and never blocks CI on drift.
 - Bundle sync: bundle 8.35.1 owns shared runtimes/providers and adopts this moved kit; `scripts/check_companions.py` passes. Bundle-Splits and `Ai tools` forges are separate owners and are documented, not duplicated.
 - Addon boundary: Reverse THIS! supplies extraction, conversion, instrumentation and REA only. It does not install game Forges, Unity MCPs, Blender, image-stack presets or model assets.
-- Next: none for 1.14.6; keep owner pointers and sibling links current.
+- Next: finish independent diff review, commit, push, watch both Windows CI jobs and CodeQL, then release 1.14.7 and verify the downloaded ZIP bytes.
 - Known limits: REA 6.8.0 rejects Ghidra 12.2; upstream main accepts 12.x but is unreleased. Context7 submission was declined; agents read `encyclopedia/` from disk. Doctor checks files/receipts, not every GUI or target.
 - Run: `install.cmd` or `powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1`; check with `-Doctor`. Logs: `sandbox/log/modkit.log`.
 - Build/release: bump VERSION + CHANGELOG on main; the release workflow publishes after green CI (two identical builds, attestation, byte re-check). Manual build: `python scripts/build_release.py <zip> --commit <sha>`.
