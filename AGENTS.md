@@ -14,7 +14,7 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 
 `Install-Modkit.ps1 -Plan` prints the catalog without network or writes. Normal runs update old owned release/pip/npm/NuGet tools while preserving pins, newer valid versions and rollback backups. `-NoUpdate` retains installed versions; missing selections can install. `-Doctor`/`-Offline` check receipts/files without network, setup or writes, not runtime behavior. Add `-DebugLog` for detailed diagnostics. The workbench provisions its own missing shared prerequisites; the bundle is optional. Read `docs/standalone.md` before changing ownership or using external tool receipts, and `docs/companions.md` for task routing and snapshot provenance.
 
-`maintain.cmd` is dry-run by default. `maintain.cmd -Apply` removes only kit-owned stale temp/cache and rollback copies beyond the newest two per tool, and repairs a stale owner pointer after a directory move. `-UpdateTools` refreshes the catalog and runs Doctor; `-Test` runs local structural checks. It never deletes target work, external tools, `sandbox/manual`, or system temp.
+`maintain.cmd` is dry-run by default. `maintain.cmd -Apply` removes only explicitly owned disposable files (temp, old rollback copies, and source caches), repairs the owner pointer and `sandbox/installed.json` together after a directory move, and refuses linked or unknown paths. `-UpdateTools` refreshes the catalog and runs Doctor; `-Test` works from a packaged ZIP as well as a source checkout. It never deletes target work, external tools, `sandbox/manual`, `sandbox/work`, or system temp. `Register-Maintenance.ps1` is the explicit opt-in for a weekly user task.
 
 ## Composition
 

@@ -17,6 +17,13 @@ class ProductTests(unittest.TestCase):
                 result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(product/'Install-Modkit.ps1'),switch],capture_output=True,text=True,
                                       encoding='utf-8',errors='replace',timeout=30)
                 self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            for switch in ('-Test','-Apply'):
+                result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(product/'Maintain.ps1'),switch],capture_output=True,text=True,
+                                      encoding='utf-8',errors='replace',timeout=30)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertIn('packaged checks ok', subprocess.run(
+                ['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(product/'Maintain.ps1'),'-Test'],
+                capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=30).stdout)
             self.assertFalse((product/'sandbox').exists(),'Read-only entrypoints wrote product state')
             # The bundle calls this updater; it must accept the encyclopedia and kit paths too.
             digest=hashlib.sha256(archive.read_bytes()).hexdigest()

@@ -81,6 +81,48 @@ class KitTools(unittest.TestCase):
         self.assertIn("pattern", data)
         self.assertGreater(data["bytes"], 0)
 
+    def test_ghidra_mcp_identity_not_any_http_answer(self):
+        import importlib.util
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        import threading
+
+        spec = importlib.util.spec_from_file_location("ghidra_mcp_up", KIT / "ghidra_mcp_up.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = b"GhidraMCP plugin" if self.path == "/good" else b"not the expected service"
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(body)
+
+            def do_POST(self):
+                body = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"serverInfo": {"name": "GhidraMCP"}}}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *_):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            base = f"http://127.0.0.1:{server.server_port}"
+            good = module.probe_ghidra(base + "/good")
+            bad = module.probe_ghidra(base + "/wrong")
+            mcp = module.probe_mcp(base + "/mcp")
+            self.assertEqual(good["identity"], "ghidra")
+            self.assertEqual(bad["identity"], "unknown")
+            self.assertEqual(mcp["identity"], "mcp")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+
 
 if __name__ == "__main__":
     unittest.main()

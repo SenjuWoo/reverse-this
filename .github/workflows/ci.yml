@@ -57,6 +57,8 @@ jobs:
         run: ./tests/test_standalone.ps1
       - name: local helper checks
         run: python tests/test_kit_tools.py
+      - name: AOB encoding fixtures
+        run: python tests/test_aob_gen.py
       - name: maintenance retention checks
         run: ./tests/test_maintain.ps1
 

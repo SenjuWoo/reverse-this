@@ -45,25 +45,78 @@ def kit_root() -> Path:
 MANUAL_START = kit_root() / "sandbox/manual/ghidra-mcp/start.cmd"
 
 
-def probe(url: str, timeout: float = 1.5) -> dict:
+def _read_body(response, limit: int = 8192) -> str:
+    try:
+        return response.read(limit).decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001 - a body is optional for identity checks
+        return ""
+
+
+def probe_ghidra(url: str, timeout: float = 1.5) -> dict:
+    """An HTTP answer alone is not proof this is the Ghidra plugin."""
     request = urllib.request.Request(url, method="GET")
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return {"url": url, "up": True, "status": response.status}
+            body = _read_body(response)
+            headers = " ".join(f"{k}:{v}" for k, v in response.headers.items())
+            identity = "ghidra" if "ghidra" in (body + headers).lower() else "unknown"
+            return {"url": url, "up": True, "status": response.status, "identity": identity}
     except urllib.error.HTTPError as exc:
-        # Any HTTP answer means the listener is alive (405/400 are common here).
-        return {"url": url, "up": True, "status": exc.code}
+        body = _read_body(exc)
+        headers = " ".join(f"{k}:{v}" for k, v in exc.headers.items()) if exc.headers else ""
+        identity = "ghidra" if "ghidra" in (body + headers).lower() else "unknown"
+        return {"url": url, "up": True, "status": exc.code, "identity": identity}
     except Exception as exc:  # noqa: BLE001 - connection errors are the normal miss
-        return {"url": url, "up": False, "status": None, "error": str(exc)}
+        return {"url": url, "up": False, "status": None, "identity": "unknown", "error": str(exc)}
+
+
+def probe_mcp(url: str, timeout: float = 2.5) -> dict:
+    """Use the MCP initialize handshake, not a blind GET."""
+    payload = json.dumps({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2025-03-26",
+            "capabilities": {},
+            "clientInfo": {"name": "reverse-this", "version": "1"},
+        },
+    }).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = _read_body(response)
+            status = response.status
+    except urllib.error.HTTPError as exc:
+        return {"url": url, "up": True, "status": exc.code, "identity": "unknown"}
+    except Exception as exc:  # noqa: BLE001 - connection errors are the normal miss
+        return {"url": url, "up": False, "status": None, "identity": "unknown", "error": str(exc)}
+    try:
+        message = json.loads(body)
+        result = message.get("result") if isinstance(message, dict) else None
+        server = (result or {}).get("serverInfo") or {}
+        name = str(server.get("name", "")).lower()
+        identity = "mcp" if name and ("ghidra" in name or "mcp" in name) else "unknown"
+    except (ValueError, TypeError):
+        identity = "unknown"
+    return {"url": url, "up": True, "status": status, "identity": identity}
 
 
 def snapshot() -> dict:
-    ghidra = probe(GHIDRA_URL)
-    mcp = probe(MCP_URL)
+    ghidra = probe_ghidra(GHIDRA_URL)
+    mcp = probe_mcp(MCP_URL)
     return {
         "ghidra_plugin": ghidra,
         "mcp_bridge": mcp,
-        "ready": ghidra["up"] and mcp["up"],
+        "ready": ghidra.get("identity") == "ghidra" and mcp.get("identity") == "mcp",
     }
 
 

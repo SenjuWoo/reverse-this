@@ -132,6 +132,7 @@ try {
     $record = [pscustomobject]@{
         id = 'probe'; version = 'v1'; asset = 'probe.zip'; sha256 = ('a' * 64)
         hash_source = 'computed'; dir = 'sandbox/tools/probe'; shims = [pscustomobject]@{ probe = 'sandbox/bin/probe.cmd' }
+        files = [pscustomobject]@{ 'probe.cmd' = (Get-Sha256Hex (Join-Path $dest 'probe.cmd')) }
     }
     $script:InstallState.tools | Add-Member -NotePropertyName probe -NotePropertyValue $record -Force
     Write-Marker -Dest $dest -Marker 'v1|probe.zip'
@@ -139,6 +140,30 @@ try {
     $cached = Test-AlreadyInstalled -Dest $dest -Marker 'v1|probe.zip'
     Assert-True $cached 'A complete cached payload was not reused'
     Assert-True (Test-Path -LiteralPath $shim) 'A cached install did not recreate its missing shim'
+
+    $tampered = Join-Path $dest 'probe.cmd'
+    $trustedBytes = [IO.File]::ReadAllBytes($tampered)
+    Write-Utf8 -Path $tampered -Text "tampered`r`n"
+    Assert-True (-not (Test-AlreadyInstalled -Dest $dest -Marker 'v1|probe.zip')) 'A modified executable was accepted from its old receipt'
+    Assert-True ((Get-ToolReceiptStatus -Row $record -Directory $dest -ToolId 'probe') -eq 'changed') 'A changed receipt file was not classified as changed'
+    [IO.File]::WriteAllBytes($tampered, $trustedBytes)
+    Assert-True (Test-AlreadyInstalled -Dest $dest -Marker 'v1|probe.zip') 'A restored trusted payload was not reusable'
+    Assert-True ((Get-ToolReceiptStatus -Row $record -Directory $dest -ToolId 'probe') -eq 'ok') 'A valid receipt was not accepted'
+
+    $oldJavaHome = $env:JAVA_HOME
+    try {
+        $jdk = Find-JdkHome -Major 25
+        if ($jdk) {
+            $env:JAVA_HOME = $jdk
+            Assert-True ((Find-JdkHome -Major 25) -eq $jdk) 'A valid JAVA_HOME was not reused'
+        }
+        $invalidJdk = Join-Path $testRoot 'missing-jdk'
+        $env:JAVA_HOME = $invalidJdk
+        $javaFailure = $null
+        try { $foundJdk = Find-JdkHome -Major 25 } catch { $javaFailure = $_.Exception.Message }
+        Assert-True (-not $javaFailure) 'An invalid JAVA_HOME crashed JDK discovery'
+        Assert-True ($foundJdk -ne $invalidJdk) 'An invalid JAVA_HOME was returned as a JDK'
+    } finally { $env:JAVA_HOME = $oldJavaHome }
 
     $legacy = [pscustomobject]@{
         schema = 1; kit_version = $kitVersion; kit_root = $KitRoot; java_home = $null
@@ -317,6 +342,18 @@ public static class AtomicJsonLockFixture {
         Assert-True (Test-Path -LiteralPath $shim) 'A missing global state prevented cached shim repair'
         Assert-True ($script:JavaHome -eq $java) 'A cached Java tool did not repair its JDK selection'
         Assert-True ((Get-Content -LiteralPath $shim -Raw).Contains('set "JAVA_HOME=' + $java.Replace('%', '%%') + '"')) 'A repaired Java shim omitted its selected JDK'
+
+        $tampered = Join-Path $dest 'probe.cmd'
+        $trustedBytes = [IO.File]::ReadAllBytes($tampered)
+        $oldRecord = Get-Content -LiteralPath (Join-Path $dest '.kit-record.json') -Raw | ConvertFrom-Json
+        Write-Utf8 -Path $tampered -Text "tampered`r`n"
+        $reinstallFailed = $false
+        try { Install-One $tool | Out-Null } catch { $reinstallFailed = $true }
+        Assert-True $reinstallFailed 'A modified cached payload was accepted by an update run'
+        Assert-True ((Get-Content -LiteralPath $tampered -Raw) -eq "tampered`r`n") 'A failed update rewrote modified bytes as trusted'
+        $afterRecord = Get-Content -LiteralPath (Join-Path $dest '.kit-record.json') -Raw | ConvertFrom-Json
+        Assert-True ($afterRecord.files.'probe.cmd' -eq $oldRecord.files.'probe.cmd') 'A failed update replaced the trusted receipt'
+        [IO.File]::WriteAllBytes($tampered, $trustedBytes)
     } finally {
         Set-Item Function:\Get-GitHubRelease -Value $savedRelease
         Set-Item Function:\Install-Jdk -Value $savedJdk

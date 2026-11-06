@@ -94,7 +94,7 @@ try {
             New-Item -ItemType Directory -Path $runtimeDest | Out-Null
             Write-TestFile (Join-Path $runtimeDest 'probe.cmd') "@echo off`r`nexit /b 0`r`n"
             Write-TestFile (Join-Path $runtimeDest '.kit-ok') 'present'
-            Write-TestFile (Join-Path $runtimeDest '.kit-record.json') (@{id=$case[0];version='1.0.0';dir=$runtimeDest;shims=@{}} | ConvertTo-Json)
+            Write-TestFile (Join-Path $runtimeDest '.kit-record.json') (@{id=$case[0];version='1.0.0';dir=$runtimeDest;shims=@{};files=@{'probe.cmd'=(Get-FileHash -LiteralPath (Join-Path $runtimeDest 'probe.cmd') -Algorithm SHA256).Hash.ToLowerInvariant()}} | ConvertTo-Json)
             $runtimeTool=[pscustomobject]@{id=$case[0];method=$case[1];needs_jdk=$(if ($case[0] -eq 'java-probe') {25});shims=@(@{name=$case[0];exe_glob='probe.cmd'})}
             Install-One $runtimeTool | Out-Null
             $shimText=Get-Content -LiteralPath (Join-Path $BinDir ($case[0]+'.cmd')) -Raw
@@ -175,7 +175,7 @@ try {
     foreach ($directory in @($badNode,$goodNode)) { Write-TestFile (Join-Path $directory 'npm.cmd') "@echo off`r`nexit /b 0`r`n" }
     Write-TestFile (Join-Path $nodeToolDir 'probe.cmd') "@echo off`r`nnode --version`r`n"
     Write-TestFile (Join-Path $nodeToolDir '.kit-ok') 'present'
-    Write-TestFile (Join-Path $nodeToolDir '.kit-record.json') (@{id='rea';version='6.8.0';dir=$nodeToolDir;shims=@{}} | ConvertTo-Json)
+    Write-TestFile (Join-Path $nodeToolDir '.kit-record.json') (@{id='rea';version='6.8.0';dir=$nodeToolDir;shims=@{};files=@{'probe.cmd'=(Get-FileHash -LiteralPath (Join-Path $nodeToolDir 'probe.cmd') -Algorithm SHA256).Hash.ToLowerInvariant()}} | ConvertTo-Json)
     $nodeTool=[pscustomobject]@{id='rea';method='npm-tool';shims=@(@{name='node-probe';exe_glob='probe.cmd'})}
     try {
         $env:PATH=$badNode+';'+$goodNode+';'+$oldPath; $NoUpdate=$true; $script:Node=$null

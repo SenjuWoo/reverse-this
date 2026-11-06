@@ -67,8 +67,17 @@ class PE:
                     "virtual_address": u32(data, base + 12),
                     "raw_size": u32(data, base + 16),
                     "raw_offset": u32(data, base + 20),
+                    "characteristics": u32(data, base + 36),
                 }
             )
+
+    def executable_ranges(self) -> list[tuple[int, int]]:
+        """Raw file ranges for sections the loader may execute."""
+        ranges = []
+        for s in self.sections:
+            if s["characteristics"] & 0x20000000 and s["raw_size"]:
+                ranges.append((s["raw_offset"], s["raw_offset"] + s["raw_size"]))
+        return ranges
 
     def rva_to_offset(self, rva: int) -> int | None:
         for s in self.sections:
@@ -110,23 +119,37 @@ def parse_pattern(text: str) -> tuple[re.Pattern[bytes], bytes]:
 def mask_flags(insn, length: int) -> bytearray:
     """Return a flag per byte: 1 = wildcard, 0 = keep.
 
-    Only relocatable bytes are masked: RIP-relative disp32, branch/call
-    displacements and absolute address immediates. Small constants stay.
+    Capstone's encoding offsets distinguish displacement bytes from immediate
+    bytes. Only relocatable fields are masked; small constants stay visible.
     """
+    encoding = getattr(insn, "encoding", None)
+    if encoding is None:
+        raise ValueError("the decoder did not expose instruction encoding offsets")
     flags = bytearray(length)
-    branch = insn.group(CS_GRP_JUMP) or insn.group(CS_GRP_CALL)
-    for op in insn.operands:
-        if op.type == X86_OP_MEM and op.mem.base == X86_REG_RIP:
-            for i in range(max(0, length - 4), length):
+
+    def mask(offset: int, size: int) -> None:
+        if size and 0 <= offset < length:
+            for i in range(offset, min(length, offset + size)):
                 flags[i] = 1
-        elif op.type == X86_OP_IMM and op.size:
-            if branch or op.size == 8 or (op.size == 4 and op.imm >= 0x10000):
-                for i in range(max(0, length - op.size), length):
-                    flags[i] = 1
-    if branch:
-        size = 1 if length <= 2 else 4
-        for i in range(max(0, length - size), length):
-            flags[i] = 1
+
+    disp_offset = getattr(encoding, "disp_offset", 0)
+    disp_size = getattr(encoding, "disp_size", 0)
+    imm_offset = getattr(encoding, "imm_offset", 0)
+    imm_size = getattr(encoding, "imm_size", 0)
+    branch = insn.group(CS_GRP_JUMP) or insn.group(CS_GRP_CALL)
+
+    for op in insn.operands:
+        if op.type == X86_OP_MEM:
+            if op.mem.base == X86_REG_RIP:
+                mask(disp_offset, disp_size)
+            elif op.mem.base == 0 and op.mem.index == 0 and disp_size >= 4 and abs(op.mem.disp) >= 0x10000:
+                # Absolute addressing describes an image address, not a constant.
+                mask(disp_offset, disp_size)
+        elif op.type == X86_OP_IMM:
+            if branch:
+                mask(imm_offset, imm_size or op.size)
+            elif op.size >= 4 and abs(op.imm) >= 0x10000:
+                mask(imm_offset, imm_size or op.size)
     return flags
 
 
@@ -177,6 +200,12 @@ def main(argv: list[str]) -> int:
             print(json.dumps({"file": str(path), "error": "offset out of range"}))
             return 1
 
+    if pe.machine not in (0x14C, 0x8664):
+        print(json.dumps({"file": str(path), "error": f"unsupported PE machine: 0x{pe.machine:04X}"}))
+        return 2
+    if not pe.executable_ranges():
+        print(json.dumps({"file": str(path), "error": "PE has no executable section"}))
+        return 2
     rva = pe.offset_to_rva(offset)
     if rva is None:
         print(json.dumps({"file": str(path), "error": "offset is not in a mapped section"}))
@@ -194,8 +223,13 @@ def main(argv: list[str]) -> int:
         if count >= args.instructions:
             break
         raw = bytearray(insn.bytes)
+        try:
+            flags = mask_flags(insn, len(raw))
+        except ValueError as exc:
+            print(json.dumps({"file": str(path), "error": str(exc)}))
+            return 2
         original += raw
-        wildcard_flags += mask_flags(insn, len(raw))
+        wildcard_flags += flags
         count += 1
         if len(original) >= len(window):
             break
@@ -207,7 +241,9 @@ def main(argv: list[str]) -> int:
     text = emit(original, wildcard_flags)
     tokens = text.split()
     regex = b"".join(b"." if t == "??" else re.escape(bytes([int(t, 16)])) for t in tokens)
-    matches = len(re.findall(regex, data, re.DOTALL))
+    matches = 0
+    for start, end in pe.executable_ranges():
+        matches += len(re.findall(regex, data[start:end], re.DOTALL))
     result = {
         "file": str(path),
         "pattern": text,

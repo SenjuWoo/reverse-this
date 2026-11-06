@@ -291,6 +291,23 @@ function Get-ToolDirectory {
     return Join-Path $ToolsDir $Id
 }
 
+# Verify the files bound by an existing receipt before reusing a cached tool.
+# Unknown/corrupt receipts and changed bytes are not trusted evidence.
+function Get-ToolReceiptStatus {
+    param($Row, [string]$Directory, [string]$ToolId)
+    if (-not $Row -or $Row.id -ne $ToolId) { return 'missing' }
+    if (-not $Row.PSObject.Properties['files'] -or -not @($Row.files.PSObject.Properties).Count) { return 'missing' }
+    $root = [IO.Path]::GetFullPath($Directory).TrimEnd('\')
+    foreach ($file in $Row.files.PSObject.Properties) {
+        if ([IO.Path]::IsPathRooted($file.Name) -or $file.Name -match ':|(^|[\\/])\.\.([\\/]|$)') { return 'corrupt' }
+        $target = [IO.Path]::GetFullPath((Join-Path $root $file.Name))
+        if (-not $target.StartsWith($root + '\', [StringComparison]::OrdinalIgnoreCase)) { return 'corrupt' }
+        if (-not (Test-Path -LiteralPath $target -PathType Leaf)) { return 'changed' }
+        if ($file.Value -notmatch '^[a-fA-F0-9]{64}$' -or (Get-Sha256Hex $target) -ne $file.Value) { return 'changed' }
+    }
+    return 'ok'
+}
+
 # Bind shims and representative package/source metadata to installed bytes without executing GUI tools.
 function Add-ToolReceipt {
     param($Tool, $Row, [string]$Directory)
@@ -751,7 +768,7 @@ function Get-JavaMajor {
 function Find-JdkHome {
     param([int]$Major)
     $homes = @()
-    if ($env:JAVA_HOME) { $homes += @(Get-Item -LiteralPath $env -Force:JAVA_HOME -ErrorAction SilentlyContinue) }
+    if ($env:JAVA_HOME) { $homes += @(Get-Item -LiteralPath $env:JAVA_HOME -Force -ErrorAction SilentlyContinue) }
     $javaCmd = Get-Command java -ErrorAction SilentlyContinue
     if ($javaCmd) { $homes += @(Get-Item -LiteralPath (Split-Path -Parent (Split-Path -Parent $javaCmd.Source)) -ErrorAction SilentlyContinue) }
     foreach ($n in $Major..40) {
@@ -879,6 +896,11 @@ function Test-AlreadyInstalled {
         $row = $script:InstallState.tools.($script:CurrentTool.id)
     }
     if (-not $row -or $row.id -ne $script:CurrentTool.id) { return $false }
+    $receiptStatus = Get-ToolReceiptStatus -Row $row -Directory $Dest -ToolId $script:CurrentTool.id
+    if ($receiptStatus -ne 'ok') {
+        Write-Log -Detail "cached $($script:CurrentTool.id) rejected: receipt $receiptStatus"
+        return $false
+    }
     if ($script:CurrentTool.method -eq 'github-archive' -and $row.asset -like '*/archive/refs/heads/*') { return $false }
     $comparison = if ($script:CurrentTool.package_version -and -not $NoUpdate) { Compare-ToolVersion $row.version $script:CurrentTool.package_version } else { 0 }
     if ($null -eq $comparison -or $comparison -lt 0) { return $false }

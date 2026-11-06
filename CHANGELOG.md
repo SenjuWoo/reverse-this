@@ -1,3 +1,11 @@
+## 1.14.1 (2026-11-06)
+
+- Reject a cached tool when any file bound by its existing receipt is missing or changed. A modified executable can no longer be legitimized by rerunning the installer; Doctor continues to fail changed bytes, and the prior payload remains recoverable.
+- Bound maintenance cleanup to explicitly owned directories; source caches only under `scripts/`, `tests/` and `kit/`; refuse reparse points; honor the installer lock; and repair `kit.json` plus `sandbox/installed.json` together with rollback backups, independently of cleanup candidates.
+- Make `-Test` work from the published ZIP with packaged catalog/version checks while retaining the full developer suite in a checkout. Add `Register-Maintenance.ps1` as an explicit opt-in weekly user task.
+- Correct AOB wildcarding to use Capstone encoding offsets, distinguish RIP displacement from immediates, handle short/near branches and reject unsupported architectures; uniqueness is checked in executable sections.
+- Fix `JAVA_HOME` discovery and validate HTTP service identity for the optional Ghidra MCP bridge instead of accepting any response.
+
 ## 1.14.0 (2026-11-05)
 
 - Add `Maintain.ps1`/`maintain.cmd`: dry-run by default; `-Apply` prunes kit-owned temp, caches and rollback copies with a two-copy recovery floor, repairs a stale owner pointer after a move, `-UpdateTools` refreshes and runs Doctor, and `-Test` runs local checks.
