@@ -23,15 +23,16 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
-## Latest local results (2026-11-06, 1.14.5 release, Windows PowerShell 5.1)
+## Latest local results (2026-11-06, 1.14.6 candidate, Windows PowerShell 5.1)
 
-45 Python checks passed: catalog/encyclopedia/delivery scripts, 12 Ghidra MCP
-fixtures, 11 AOB fixtures, 5 PE parser fixtures, 5 kit-tool checks, 4 companion
-fixtures and 3 upstream-report fixtures. All seven PowerShell suites passed,
-including owner-failure propagation, ambiguous-owner refusal, missing-pointer
-parent creation, linked cleanup refusal, scheduled-task ownership decoding and
-zero-mutation `-WhatIf` previews. Live companion contract passed. The extracted
-product ran `pe_recon.py` and started `aob_gen.py` without the source module path.
+53 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
+fixtures, 12 AOB fixtures, 6 PE parser fixtures, 5 kit-tool checks, 4 companion
+fixtures and 6 upstream-report fixtures. All seven PowerShell suites passed,
+including owner-failure propagation, ambiguous-owner refusal, strict task
+templates, wrong-root removal refusal, missing-pointer parent creation, linked
+cleanup refusal and zero-mutation `-WhatIf` previews. Live companion contract
+passed. The extracted product ran `pe_recon.py`, started `aob_gen.py` and ran
+the packaged upstream checker in offline mode without the source module path.
 Doctor exits 0; existing legacy rows without shim digests emit explicit
 regeneration warnings until the shim receipt is refreshed. PowerShell 7 and the
 Windows delivery path under `PSHOST=pwsh` are covered by CI only; no `pwsh` is

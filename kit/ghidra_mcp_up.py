@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -129,101 +128,66 @@ def _sse_message(event: bytes):
 
 
 def _read_sse_response(response, expected_id: int, timeout: float) -> tuple[dict | None, str | None]:
-    """Read bounded SSE until the initialize response, ignoring keepalives.
+    """Read bounded SSE with CR/LF/CRLF lines and real blank-line termination.
 
-    Chunks are not normalized independently: an event delimiter may be split
-    between two reads. Boundaries are found in the accumulated raw buffer.
+    The scanner keeps a residual line across network chunks. A final line or
+    event without the blank-line terminator is never dispatched at EOF.
     """
     deadline = time.monotonic() + timeout
-    boundary = re.compile(rb"\r\n\r\n|\n\n|\r\r")
     buf = b""
+    lines: list[bytes] = []
     total = 0
     events = 0
-
-    def consume(final: bool = False):
-        nonlocal buf, events
-        while True:
-            match = boundary.search(buf)
-            if match is None:
-                break
-            raw, buf = buf[: match.start()], buf[match.end() :]
-            events += 1
-            if events > 64:
-                raise ValueError("too many SSE events before initialize response")
-            message = _sse_message(raw)
-            if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
-                return message
-        if final and buf.strip():
-            message = _sse_message(buf)
-            buf = b""
-            if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
-                return message
-        return None
-
+    eof = False
     while total < MAX_BODY and time.monotonic() < deadline:
         try:
             chunk = response.read1(4096)
         except Exception as exc:  # noqa: BLE001 - a timed-out stream is a failed probe
             return None, str(exc)
         if not chunk:
+            eof = True
             break
         total += len(chunk)
         if total > MAX_BODY:
             return None, f"response exceeded {MAX_BODY} bytes"
         buf += chunk
-        message = consume()
-        if message is not None:
-            return message, None
-    try:
-        message = consume(final=True)
-    except ValueError as exc:
-        return None, str(exc)
-    if message is not None:
-        return message, None
+        pos = 0
+        while True:
+            cr = buf.find(b"\r", pos)
+            lf = buf.find(b"\n", pos)
+            if cr < 0 and lf < 0:
+                break
+            index = cr if cr >= 0 and (lf < 0 or cr < lf) else lf
+            if buf[index:index + 1] == b"\r" and index + 1 < len(buf) and buf[index + 1:index + 2] == b"\n":
+                end = index + 2
+            else:
+                end = index + 1
+            line, pos = buf[pos:index], end
+            if not line:
+                events += 1
+                if events > 64:
+                    return None, "too many SSE events before initialize response"
+                message = _sse_message(b"\n".join(lines))
+                lines = []
+                if isinstance(message, dict) and str(message.get("id")) == str(expected_id):
+                    return message, None
+            else:
+                lines.append(line)
+        buf = buf[pos:]
+    if not eof and time.monotonic() >= deadline:
+        return None, "SSE initialize response timed out"
     return None, "no matching SSE initialize response"
 
 
-def _mcp_result(message, expected_id: int, url: str, status: int, session: str | None) -> dict:
-    base = {"url": url, "up": True, "status": status, "identity": "unknown",
-            "healthy": False, "session": bool(session)}
-    if not isinstance(message, dict):
-        return {**base, "error": "MCP response is not a JSON object"}
-    if message.get("jsonrpc") != "2.0":
-        return {**base, "error": "MCP response is not JSON-RPC 2.0"}
-    if str(message.get("id")) != str(expected_id):
-        return {**base, "error": f"unexpected MCP response id: {message.get('id')!r}"}
-    if "error" in message:
-        return {**base, "error": f"MCP error: {message.get('error')}"}
-    result = message.get("result")
-    if not isinstance(result, dict):
-        return {**base, "error": "MCP initialize result is missing"}
-    server = result.get("serverInfo")
-    name = str((server or {}).get("name", "")) if isinstance(server, dict) else ""
-    protocol = result.get("protocolVersion")
-    if not isinstance(protocol, str) or not protocol:
-        return {**base, "error": "MCP initialize result has no protocolVersion"}
-    if not name:
-        return {**base, "error": "MCP initialize result has no serverInfo.name"}
-    normalized = name.lower().replace("_", "-")
-    is_ghidra = "ghidra" in normalized and "mcp" in normalized
-    return {
-        **base,
-        "identity": "mcp" if is_ghidra else "unknown",
-        "healthy": is_ghidra,
-        "server_name": name,
-        "protocol": protocol,
-        "error": None if is_ghidra else f"unrelated MCP server: {name}",
-    }
-
-
 def _cleanup_session(url: str, session: str | None, timeout: float) -> None:
+    """Best-effort cleanup; a server that does not support DELETE is still usable."""
     if not session:
         return
     try:
         request = urllib.request.Request(url, method="DELETE", headers={"Mcp-Session-Id": session})
-        with urllib.request.urlopen(request, timeout=min(timeout, 1.0)):
+        with urllib.request.urlopen(request, timeout=timeout):
             pass
-    except Exception:  # noqa: BLE001 - cleanup is best effort
+    except Exception:  # noqa: BLE001 - session cleanup is not part of readiness
         pass
 
 
@@ -248,6 +212,27 @@ def _notify_initialized(url: str, session: str | None, protocol: str | None, tim
         return False, f"initialized notification rejected: HTTP {exc.code}"
     except Exception as exc:  # noqa: BLE001 - report the failed lifecycle step
         return False, f"initialized notification failed: {exc}"
+
+
+def _mcp_result(message, expected_id: int, url: str, status: int, session: str | None) -> dict:
+    """Classify a JSON-RPC initialize result without trusting arbitrary HTTP."""
+    base = {"url": url, "up": True, "status": status, "session": bool(session)}
+    if not isinstance(message, dict):
+        return {**base, "identity": "unknown", "healthy": False, "initialized": False,
+                "error": "malformed MCP initialize response"}
+    if str(message.get("id")) != str(expected_id):
+        return {**base, "identity": "unknown", "healthy": False, "initialized": False,
+                "error": "initialize response id mismatch"}
+    result = message.get("result")
+    if not isinstance(result, dict):
+        return {**base, "identity": "unknown", "healthy": False, "initialized": False,
+                "error": "initialize response missing result"}
+    server = result.get("serverInfo")
+    if not isinstance(server, dict) or server.get("name") != "ghidra-mcp":
+        return {**base, "identity": "unknown", "healthy": False, "initialized": False,
+                "error": "unrelated MCP server or missing serverInfo"}
+    return {**base, "identity": "mcp", "healthy": True, "initialized": False,
+            "server_name": "ghidra-mcp", "protocol": result.get("protocolVersion")}
 
 
 def _finish_mcp(message, expected_id: int, url: str, status: int, session: str | None) -> dict:

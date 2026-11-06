@@ -54,18 +54,31 @@ exit 0
     foreach ($node in $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)) {
         . ([scriptblock]::Create($node.Extent.Text))
     }
-    $decoded = "& 'C:\Kit\Maintain.ps1' -All"
+    $decoded = "& 'C:\Kit\Maintain.ps1' -All *>> 'C:\log\maintenance.log'"
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($decoded))
-    $owned = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + $encoded }) }
-    if (-not (Test-ReverseThisTask $owned)) { throw 'valid encoded Reverse THIS! task was rejected' }
+    $owned = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + $encoded }) }
+    if (-not (Test-ReverseThisTask $owned 'C:\Kit')) { throw 'valid encoded Reverse THIS! task was rejected' }
+    if (Test-ReverseThisTask $owned 'C:\Other') { throw 'removal accepted another owner root' }
     $legacy = [pscustomobject]@{ Description = 'Reverse THIS! weekly cleanup, tool update, and local checks. Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-File C:\Kit\Maintain.ps1 -All' }) }
-    if (-not (Test-ReverseThisTask $legacy)) { throw 'valid legacy task was rejected' }
+    if (-not (Test-ReverseThisTask $legacy 'C:\Kit')) { throw 'valid legacy task was rejected' }
     $foreign = [pscustomobject]@{ Description = 'Unrelated task'; Actions = @([pscustomobject]@{ Execute = 'cmd.exe'; Arguments = '/c calc.exe' }) }
     if (Test-ReverseThisTask $foreign) { throw 'foreign task was accepted' }
+    $wrongExe = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'cmd.exe'; Arguments = '-EncodedCommand ' + $encoded }) }
+    if (Test-ReverseThisTask $wrongExe) { throw 'wrong executable was accepted' }
     $extra = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + $encoded }, [pscustomobject]@{ Execute = 'cmd.exe'; Arguments = '/c calc.exe' }) }
     if (Test-ReverseThisTask $extra) { throw 'multi-action task was accepted' }
-    $badEncoded = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes('Invoke-WebRequest https://example.invalid')) }) }
-    if (Test-ReverseThisTask $badEncoded) { throw 'unrelated encoded command was accepted' }
+    $comment = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("Write-Output 'unrelated'; # Maintain.ps1 -All")) }) }
+    if (Test-ReverseThisTask $comment) { throw 'comment-only command was accepted' }
+    $stringOnly = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("Write-Output 'Maintain.ps1 -All'")) }) }
+    if (Test-ReverseThisTask $stringOnly) { throw 'string-only command was accepted' }
+    $appended = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Kit'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes("$decoded; Write-Output 'unrelated'")) }) }
+    if (Test-ReverseThisTask $appended) { throw 'appended command was accepted' }
+    $wrongOwner = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: C:\Other'; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + $encoded }) }
+    if (Test-ReverseThisTask $wrongOwner) { throw 'script path different from owner was accepted' }
+    $specialRoot = "C:\Kit O'Brien & ü"
+    $specialScript = "& '" + $specialRoot.Replace("'", "''") + "\Maintain.ps1' -All *>> 'C:\log\maintenance.log'"
+    $special = [pscustomobject]@{ Description = 'Reverse THIS! maintenance; Owner: ' + $specialRoot; Actions = @([pscustomobject]@{ Execute = 'powershell.exe'; Arguments = '-EncodedCommand ' + [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($specialScript)) }) }
+    if (-not (Test-ReverseThisTask $special)) { throw 'special-character owner path was rejected' }
 
     Write-Output 'scheduled maintenance preview checks ok'
 } finally {

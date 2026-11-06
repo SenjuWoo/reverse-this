@@ -30,17 +30,23 @@ GRAPHICS_DLLS = {
     "dwrite.dll": "DirectWrite",
 }
 
-ANTI_CHEAT_MARKERS = {
-    "BattlEye": ["battleye", "beclient", "beservice"],
-    "EasyAntiCheat": ["easyanticheat", "easyanti", "eac_launcher"],
-    "Riot Vanguard": ["vgk.sys", "vgc.dll", "vanguard"],
-    "Denuvo": ["denuvo"],
-    "VMProtect": ["vmprotect"],
-    "Themida": ["themida", "winlicense"],
-    "Arxan": ["arxan"],
-    "PunkBuster": ["punkbuster", "pnkbstr"],
-    "Ricochet": ["ricochet"],
-    "nProtect": ["nprotect", "gameguard"],
+SECURITY_MARKERS = {
+    "anti-cheat": {
+        "BattlEye": ["battleye", "beclient", "beservice"],
+        "EasyAntiCheat": ["easyanticheat", "easyanti", "eac_launcher"],
+        "Riot Vanguard": ["vgk.sys", "vgc.dll", "vanguard"],
+        "PunkBuster": ["punkbuster", "pnkbstr"],
+        "Ricochet": ["ricochet"],
+        "nProtect": ["nprotect", "gameguard"],
+    },
+    "drm-anti-tamper": {
+        "Denuvo": ["denuvo"],
+        "Arxan": ["arxan"],
+    },
+    "protector-packer": {
+        "VMProtect": ["vmprotect"],
+        "Themida": ["themida", "winlicense"],
+    },
 }
 
 PROXY_CANDIDATES = [
@@ -192,6 +198,17 @@ class PE:
         return out
 
 
+def security_indicators(data: bytes) -> dict[str, list[str]]:
+    lowered = data.lower()
+    return {
+        category: [
+            name for name, needles in markers.items()
+            if any(needle.encode("ascii") in lowered for needle in needles)
+        ]
+        for category, markers in SECURITY_MARKERS.items()
+    }
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[1] in ("-h", "--help"):
         print((__doc__ or "").strip())
@@ -210,12 +227,8 @@ def main(argv: list[str]) -> int:
         for dll in imports
         if dll in GRAPHICS_DLLS
     ]
-    lowered = data.lower()
-    anti_cheat = [
-        name
-        for name, needles in ANTI_CHEAT_MARKERS.items()
-        if any(n.encode("ascii") in lowered for n in needles)
-    ]
+    indicators = security_indicators(data)
+    anti_cheat = indicators["anti-cheat"]
     proxy = [
         {"name": name, "already_imported": name in imports}
         for name in PROXY_CANDIDATES
@@ -234,7 +247,8 @@ def main(argv: list[str]) -> int:
         "imports": imports,
         "graphics_apis": graphics,
         "anti_cheat_markers": anti_cheat,
-        "anti_cheat_note": "string indicators, not definitive detection",
+        "security_indicators": indicators,
+        "anti_cheat_note": "string indicators grouped by purpose, not definitive detection",
         "rtti_strings": pe.rtti_strings(),
         "proxy_candidates": proxy,
         "proxy_note": "candidates only; loading a proxy DLL is never guaranteed safe",

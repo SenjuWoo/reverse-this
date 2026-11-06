@@ -61,10 +61,13 @@ class PE:
         self.pe32_plus = self.magic == 0x20B
         if self.magic not in (0x10B, 0x20B):
             raise ValueError(f"not a PE: unsupported optional-header magic 0x{self.magic:04X}")
+        minimum_opt = 112 if self.pe32_plus else 96
+        if self.opt_size < minimum_opt:
+            raise ValueError("not a PE: optional header is smaller than its fixed fields")
         self.image_base = u64(data, opt + 24) if self.pe32_plus else u32(data, opt + 28)
         self.sections = []
         sec = opt + self.opt_size
-        if self.section_count <= 0 or sec + self.section_count * 40 > len(data):
+        if self.section_count <= 0 or self.section_count > 96 or sec + self.section_count * 40 > len(data):
             raise ValueError("not a PE: section table exceeds the file")
         for i in range(self.section_count):
             base = sec + i * 40

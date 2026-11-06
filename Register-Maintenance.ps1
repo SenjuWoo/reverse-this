@@ -21,34 +21,57 @@ function Get-TaskOwner($task) {
     if ($task.Description -match 'Owner:\s*(.+)$') { return $matches[1].Trim() }
     return ''
 }
-function Test-ReverseThisTask($task) {
-    if (-not $task) { return $false }
-    if ([string]$task.Description -notmatch '^Reverse THIS! (?:weekly cleanup|maintenance)') { return $false }
+function Get-CanonicalPath([string]$Path) {
+    if (-not $Path) { return '' }
+    try { return [IO.Path]::GetFullPath($Path).TrimEnd('\') } catch { return '' }
+}
+function Get-ReverseThisTaskInfo($task) {
+    if (-not $task) { return $null }
+    if ([string]$task.Description -notmatch '^Reverse THIS! (?:weekly cleanup|maintenance)') { return $null }
     $actions = @($task.Actions)
-    if ($actions.Count -ne 1) { return $false }
+    if ($actions.Count -ne 1) { return $null }
     $action = $actions[0]
-    if (-not $action) { return $false }
-    $exe = [IO.Path]::GetFileName([string]$action.Execute).ToLowerInvariant()
-    if ($exe -notin @('powershell.exe', 'pwsh.exe')) { return $false }
+    if (-not $action) { return $null }
+    if ([IO.Path]::GetFileName([string]$action.Execute).ToLowerInvariant() -notin @('powershell.exe', 'pwsh.exe')) { return $null }
+    $owner = Get-CanonicalPath (Get-TaskOwner $task)
+    if (-not $owner) { return $null }
     $arguments = [string]$action.Arguments
-    if ($arguments -match '-EncodedCommand\s+([A-Za-z0-9+/=]+)') {
-        try {
-            $decoded = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($matches[1]))
-        } catch { return $false }
-        return $decoded -match 'Maintain\.ps1' -and $decoded -match '(?:^|\s)-All(?:\s|$)'
+    $script = $null
+    $kind = $null
+    if ($arguments -match '(?i)^\s*(?:-NoProfile\s+|-ExecutionPolicy\s+Bypass\s+|-NonInteractive\s+)*-EncodedCommand\s+([A-Za-z0-9+/=]+)\s*$') {
+        try { $decoded = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($matches[1])) }
+        catch { return $null }
+        if ($decoded -notmatch "^\s*&\s*'((?:[^']|'')+)'\s+-All\s+\*>>\s*'((?:[^']|'')+)'\s*$") { return $null }
+        $script = $matches[1].Replace("''", "'")
+        $kind = 'encoded'
+    } elseif ($arguments -match '(?i)^\s*(?:-NoProfile\s+|-ExecutionPolicy\s+Bypass\s+|-NonInteractive\s+)*-File\s+(?:"([^"]+)"|''([^'']+)''|(\S+))\s+-All\s*$') {
+        $script = @($matches[1], $matches[2], $matches[3]) | Where-Object { $_ } | Select-Object -First 1
+        $kind = 'legacy'
+    } else {
+        return $null
     }
-    return $arguments -match 'Maintain\.ps1' -and $arguments -match '(?:^|\s)-All(?:\s|$)'
+    $scriptPath = Get-CanonicalPath $script
+    if (-not $scriptPath -or [IO.Path]::GetFileName($scriptPath) -ne 'Maintain.ps1') { return $null }
+    if (-not [string]::Equals((Get-CanonicalPath (Split-Path -Parent $scriptPath)), $owner, [StringComparison]::OrdinalIgnoreCase)) { return $null }
+    return [pscustomobject]@{ Owner = $owner; Script = $scriptPath; Kind = $kind }
+}
+function Test-ReverseThisTask($task, [string]$ExpectedRoot = '') {
+    $info = Get-ReverseThisTaskInfo $task
+    if (-not $info) { return $false }
+    if ($ExpectedRoot -and -not [string]::Equals($info.Owner, (Get-CanonicalPath $ExpectedRoot), [StringComparison]::OrdinalIgnoreCase)) { return $false }
+    return $true
 }
 $maintain = Join-Path $Root 'Maintain.ps1'
 
 if ($Remove) {
-    if (-not $PSCmdlet.ShouldProcess($TaskName, 'remove scheduled task')) { exit 0 }
     $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
     if ($task) {
-        if (-not (Test-ReverseThisTask $task)) { throw "scheduled task '$TaskName' is not owned by Reverse THIS!; refusing to remove it." }
+        if (-not (Test-ReverseThisTask $task $Root)) { throw "scheduled task '$TaskName' is not owned by this checkout ($Root); refusing to remove it. Re-register from the recorded owner or remove it explicitly in Task Scheduler." }
+        if (-not $PSCmdlet.ShouldProcess($TaskName, 'remove scheduled task')) { exit 0 }
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
         Write-Host "removed scheduled task: $TaskName"
     } else {
+        if (-not $PSCmdlet.ShouldProcess($TaskName, 'remove scheduled task')) { Write-Host "scheduled task not present: $TaskName"; exit 0 }
         Write-Host "scheduled task not present: $TaskName"
     }
     exit 0

@@ -26,10 +26,12 @@ boundaries below are reviewed.
    test baseline; do not silently move the runtime dependency across majors.
 5. The live companion/upstream check is scheduled or manual. Regular CI uses
    offline fixtures so unrelated README wording cannot block every release.
-   Run `python scripts/check_upstreams.py` for a read-only currency report on
-   Ghidra, GhidraMCP, REA, ILSpy, `ilspycmd`, .NET and Capstone. It reports
-   current/outdated/incompatible/unverified/network-unavailable and never fails
-   CI merely because an upstream release appeared.
+   Run `python scripts/check_upstreams.py` (source checkout or extracted
+   release) for a read-only currency report on Ghidra, GhidraMCP, REA, ILSpy,
+   `ilspycmd`, .NET and Capstone. It reports observed installed versions,
+   catalog/report baselines, latest releases, update status and compatibility
+   separately; it never labels an unobserved version as installed, and it never
+   blocks CI merely because an upstream release appeared.
 6. A missing real bridge, GUI or game target is recorded as unavailable, not
    reported as a passed runtime test.
 

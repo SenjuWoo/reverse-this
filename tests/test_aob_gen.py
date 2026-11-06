@@ -16,10 +16,9 @@ aob_gen = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(aob_gen)
 
 
-def make_pe(text: bytes, extra_text: bytes | None = None) -> bytes:
+def make_pe(text: bytes, extra_text: bytes | None = None, opt_size: int = 0xF0) -> bytes:
     """Build a minimal PE32+ with one or two executable sections."""
     e_lfanew = 0x80
-    opt_size = 0xF0
     table = e_lfanew + 4 + 20 + opt_size
     data = bytearray(max(0x600 + len(text), 0x800 + len(extra_text or b"")))
     data[0:2] = b"MZ"
@@ -82,6 +81,11 @@ class AobFixtures(unittest.TestCase):
         self.assertEqual(aob_gen.count_overlapping(b".", b"\x00\x0a\x0d\xff"), 4)
         self.assertEqual(aob_gen.count_overlapping(b"", b"\x90\x90"), 0)
         self.assertEqual(aob_gen.count_overlapping(b"\x90\x90", b"\x90" * 100000), 99999)
+
+    def test_optional_header_smaller_than_fixed_fields_is_rejected(self):
+        code, result = self.run_aob(make_pe(b"\x90", opt_size=2), "--pattern", "90")
+        self.assertEqual(code, 2)
+        self.assertIn("optional header", result["error"])
 
     def test_invalid_pattern_is_structured(self):
         code, result = self.run_aob(make_pe(b"\x90"), "--pattern", "zz")

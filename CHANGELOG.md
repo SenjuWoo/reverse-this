@@ -1,3 +1,11 @@
+## 1.14.6 (2026-11-06)
+
+- Scheduled-task ownership now parses the actual generated command template instead of matching text anywhere in the command. Encoded commands are decoded as UTF-16LE and must resolve to `Maintain.ps1 -All` under the recorded owner; comments, unrelated strings, appended commands, wrong executables, extra actions and mismatched owner paths are rejected. Removal requires the task owner to match the current root and still previews without mutating under `-WhatIf`.
+- The MCP SSE reader is a line-oriented state machine that handles CR, LF and CRLF, including mixed combinations and splits at every byte. An event is dispatched only after a blank-line terminator; incomplete EOF, invalid JSON, unrelated events and wrong IDs are ignored.
+- `aob_gen.py` now rejects PE optional headers smaller than the fixed fields it reads and bounds section counts, matching the strict reconnaissance parser.
+- `scripts/check_upstreams.py` ships in the release ZIP and has a packaged `--offline` execution test. It reports observed installed versions, catalog/report baselines, latest releases, update status and compatibility separately; a missing .NET observation is no longer represented as installed.
+- PE reconnaissance groups string indicators as anti-cheat, DRM/anti-tamper and protector/packer instead of treating them as equivalent detections. Existing `anti_cheat_markers` remains for compatibility; the grouped `security_indicators` field is added.
+
 ## 1.14.5 (2026-11-06)
 
 - AOB wildcard matching now compiles one binary regex with `DOTALL` and searches from each previous match's start offset without copying the remaining file. Wildcards match `00`, `0A`, `0D` and `FF`; empty patterns terminate; invalid patterns return a structured JSON error.

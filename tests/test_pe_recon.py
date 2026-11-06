@@ -63,6 +63,14 @@ class PeReconTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "section raw data"):
             PE(make_pe(raw_size=0x400, file_size=0x300))
 
+    def test_security_indicators_are_grouped_by_purpose(self):
+        from pe_recon import security_indicators
+        indicators = security_indicators(b"denuvo vmprotect battleye")
+        self.assertEqual(indicators["anti-cheat"], ["BattlEye"])
+        self.assertEqual(indicators["drm-anti-tamper"], ["Denuvo"])
+        self.assertEqual(indicators["protector-packer"], ["VMProtect"])
+        self.assertNotIn("Denuvo", indicators["anti-cheat"])
+
     def test_cli_reports_malformed_pe_without_traceback(self):
         with tempfile.TemporaryDirectory() as tmp:
             bad = Path(tmp) / "bad.exe"

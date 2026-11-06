@@ -1,6 +1,7 @@
 """Deterministic GhidraMCP health and Streamable HTTP initialize checks."""
 
 import importlib.util
+import itertools
 import json
 import socket
 import threading
@@ -251,6 +252,53 @@ class GhidraMcpTests(unittest.TestCase):
                 parsed, error = ghidra_mcp_up._read_sse_response(FakeResponse([event[:split], event[split:]]), 1, 1.0)
                 self.assertIsNone(error)
                 self.assertEqual(parsed["id"], 1)
+
+    def test_sse_accepts_every_line_ending_combination_and_split(self):
+        message = {"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2025-06-18",
+                   "serverInfo": {"name": "ghidra-mcp", "version": "1"}}}
+        class FakeResponse:
+            def __init__(self, chunks):
+                self.chunks = list(chunks)
+            def read1(self, _size):
+                return self.chunks.pop(0) if self.chunks else b""
+        for a, b, c in itertools.product((b"\r\n", b"\n", b"\r"), repeat=3):
+            event = (b": keepalive" + a + b"event: message" + b + b"data: " +
+                     json.dumps(message).encode() + c + c)
+            for split in range(1, len(event)):
+                with self.subTest(endings=(a, b, c), split=split):
+                    parsed, error = ghidra_mcp_up._read_sse_response(
+                        FakeResponse([event[:split], event[split:]]), 1, 1.0)
+                    self.assertIsNone(error)
+                    self.assertEqual(parsed["id"], 1)
+
+    def test_sse_incomplete_eof_is_not_dispatched(self):
+        message = {"jsonrpc": "2.0", "id": 1, "result": {"serverInfo": {"name": "ghidra-mcp"}}}
+        event = b"event: message\n" + b"data: " + json.dumps(message).encode() + b"\n"
+        class FakeResponse:
+            def __init__(self):
+                self.used = False
+            def read1(self, _size):
+                if self.used:
+                    return b""
+                self.used = True
+                return event
+        parsed, error = ghidra_mcp_up._read_sse_response(FakeResponse(), 1, 1.0)
+        self.assertIsNone(parsed)
+        self.assertIn("no matching", error)
+
+
+    def test_sse_multiple_events_and_invalid_json_are_skipped(self):
+        message = {"jsonrpc": "2.0", "id": 1, "result": {"serverInfo": {"name": "ghidra-mcp"}}}
+        event = (b": keepalive\r\n\r\n"
+                 b"data: not-json\r\n\r\n"
+                 b"event: message\r\n"
+                 b"data: " + json.dumps(message).encode() + b"\r\n\r\n")
+        class FakeResponse:
+            def read1(self, _size):
+                return event
+        parsed, error = ghidra_mcp_up._read_sse_response(FakeResponse(), 1, 1.0)
+        self.assertIsNone(error)
+        self.assertEqual(parsed["id"], 1)
 
     def test_fragmented_sse_initialize(self):
         result = ghidra_mcp_up.probe_mcp(self.base + "/mcp-sse-frag")

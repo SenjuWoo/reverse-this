@@ -51,6 +51,10 @@ class ProductTests(unittest.TestCase):
             result=subprocess.run([sys.executable,str(product/'kit/aob_gen.py'),'--help'],capture_output=True,text=True,
                                   encoding='utf-8',errors='replace',timeout=30,cwd=str(base))
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            result=subprocess.run([sys.executable,str(product/'scripts/check_upstreams.py'),'--offline','--json'],
+                                  capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=30,cwd=str(base))
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertEqual(len(json.loads(result.stdout)),7)
 
     def test_frozen_product_reproducible_private_files_absent_and_existing_output_preserved(self):
         with tempfile.TemporaryDirectory(prefix='Reverse ! ') as td:
