@@ -1,8 +1,8 @@
 # Reverse THIS! state (2026-11-06)
 
 - Goal: one Windows RE/modding workbench with stable `sandbox/bin` shims, one owner kit and preserved private targets.
-- Version: 1.15.0, released at 4cee29b9b30c22ce5c060e61dbc1d0bc20de98b8 (CI 42508237018, CodeQL 42508236616 and release 42508383004 green). ZIP 165,385 bytes, sha256 e1363f9b00caea75f4a2c07573f4324c90a4c7d4495b227a8f13cf175b83eced; 59 entries and packaged `Maintain.ps1 -Test` verified.
-- Local kit: source and installed kit 1.15.0 at the moved path; 93 catalog tools; `reverse-api-engineer` 0.14.0 installed in its private venv with a shim. Doctor exits 0.
+- Version: 1.15.1, released at c3063a326e2d13c9f92dde4bda8994ce1341fff5 (CI 42511486845, CodeQL 42511487116 and release 42511644324 green). ZIP 166,210 bytes, sha256 7016fd630c371b206fe0c58508724da8562c3805f4f5f7db151d3cc684f15851; 59 entries, 93 catalog tools and packaged checks verified.
+- Local kit: source and installed kit 1.15.1 at the moved path; 93 catalog tools; `reverse-api-engineer` 0.14.0 installed in its private venv with a shim. Doctor exits 0.
 - Web API reconstruction: optional `reverse-api-engineer` 0.14.0 pinned from PyPI; `--version`, `list --json` and `agent --dry-run` pass. Generated clients and HARs stay under `sandbox/work/web-api`; no MCP or browser service is registered.
 - REA integration: `rea-agents` 6.8.0 with isolated official Ghidra 12.1.4 (`sandbox/tools/ghidra-12.1.4`) and JDK 25 (`JAVA_HOME`); stable pair passes `rea doctor`, real read-only `notepad.exe` analysis and MCP initialize plus `open_binary`/`binary_overview`/`list_procedures`. Hermes registration is `aligned`.
 - Integrity: cached installs must match every file hash in their existing receipt; changed/missing receipts are rejected and recoverable. Generated shims now carry their own SHA-256 receipt; Doctor detects missing, changed and linked shims. Linked owner roots/ancestors, pointers and tool files are refused.
@@ -12,8 +12,8 @@
 - Windows delivery: `test_delivery.py` runs in both PowerShell 5.1 and 7 CI jobs through `PSHOST`; the live companion check stays scheduled/manual. `scripts/check_upstreams.py` ships in the product, reports observed/baseline/update/compatibility separately, and never blocks CI on drift.
 - Bundle sync: bundle 8.35.1 owns shared runtimes/providers and adopts this moved kit; `scripts/check_companions.py` passes. Bundle-Splits and `Ai tools` forges are separate owners and are documented, not duplicated.
 - Addon boundary: Reverse THIS! supplies extraction, conversion, instrumentation, REA and the optional web API reconstruction adapter. It does not install game Forges, Unity MCPs, Blender, image-stack presets or model assets.
-- Next: none for 1.15.0; keep owner pointers and sibling links current.
-- Known limits: the kit default Ghidra 12.2 is still not a verified REA 6.8.0 pair; REA uses the isolated 12.1.4 installation and scoped environment. IDA/JADX/Kuna remain unconfigured optional providers. Context7 submission was declined; agents read `encyclopedia/` from disk. Doctor checks files/receipts, not every GUI or target.
+- Next: none for 1.15.1; keep owner pointers and sibling links current.
+- Known limits: the kit default Ghidra 12.2 is still not a verified REA 6.8.0 pair; the REA shim automatically selects the isolated 12.1.4 installation. IDA/JADX/Kuna remain unconfigured optional providers. Context7 submission was declined; agents read `encyclopedia/` from disk. Doctor checks files/receipts, not every GUI or target.
 - Run: `install.cmd` or `powershell -NoProfile -ExecutionPolicy Bypass -File Install-Modkit.ps1`; check with `-Doctor`. Logs: `sandbox/log/modkit.log`.
 - Build/release: bump VERSION + CHANGELOG on main; the release workflow publishes after green CI (two identical builds, attestation, byte re-check). Manual build: `python scripts/build_release.py <zip> --commit <sha>`.
 - History: CHANGELOG.md and git log. This file holds the current state only.

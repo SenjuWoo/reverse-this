@@ -65,7 +65,21 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
   under ignored `sandbox/work/web-api`, because upstream `real_time_sync`
   writes clients into the current directory.
 
-## Latest local results (2026-11-08, 1.15.0 release, Windows PowerShell 5.1)
+## Latest local results (2026-11-08, 1.15.1 release, Windows PowerShell 5.1)
+
+61 Python checks passed, including the web-API contract, delivery and upstream
+fixtures. `tests/test_installer.ps1` passed with the isolated-Ghidra preference
+and caller-override checks. Repeated `Install-Modkit.ps1 -Only rea` produced the
+same shim hash; `Install-Modkit.ps1 -Doctor` exited 0. The installed kit is
+1.15.1 with 93 tools. Default `rea doctor --provider ghidra` is healthy against
+Ghidra 12.1.4, and the shim does not leak `GHIDRA_INSTALL_DIR` or `JAVA_HOME`
+to the caller. The published `Reverse-This-1.15.1.zip` was re-downloaded and
+verified: 166,210 bytes, SHA-256
+`7016fd630c371b206fe0c58508724da8562c3805f4f5f7db151d3cc684f15851`,
+59 entries and 93 catalog tools. Live `reverse-api-engineer` capture remains
+unverified because no model/provider authentication was supplied.
+
+## Earlier local results (2026-11-08, 1.15.0 release)
 
 63 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
 fixtures, 12 AOB fixtures, 6 PE parser fixtures, 5 kit-tool checks, 4 companion
