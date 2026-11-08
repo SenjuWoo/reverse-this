@@ -99,8 +99,8 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Hook, new C++ | `sandbox/tools/safetyhook` |
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
-| Agent-driven static/runtime analysis (REA) | `sandbox/bin/rea.cmd` (`rea doctor`, `rea analyze <file>`). The shim points `GHIDRA_INSTALL_DIR` at the kit Ghidra unless the caller set it. REA 6.8.0 accepts Ghidra 12.1.x only and the kit ships 12.2, so its Ghidra provider stays unavailable until a newer REA release; JS/Electron/web/APK-resource routes work. MCP registration (`rea mcp add`) is the user's opt-in. |
-| Website HTTP API reconstruction | `sandbox/bin/reverse-api-engineer.cmd` (`list`, `show`, `agent --dry-run`, `agent --json-stream`, `engineer`, `run`). Optional pinned v0.14.0; read `docs/web-api.md`. Use only when no official API/SDK covers the task; run from an ignored work directory. |
+| Agent-driven static/runtime analysis (REA) | `sandbox/bin/rea.cmd` (`rea doctor`, `rea analyze <file>`). When the caller has not set `GHIDRA_INSTALL_DIR`, the shim prefers the isolated `sandbox/tools/ghidra-12.1.4` copy that REA 6.8.0 supports, then falls back to the kit Ghidra. The default Ghidra 12.2 remains available for other tools. MCP registration (`rea mcp add`) is the user's opt-in. |
+| Website HTTP API reconstruction | `sandbox/bin/reverse-api-engineer.cmd` (`list`, `show`, `agent --dry-run`, `agent --json-stream`, `engineer`, `run`). Optional catalog-pinned tool; read `docs/web-api.md`. Use only when no official API/SDK covers the task; run from an ignored work directory. |
 | Android / Java decompile | `sandbox/bin/jadx.cmd` or `sandbox/bin/jadx-gui.cmd` |
 | JVM decompile, second opinion | `sandbox/bin/vineflower.cmd` |
 | APK signing | `sandbox/bin/uber-apk-signer.cmd` |

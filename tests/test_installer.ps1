@@ -866,6 +866,14 @@ public static class AtomicJsonLockFixture {
     try {
         $env:GHIDRA_INSTALL_DIR = $null
         Assert-True ((& cmd /d /c "`"$reaShim`"" | Out-String).Trim() -eq ((Join-Path $BinDir '..\tools\ghidra') -replace '\\\\','\')) 'REA shim did not default to the kit Ghidra'
+        $isolated = Join-Path $ToolsDir 'ghidra-12.1.4\Ghidra'
+        New-Item -ItemType Directory -Path $isolated -Force | Out-Null
+        $isolatedShim = Write-Shim -Name 'rea' -Target $reaTarget
+        try {
+            $env:GHIDRA_INSTALL_DIR = $null
+            $expectedIsolated = [IO.Path]::GetFullPath((Join-Path $BinDir '..\tools\ghidra-12.1.4'))
+            Assert-True ((& cmd /d /c "`"$isolatedShim`"" | Out-String).Trim() -eq $expectedIsolated) 'REA shim did not prefer the isolated Ghidra 12.1.x copy'
+        } finally { Remove-Item -LiteralPath (Join-Path $ToolsDir 'ghidra-12.1.4') -Recurse -Force -ErrorAction SilentlyContinue }
         $env:GHIDRA_INSTALL_DIR = 'C:\caller-ghidra'
         Assert-True ((& cmd /d /c "`"$reaShim`"" | Out-String).Trim() -eq 'C:\caller-ghidra') 'REA shim replaced the caller GHIDRA_INSTALL_DIR'
     } finally { $env:GHIDRA_INSTALL_DIR = $oldGhidra; Remove-Item -LiteralPath $reaShim -Force -ErrorAction SilentlyContinue }

@@ -5,10 +5,11 @@ typed client. It is a separate optional capability from REA: use REA for
 binaries, applications and runtime behavior; use this tool when the target is a
 website and no official API or maintained SDK covers the task.
 
-The catalog pins **v0.14.0**, the current published MIT release, from PyPI. Do
-not install the unreleased `main` branch or mix its skill instructions with the
-stable CLI. Upstream `main` includes later OpenCode and skill changes; review
-them and publish a new pin before adopting them.
+The catalog pins the published MIT release from PyPI; `catalog/tools.json` is
+the single source of truth for the version. Do not install the unreleased
+`main` branch or mix its skill instructions with the stable CLI. Upstream
+`main` includes later OpenCode and skill changes; review them and publish a new
+pin before adopting them.
 
 ## Install and check
 
@@ -27,6 +28,23 @@ Agent mode requires Node.js 20.19+ and a supported browser/provider. Manual
 Playwright capture is an optional extra and is not installed by this catalog
 entry. Model authentication is also the caller's responsibility; this kit does
 not copy API keys.
+
+## Model provider
+
+The default SDK is Claude Code. It needs an authenticated `claude` session or
+`ANTHROPIC_API_KEY`. `agent --dry-run` only checks that the environment variable
+exists; it does not prove that the provider is signed in or can run.
+
+The pinned release also supports OpenCode as its SDK. To use an existing
+OpenCode/OpenRouter setup, configure RAE's interactive settings with
+`sdk: "opencode"` and a connected provider/model pair, for example OpenRouter
+with a DeepSeek model. OpenCode owns that authentication; select a pair from the
+tool's settings rather than inventing model IDs. Node.js and `npx` must be on
+PATH when RAE starts its managed OpenCode server.
+
+Hermes is not an RAE SDK: this Hermes/DeepSeek session does not authenticate the
+tool's model calls. Do not point RAE at Hermes credentials or change existing
+model defaults unless the user explicitly chooses that setup.
 
 ## Workflow
 

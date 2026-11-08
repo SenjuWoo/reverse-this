@@ -878,12 +878,18 @@ function Write-Shim {
         [bool]$PythonScript = $false
     )
     $rel = (Resolve-Path -LiteralPath $Target).Path
+    # REA needs Java but its catalog entry does not declare needs_jdk; discover
+    # a supported JDK when the caller did not supply one.
+    if ($Name -eq 'rea' -and -not $JavaHome) { $JavaHome = Find-JdkHome 21 }
     $from = (Resolve-Path -LiteralPath $BinDir).Path
     if (-not $from.EndsWith('\')) { $from = $from + '\' }
     $base = New-Object System.Uri $from
     $to = New-Object System.Uri $rel
     $relative = [Uri]::UnescapeDataString($base.MakeRelativeUri($to).ToString()) -replace '/', '\'
     $relative = $relative.Replace('%', '%%')
+    # REA's npm shim runs `endLocal`; invoke it in a child cmd so its scope
+    # cannot discard GHIDRA_INSTALL_DIR/JAVA_HOME set here, and keep this
+    # wrapper's own setlocal so the caller's environment is not modified.
     $lines = @('@echo off', 'setlocal DisableDelayedExpansion')
     if ($JavaHome) {
         $lines += 'set "JAVA_HOME=' + $JavaHome.Replace('%', '%%') + '"'
@@ -895,9 +901,18 @@ function Write-Shim {
     }
     if ($NodeHome) { $lines += 'set "PATH=' + $NodeHome.Replace('%', '%%') + ';%PATH%"' }
     if ($Name -eq 'rea') {
-        # REA finds Ghidra only through GHIDRA_INSTALL_DIR; default to the kit's copy, keep a caller's own choice.
+        # REA finds Ghidra only through GHIDRA_INSTALL_DIR. Prefer the isolated
+        # 12.1.x copy that REA 6.8.0 supports; keep the caller's own choice.
+        # Enter the parent directory, then test a relative no-space marker:
+        # paths containing `..\tools` are unreliable in some Windows shells.
+        $lines += 'if defined GHIDRA_INSTALL_DIR goto rea_ghidra_done'
+        $lines += 'pushd "%~dp0.." 2>nul || goto rea_ghidra_done'
+        $lines += 'if not exist tools\ghidra-12.1.4\Ghidra goto rea_ghidra_pop'
+        $lines += 'set "GHIDRA_INSTALL_DIR=%CD%\tools\ghidra-12.1.4"'
+        $lines += ':rea_ghidra_pop'
+        $lines += 'popd'
+        $lines += ':rea_ghidra_done'
         $lines += 'if not defined GHIDRA_INSTALL_DIR set "GHIDRA_INSTALL_DIR=%~dp0..\tools\ghidra"'
-        if ($script:JavaHome) { $lines += 'if not defined JAVA_HOME set "JAVA_HOME=' + $script:JavaHome.Replace('%', '%%') + '"' }
     }
     # Chain batch targets directly; CALL expands percent signs in paths a second time.
     $call = ''
@@ -905,6 +920,11 @@ function Write-Shim {
     elseif ($JavaJar) { $call = '"%JAVA_HOME%\bin\java.exe" -jar ' }
     $arguments = if ($Name -eq 'capa') { '-r "' + (Get-ToolDirectory 'capa-rules').Replace('%','%%') + '" -s "' + (Join-Path (Get-ToolDirectory 'capa-source') 'sigs').Replace('%','%%') + '" %*' } else { '%*' }
     $lines += $call + '"%~dp0' + $relative + '" ' + $arguments
+    if ($Name -eq 'rea') {
+        # cmd /c gives REA its own environment scope; the outer setlocal still
+        # prevents PATH/JAVA_HOME/GHIDRA_INSTALL_DIR from leaking to the caller.
+        $lines[-1] = 'cmd /d /c ""%~dp0' + $relative + '" ' + $arguments + '"'
+    }
     $lines += 'exit /b %errorlevel%'
     $dest = Join-Path $BinDir ($Name + '.cmd')
     foreach ($guard in @($BinDir, (Split-Path -Parent $BinDir), $dest)) {

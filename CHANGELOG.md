@@ -1,3 +1,15 @@
+## 1.15.1 (2026-11-08)
+
+- The REA shim now prefers the isolated `sandbox/tools/ghidra-12.1.4` copy that
+  REA 6.8.0 supports, while still honoring a caller-supplied
+  `GHIDRA_INSTALL_DIR`. It discovers a JDK 21+ when the REA entry does not
+  declare one, and runs the npm shim in a child `cmd` so REA's `endlocal` does
+  not discard the selected paths or leak `PATH`/`JAVA_HOME` to the caller.
+- Added installer regressions for isolated-Ghidra preference, caller override,
+  and repeated shim generation.
+- Website API documentation now names the actual provider requirements and
+  keeps `catalog/tools.json` as the single version source.
+
 ## 1.15.0 (2026-11-08)
 
 - Added optional `reverse-api-engineer` 0.14.0 (MIT, published PyPI release) as

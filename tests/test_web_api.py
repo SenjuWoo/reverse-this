@@ -28,7 +28,7 @@ class WebApiTests(unittest.TestCase):
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         guide = (ROOT / "docs" / "web-api.md").read_text(encoding="utf-8")
         self.assertIn("reverse-api-engineer.cmd", agents)
-        self.assertIn("v0.14.0", guide)
+        self.assertIn("catalog/tools.json", guide)
         self.assertIn("sandbox", guide)
         self.assertIn("chrome-mcp", guide)
         self.assertIn("HAR", guide)
