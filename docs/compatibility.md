@@ -14,6 +14,7 @@ boundaries below are reviewed.
 | Java/JDK | 25 observed via `JAVA_HOME` | selected JDK, not PATH by default | Ghidra 12.1.4 declares min 21, no max | `within-ghidra-bounds`; verified REA/Ghidra 12.1.4 pairing | `scripts/check_upstreams.py`, `rea doctor` |
 | Capstone | 5.0.9 test baseline | test-only pin in `requirements-test.txt` | 5.0.9 | AOB fixtures pass | `tests/test_aob_gen.py` |
 | GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | current upstream | protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
+| Reverse API Engineer | 0.14.0 pinned PyPI release | stable only; review main separately | 0.14.0 | CLI `--version`, `list --json` and `agent --dry-run` pass; live capture/model call not run | `catalog/tools.json`, `docs/web-api.md`, `tests/test_web_api.py` |
 
 ## Policy
 

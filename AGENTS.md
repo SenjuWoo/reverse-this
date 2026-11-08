@@ -18,7 +18,7 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 
 ## Composition
 
-This repository is the optional reverse-engineering layer. It owns REA, the analysis payload catalog, `sandbox/bin` shims, the target workspace and the encyclopedia. It does not own provider setup, shared compilers/runtimes, general skills or GitHub/work-hygiene routing (the Starter Bundle owns those), and it does not own Skyrim records, Papyrus, assets, xEdit, LOOT, the Creation Kit or houseCARL (Skyrim Forge and other forges own those).
+This repository is the optional reverse-engineering layer. It owns REA, the analysis payload catalog, `sandbox/bin` shims, the target workspace and the encyclopedia. It also provides an optional, thin adapter around `reverse-api-engineer` for website HTTP API reconstruction; it does not install provider skills or register browser/MCP services. It does not own provider setup, shared compilers/runtimes, general skills or GitHub/work-hygiene routing (the Starter Bundle owns those), and it does not own Skyrim records, Papyrus, assets, xEdit, LOOT, the Creation Kit or houseCARL (Skyrim Forge and other forges own those).
 
 - Route Skyrim work to Forge; route provider, general-skill and GitHub work to the bundle.
 - Reuse `UABS_PYTHON`, `UABS_TOOL_ROOTS` and an existing `um` installation. Do not install a second base interpreter beside a working one.
@@ -100,6 +100,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
 | Agent-driven static/runtime analysis (REA) | `sandbox/bin/rea.cmd` (`rea doctor`, `rea analyze <file>`). The shim points `GHIDRA_INSTALL_DIR` at the kit Ghidra unless the caller set it. REA 6.8.0 accepts Ghidra 12.1.x only and the kit ships 12.2, so its Ghidra provider stays unavailable until a newer REA release; JS/Electron/web/APK-resource routes work. MCP registration (`rea mcp add`) is the user's opt-in. |
+| Website HTTP API reconstruction | `sandbox/bin/reverse-api-engineer.cmd` (`list`, `show`, `agent --dry-run`, `agent --json-stream`, `engineer`, `run`). Optional pinned v0.14.0; read `docs/web-api.md`. Use only when no official API/SDK covers the task; run from an ignored work directory. |
 | Android / Java decompile | `sandbox/bin/jadx.cmd` or `sandbox/bin/jadx-gui.cmd` |
 | JVM decompile, second opinion | `sandbox/bin/vineflower.cmd` |
 | APK signing | `sandbox/bin/uber-apk-signer.cmd` |

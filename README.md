@@ -40,6 +40,7 @@ The first run installs the catalog into `sandbox/tools` and writes stable shims 
 | Native and .NET analysis | Ghidra, x64dbg, PE-bear, DIE, ImHex, ILSpy, dnSpy, Rizin |
 | Instrumentation and tracing | Frida, RenderDoc, capa, FLOSS, YARA, MinHook, SafetyHook |
 | Unity and Unreal | AssetRipper, UABEA, UnityPy, FModel, repak, retoc, UE4SS |
+| Web APIs | Reverse API Engineer (`reverse-api-engineer`, optional v0.14.0) |
 | Archives and formats | 7-Zip, QuickBMS, Kaitai, wasm-tools, NeoXtractor, `nstool`, RPFM |
 | Game routes | League WADs/LTK, Naruto CPK/XFBIN, NeoX NPK, Risk of Rain 2 source-to-Unity, Pokémon Switch extraction |
 | Java, Android and Python | JADX, Apktool, Vineflower, uber-apk-signer, PyInstaller extractors |

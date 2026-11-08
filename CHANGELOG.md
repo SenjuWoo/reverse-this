@@ -1,3 +1,14 @@
+## 1.15.0 (2026-11-08)
+
+- Added optional `reverse-api-engineer` 0.14.0 (MIT, published PyPI release) as
+  a private `pip-venv` catalog tool with a stable `reverse-api-engineer` shim.
+  It does not register MCP, start a browser, install a global Python package or
+  alter REA/REA MCP settings.
+- Added `docs/web-api.md`, task routing in `AGENTS.md` and `docs/coverage.md`,
+  and contract tests. The integration keeps generated clients and HAR captures
+  under ignored `sandbox/work/web-api`; the stable release is pinned instead of
+  mixing in unreleased `main` skill changes.
+
 ## 1.14.9 (2026-11-06)
 
 - The upstream report selects the JDK REA/Ghidra actually use: a valid

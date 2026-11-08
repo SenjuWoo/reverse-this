@@ -1,4 +1,4 @@
-version: 1.14.9
+version: 1.15.0
 installed: sandbox/installed.json
 bin: sandbox/bin
 pointer: %LOCALAPPDATA%\ReverseThis\kit.json

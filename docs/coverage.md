@@ -47,6 +47,7 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | GameMaker games | UndertaleModTool (GUI and CLI) | `data.win` version support varies; not every runner build is covered. |
 | Total War packs | RPFM | Schemas are per game; verify the pack version before writing. |
 | App behavior recon and clean-room rebuild | replica-skill (`replica-recon`, `-diff`, `-test`, others) | MIT Claude skills with stdlib Python helpers. They work from public pages, screenshots and your own account; they do not analyze binaries. The installer resolves the current default branch to a full immutable commit, records that archive identity and its SHA-256, and reuses the recorded version with `-NoUpdate`; review the selected source before use. Rebuilding features is not a licence to copy code, assets or branding. |
+| Website HTTP API reconstruction | `reverse-api-engineer` (pinned v0.14.0) | Optional MIT tool in a private venv. Discovers a site's private HTTP API and generates a client; use only when no official API/SDK exists. A browser/provider and model authentication are task-time requirements, not installation side effects. Prefer a reusable HAR; `chrome-mcp` runs have no reusable HAR. Read `docs/web-api.md` for commands, output privacy and limits. |
 
 The game-specific SDKs, fighting-game tools and art editors remain in the catalog. They do not extend generic app decompilation. Bethesda and Skyrim tooling is owned by [Skyrim Forge](https://github.com/SenjuWoo/SkyrimForge); this kit does not duplicate xEdit, LOOT or the Creation Kit.
 

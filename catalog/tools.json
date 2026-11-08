@@ -1081,6 +1081,20 @@
       ]
     },
     {
+      "id": "reverse-api-engineer",
+      "name": "Reverse API Engineer",
+      "job": "Optional website HTTP API reconstruction into a typed client. No browser or MCP service is started at install time.",
+      "method": "pip-venv",
+      "package": "reverse-api-engineer",
+      "package_version": "0.14.0",
+      "shims": [
+        {
+          "name": "reverse-api-engineer",
+          "exe_glob": "reverse-api-engineer.exe"
+        }
+      ]
+    },
+    {
       "id": "pe-recon",
       "name": "PE reconnaissance",
       "job": "JSON PE fingerprint: bitness, graphics APIs, anti-cheat markers, RTTI and proxy candidates.",
