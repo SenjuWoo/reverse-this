@@ -47,13 +47,30 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
   and the REA skill installed. A running Hermes session needs a restart before
   the new MCP server appears as native tools.
 
-## Latest local results (2026-11-06, 1.14.9 release, Windows PowerShell 5.1)
+## Web API reconstruction (2026-11-08)
 
-60 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
+- Selected the published **reverse-api-engineer v0.14.0** (MIT) rather than
+  `main` `cd221e9ef5fe30d4fb66ad0d5198f179191aca57`; the stable wheel does not
+  ship the unreleased `skills/` changes, so no mixed revision is installed.
+- Added catalog entry `reverse-api-engineer` (`pip-venv`, pinned `0.14.0`) and
+  installed it with `Install-Modkit.ps1 -Only reverse-api-engineer`:
+  `ok=1 failed=0`. It uses the shared Python in a private venv.
+- `sandbox/bin/reverse-api-engineer.cmd --version` → **0.14.0**;
+  `list --json` → `[]`; `agent --dry-run` → `status: ok`,
+  provider `auto`, SDK `claude`, Node `v26.13.0`. No browser or model run was
+  started.
+- Live capture and client generation are **unverified**: no model
+  authentication was supplied and no target site was authorized for capture.
+- Routing is in `AGENTS.md` and `docs/web-api.md`; generated output belongs
+  under ignored `sandbox/work/web-api`, because upstream `real_time_sync`
+  writes clients into the current directory.
+
+## Latest local results (2026-11-08, 1.15.0 release, Windows PowerShell 5.1)
+
+63 Python checks passed: catalog/encyclopedia/delivery scripts, 15 Ghidra MCP
 fixtures, 12 AOB fixtures, 6 PE parser fixtures, 5 kit-tool checks, 4 companion
-fixtures and 13 upstream-report fixtures. Six local PowerShell suites passed
-(installer, standalone, maintenance, scheduled maintenance, entrypoint,
-isolation). The published `Reverse-This-1.14.9.zip` was re-downloaded and its
-SHA-256 verified against `SHA256SUMS.txt`; the extracted product reports
-`packaged checks ok: 1.14.9, 92 tools`. The local kit was refreshed
-(`ok=90 failed=0`) and Doctor exits 0.
+fixtures, 13 upstream-report fixtures and 3 web-API contract checks. The
+published `Reverse-This-1.15.0.zip` was re-downloaded and its SHA-256 verified
+against `SHA256SUMS.txt`; the extracted product reports
+`packaged checks ok: 1.15.0, 93 tools`. The local kit is 1.15.0 and Doctor
+exits 0.
