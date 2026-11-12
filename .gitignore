@@ -4,6 +4,7 @@ sandbox/tmp/
 sandbox/log/
 sandbox/installed.json
 sandbox/installed.json.*
+sandbox/last-run.json
 sandbox/backups/
 sandbox/.install.lock
 sandbox/work/*

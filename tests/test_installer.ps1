@@ -890,6 +890,40 @@ public static class AtomicJsonLockFixture {
         # The fake gh sets a failing exit code; CI's `. script` wrapper would report it as the suite result.
         $global:LASTEXITCODE = 0
     }
+    # An unanswered UAC prompt must cost one winget attempt per run, not one per Java tool.
+    $savedFind = ${function:Find-JdkHome}
+    $script:WingetCalls = 0
+    try {
+        function Find-JdkHome { param([int]$Major) return $null }
+        function winget { $script:WingetCalls += 1; $global:LASTEXITCODE = -1978334964 }
+        $script:JdkFailure = $null
+        $first = $null; $second = $null
+        try { Install-Jdk -Major 25 | Out-Null } catch { $first = $_.Exception.Message }
+        try { Install-Jdk -Major 25 | Out-Null } catch { $second = $_.Exception.Message }
+        Assert-True ($first -match 'failed \(-1978334964\)') "first JDK attempt reported: $first"
+        Assert-True ($second -match 'not retried this run') "second JDK attempt reported: $second"
+        Assert-True ($script:WingetCalls -eq 1) "winget ran $($script:WingetCalls) times for one missing JDK"
+    } finally {
+        Set-Item Function:\Find-JdkHome -Value $savedFind
+        Remove-Item Function:\winget -ErrorAction SilentlyContinue
+        $script:JdkFailure = $null
+        $global:LASTEXITCODE = 0
+    }
+    $nodeText = ${function:Initialize-SharedNode}.ToString()
+    Assert-True ($nodeText -match 'keeping \$\(\$found\.version\)') 'a failed Node upgrade must keep a working runtime'
+    $pythonText = ${function:Initialize-SharedPython}.ToString()
+    Assert-True ($pythonText -notmatch 'throw "Python manager patch update failed') 'a failed Python patch update must keep a working base'
+    # A moved kit leaves pip launchers naming the old venv; detect it, accept the current one.
+    $venv = Join-Path $testRoot 'venv-probe'
+    New-Item -ItemType Directory -Force -Path (Join-Path $venv 'Scripts') | Out-Null
+    [IO.File]::WriteAllBytes((Join-Path $venv 'Scripts\python.exe'), [byte[]](1,2,3))
+    $launcher = Join-Path $venv 'Scripts\probe.exe'
+    $oldPy = 'C:\old-kit\sandbox\tools\probe\Scripts\python.exe'
+    [IO.File]::WriteAllBytes($launcher, [Text.Encoding]::UTF8.GetBytes("MZ" + ('x' * 64) + "#!`"$oldPy`"`r`nPK"))
+    Assert-True ((Get-StaleVenvLauncher $venv) -eq $oldPy) 'a launcher naming a moved venv was not detected'
+    $ownPy = [IO.Path]::GetFullPath((Join-Path $venv 'Scripts\python.exe'))
+    [IO.File]::WriteAllBytes($launcher, [Text.Encoding]::UTF8.GetBytes("MZ" + ('x' * 64) + "#!`"$ownPy`"`r`nPK"))
+    Assert-True ($null -eq (Get-StaleVenvLauncher $venv)) 'a launcher naming its own venv was reported stale'
     Write-Host 'installer regression checks ok'
 } finally {
     $resolved = [IO.Path]::GetFullPath($testRoot)

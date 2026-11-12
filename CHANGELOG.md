@@ -1,3 +1,17 @@
+## 1.15.2 (2026-11-12)
+
+- Unattended runs no longer stall or abort on an unanswered UAC prompt. A failed
+  Node or Python patch upgrade keeps the working runtime with a warning; it is
+  fatal only when no compatible runtime remains.
+- A failed JDK install is attempted once per run. Later Java tools fail at once
+  with the first reason instead of each waiting for another prompt.
+- Each run writes `sandbox/last-run.json` (`ok` and `failed` tool ids) so a
+  caller can report a partial run without parsing the log. Failed tools keep any
+  previously installed version.
+- A kit folder move no longer leaves silent broken Python tools: pip console
+  launchers keep the old absolute path. Doctor now reports such a venv, and a
+  normal install rebuilds it with `venv --clear`.
+
 ## 1.15.1 (2026-11-08)
 
 - The REA shim now prefers the isolated `sandbox/tools/ghidra-12.1.4` copy that

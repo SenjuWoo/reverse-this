@@ -174,7 +174,7 @@ Distinguish recovery from reimplementation: native decompilers output approximat
 
 ## When a tool fails
 
-Read `sandbox/log/modkit.log`. Fix the failed id, or re-run with `-Only <id> -DebugLog`. A missing shim means that tool's archive did not contain the expected executable; use `sandbox/installed.json` and the unpacked directory instead of guessing another install on the machine. Replaced payloads are retained under `sandbox/backups`; the pre-update manifest is `sandbox/installed.json.pre-<kit-version>.json`. Keep those until the new target workflow works, and do not publish them.
+Read `sandbox/last-run.json` for the `ok`/`failed` ids of the last run, then `sandbox/log/modkit.log`. Fix the failed id, or re-run with `-Only <id> -DebugLog`. A missing shim means that tool's archive did not contain the expected executable; use `sandbox/installed.json` and the unpacked directory instead of guessing another install on the machine. Replaced payloads are retained under `sandbox/backups`; the pre-update manifest is `sandbox/installed.json.pre-<kit-version>.json`. Keep those until the new target workflow works, and do not publish them.
 
 ## Target project ownership and publication
 

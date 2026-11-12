@@ -147,7 +147,8 @@ function Initialize-SharedPython {
         $manager = Get-Command pymanager -CommandType Application -ErrorAction SilentlyContinue
         if ($manager) {
             & $manager.Source install --update --yes $feature | ForEach-Object { Write-Log -Detail "pymanager: $_" }
-            if ($LASTEXITCODE -ne 0) { throw "Python manager patch update failed ($LASTEXITCODE)" }
+            # A failed patch update keeps the working base (same rule as Node).
+            if ($LASTEXITCODE -ne 0) { Write-Log "WARN Python manager patch update failed ($LASTEXITCODE); keeping $found" }
             $found = Find-SharedPython
             if (-not $found) { throw 'Shared Python was unavailable after its manager update.' }
         } else { Write-Log 'Shared Python retained; its Python manager is not callable for patch updates.' }
@@ -219,7 +220,15 @@ function Initialize-SharedNode {
             } catch { Write-Log "Node owner query failed; existing runtime retained: $($_.Exception.Message)" }
         }
         if ($managed -and -not $NoUpdate) {
-            Install-RuntimePackage 'OpenJS.NodeJS.LTS' -Upgrade
+            # A patch upgrade is optional while a compatible Node already works: an
+            # unanswered UAC prompt (winget 0x8A15010C) keeps that runtime instead of
+            # failing every npm tool. Re-detect afterwards, because a half-done MSI may
+            # have removed it; only then is the failure fatal.
+            try { Install-RuntimePackage 'OpenJS.NodeJS.LTS' -Upgrade }
+            catch {
+                if (-not $found) { throw }
+                Write-Log "WARN Node upgrade did not complete; keeping $($found.version): $($_.Exception.Message)"
+            }
             $found = Find-SharedNode $Rea
         }
         if (-not $found) { throw "Existing Node/npm $($existing.version) is incompatible and was preserved at $($existing.node). Update it through its owner; no parallel Node was installed." }
@@ -701,6 +710,28 @@ function Assert-OwnedToolPath {
     }
 }
 
+# pip writes each console launcher (Scripts\*.exe) with an absolute #!"...python.exe"
+# line. After the kit folder moves, those launchers still name the old folder and
+# fail silently, while python.exe and the receipts look fine. Returns the first
+# foreign interpreter path, or $null when every launcher points into this venv.
+function Get-StaleVenvLauncher {
+    param([string]$Dest)
+    $own = [IO.Path]::GetFullPath((Join-Path $Dest 'Scripts\python.exe'))
+    foreach ($exe in @(Get-ChildItem -LiteralPath (Join-Path $Dest 'Scripts') -Filter '*.exe' -File -ErrorAction SilentlyContinue)) {
+        if ($exe.Name -match '^pythonw?(\d|_d)?\.exe$') { continue }
+        $stream = [IO.File]::OpenRead($exe.FullName)
+        try {
+            $count = [int][Math]::Min(4096, $stream.Length)
+            [void]$stream.Seek(-$count, [IO.SeekOrigin]::End)
+            $buffer = New-Object byte[] $count
+            [void]$stream.Read($buffer, 0, $count)
+        } finally { $stream.Dispose() }
+        $text = [Text.Encoding]::UTF8.GetString($buffer)
+        if ($text -match '#!"([^"]+)"' -and ([IO.Path]::GetFullPath($Matches[1]) -ne $own)) { return $Matches[1] }
+    }
+    return $null
+}
+
 function Assert-ToolPayload {
     param($Tool, [string]$Dest)
     if (-not (Test-Path -LiteralPath $Dest -PathType Container)) { throw "missing tool directory: $Dest" }
@@ -710,6 +741,8 @@ function Assert-ToolPayload {
         if (-not (Test-Path -LiteralPath (Join-Path $Dest 'Scripts\python.exe'))) { throw "$($Tool.id) missing Python interpreter" }
         $metadata = @(Get-ChildItem -Path (Join-Path $Dest 'Lib\site-packages') -Directory -Filter (($Tool.package -replace '-', '_') + '-*.dist-info') -ErrorAction SilentlyContinue)
         if (-not $metadata.Count) { throw "$($Tool.id) missing package metadata" }
+        $stale = Get-StaleVenvLauncher $Dest
+        if ($stale) { throw "$($Tool.id) launchers still point at $stale (the kit folder moved); re-run Install-Modkit.ps1 -Only $($Tool.id) to rebuild its venv" }
     }
     if ($Tool.id -eq 'capa-source') {
         $signatures = @(Get-ChildItem -LiteralPath (Join-Path $Dest 'sigs') -Recurse -File -ErrorAction SilentlyContinue |
@@ -830,15 +863,19 @@ function Install-Jdk {
     param([int]$Major)
     $found = Find-JdkHome -Major $Major
     if ($found) { return $found }
+    # One attempt per run: every Java tool calls this, and an unanswered UAC prompt
+    # waits about 30 minutes each time. Later tools fail fast with the first reason.
+    if (-not $script:JdkFailure) { $script:JdkFailure = @{} }
+    if ($script:JdkFailure.ContainsKey($Major)) { throw "JDK $Major unavailable; not retried this run: $($script:JdkFailure[$Major])" }
     $winget = Get-Command winget -ErrorAction SilentlyContinue
-    if (-not $winget) { throw "JDK $Major is missing and winget is not available" }
+    if (-not $winget) { $script:JdkFailure[$Major] = 'winget is not available'; throw "JDK $Major is missing and winget is not available" }
     Write-Log "installing Microsoft.OpenJDK.$Major via winget"
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     & winget install --id "Microsoft.OpenJDK.$Major" -e --accept-package-agreements --accept-source-agreements --disable-interactivity | ForEach-Object { Write-Log -Detail "winget: $_" }
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
-    if ($code -ne 0) { throw "winget Microsoft.OpenJDK.$Major failed ($code)" }
+    if ($code -ne 0) { $script:JdkFailure[$Major] = "winget Microsoft.OpenJDK.$Major failed ($code)"; throw $script:JdkFailure[$Major] }
     $found = Find-JdkHome -Major $Major
     if (-not $found) { throw "JDK $Major installed but its home was not found" }
     return $found
@@ -1355,13 +1392,16 @@ function Install-PipVenv {
     $basePython = Initialize-SharedPython
     $dest = Get-ToolDirectory $Tool.id
     $exe = Join-Path $dest 'Scripts\python.exe'
-    if ((Test-AlreadyInstalled -Dest $dest -Marker 'present') -and (Test-Path -LiteralPath $exe)) {
+    $relocated = (Test-Path -LiteralPath $exe) -and (Get-StaleVenvLauncher $dest)
+    if (-not $relocated -and (Test-AlreadyInstalled -Dest $dest -Marker 'present') -and (Test-Path -LiteralPath $exe)) {
         Write-Log "skip $($Tool.id)"
         return $script:CachedRecord
     }
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $basePython -m venv $dest | ForEach-Object { Write-Log -Detail "python: $_" }
+    # --clear rewrites a moved venv; pip would otherwise keep its stale launchers.
+    $venvArgs = if ($relocated) { @('-m', 'venv', '--clear', $dest) } else { @('-m', 'venv', $dest) }
+    & $basePython @venvArgs | ForEach-Object { Write-Log -Detail "python: $_" }
     if ($LASTEXITCODE -ne 0) { $ErrorActionPreference = $prev; throw "venv failed ($LASTEXITCODE)" }
     $pyexe = Join-Path $dest 'Scripts\python.exe'
     $packageSpec = if ($Tool.package_version) { $Tool.package + '==' + $Tool.package_version } else { $Tool.package }
@@ -1704,7 +1744,9 @@ function Install-One {
     $parentStarted = $true
     if ($Tool.method -eq 'dotnet-tool') { Initialize-DotNet10 | Out-Null }
     if ($Tool.method -in @('pip-venv', 'dotnet-tool', 'npm-tool') -and (Test-Path -LiteralPath $dest)) {
-        if (Test-AlreadyInstalled -Dest $dest -Marker 'present') {
+        $relocated = $Tool.method -eq 'pip-venv' -and (Get-StaleVenvLauncher $dest)
+        if ($relocated) { Write-Log "rebuild $($Tool.id): venv launchers name another folder" }
+        if (-not $relocated -and (Test-AlreadyInstalled -Dest $dest -Marker 'present')) {
             $script:CachedRecord = Add-ToolReceipt -Tool $Tool -Row $script:CachedRecord -Directory $dest
             Write-AtomicJson -Path (Join-Path $dest '.kit-record.json') -Text ($script:CachedRecord | ConvertTo-Json -Depth 8)
             return $script:CachedRecord
@@ -1908,6 +1950,12 @@ foreach ($tool in $selected) {
     }
 }
 Write-Log ("done ok={0} failed={1}" -f $ok.Count, $bad.Count)
+# Machine-readable result for callers (the bundle reports a partial run as degraded
+# instead of parsing this log). Failed tools keep any previously installed version.
+try {
+    $lastRun = [ordered]@{ schema = 1; version = $kitVersion; finished_utc = (Get-Date).ToUniversalTime().ToString('o'); ok = @($ok); failed = @($bad) }
+    [IO.File]::WriteAllText((Join-Path $Sandbox 'last-run.json'), ($lastRun | ConvertTo-Json -Depth 3), [Text.UTF8Encoding]::new($false))
+} catch { Write-Log "WARN last-run.json not written: $($_.Exception.Message)" }
 if ($bad.Count -gt 0) {
     Write-Log ("failed: " + ($bad -join ', '))
     Write-Log "log: $LogPath"
