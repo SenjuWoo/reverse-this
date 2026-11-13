@@ -8,20 +8,20 @@ Each installs independently and consumes verified existing installations. The wo
 
 Run `python scripts/check_companions.py` (source checkout) or the scheduled `companions` workflow to read the published bundle catalog entry (floor, asset template), the bundle `PACKS.json` reverse pack (enable command, owner, floor, `ReverseThis/kit.json` detection) and the Forge ownership link. It only reads; it never writes to either repository.
 
-The supplied upstream snapshots were re-inspected on 2026-11-13 and each snapshot compared with its upstream. These are observations of local copies, not a promise about future upstream revisions. None is vendored; owner decisions are below.
+Upstream snapshots supplied alongside this kit were reviewed on 2026-11-13. Local copies are refreshed outside this repository, so this table records ownership decisions, not local versions; check the upstream before relying on a copy.
 
-| Snapshot | Local / upstream (2026-11-13) | Owner and decision |
+| Snapshot | Upstream | Owner and decision |
 |---|---|---|
-| `rea-main` | rea-agents 6.9.0 source; npm and tag `rea-agents-6.9.0` | Catalogued here as `rea`, installed from the integrity-pinned npm 6.9.0 release, not built from this source. Verified with Ghidra 12.1.4 and 12.2. |
-| `CLI-Anything-main` | source collection, Apache-2.0; upstream release v0.4.0, main active | Starter Bundle. Per-application CLI harnesses (RenderDoc, LLDB, Blender, Godot and others); use a harness when it fills the task. Not an analysis payload. |
-| `context-mode-main` | 1.0.169, Elastic-2.0; upstream 2.1.10 | Starter Bundle (agent context plugin). The local copy is a major version behind; take upstream 2.x if it is adopted. ELv2: do not merge or relicense its source. |
-| `OBS-MCP-main` | obs-mcp 1.1.1, MIT; upstream 1.1.1 | Starter Bundle (OBS Studio scene/recording MCP). Useful for recording runtime proof, but not an analysis tool. Not catalogued. |
-| `Unity-MCP-1` | CoplayDev MCP for Unity 10.3.0, MIT; upstream 10.3.0 | Starter Bundle (Unity Editor automation). Works on a Unity project, not on a shipped game binary; game-side Unity work uses BepInEx/MelonLoader/UnityExplorer here. |
-| `Unity-MCP-2` | IvanMurzak Unity-MCP server 9.3.2, Apache-2.0; upstream 9.3.2 | Starter Bundle, same scope as above. Pick one Unity MCP per project. |
-| `awesome-gamedev-agent-skills-main` | Apache-2.0 skill collection, 2026-11-07 copy; upstream pushed 2026-11-12 | Starter Bundle skills. Game development, not reverse engineering. |
-| `awesome-opus5-5-videos-main` | MIT prompt gallery | Reference only; no tool. |
-| `blender/blender-5.2.3-windows-x64` | 5.2.3; upstream and the shared PATH install are 5.3.0 | Shared application owned by the bundle; this kit does not install Blender. The 5.2.3 copy is superseded. |
-| `CLibDT (Windows)` | `ClibDT.exe`, GPL-3.0-only | Skyrim Forge / bundle (CommonLib/SKSE developer tools). Not catalogued. |
-| `zIDK` | nx 24.0.2 (upstream 24.0.6), turbo 2.11.10 (2.11.11), vite 8.3.5 (8.3.8), webpack 5.112.2 (current) | JavaScript build tooling. When rebuilding a recovered web/Electron app, use the versions in that project's lockfile, not these copies. |
+| REA source | [morluto/rea](https://github.com/morluto/rea) | Catalogued here as `rea`, installed from the integrity-pinned npm release (6.9.0), never built from a source snapshot. |
+| CLI-Anything | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Starter Bundle. Per-application CLI harnesses (RenderDoc, LLDB, Blender, Godot and others); use one when it fills the task. |
+| Context Mode | [mksglu/context-mode](https://github.com/mksglu/context-mode) | Starter Bundle (agent context plugin). Elastic License 2.0: do not merge or relicense its source. |
+| OBS MCP | [Tom-R-Main/OBS-MCP](https://github.com/Tom-R-Main/OBS-MCP) | Starter Bundle. Scene and recording control, handy for recording runtime proof; not an analysis tool. |
+| MCP for Unity | [CoplayDev/unity-mcp](https://github.com/CoplayDev/unity-mcp) | Starter Bundle. Drives a Unity Editor project, not a shipped game; game-side Unity work here uses BepInEx, MelonLoader and UnityExplorer. |
+| Unity-MCP | [IvanMurzak/Unity-MCP](https://github.com/IvanMurzak/Unity-MCP) | Starter Bundle, same scope; pick one Unity MCP per project. |
+| awesome-gamedev-agent-skills | [gamedev-skills/awesome-gamedev-agent-skills](https://github.com/gamedev-skills/awesome-gamedev-agent-skills) | Starter Bundle skills for game development. |
+| Blender, blender-skills, img2threejs, teardown | [blender.org](https://www.blender.org/download/), [EL4CTEO/blender-skills](https://github.com/EL4CTEO/blender-skills), [img2threejs/img2threejs](https://github.com/img2threejs/img2threejs), [elvarofficial/teardown](https://github.com/elvarofficial/teardown) | Starter Bundle creative and 3D tooling. This kit installs none of them. |
+| awesome-opus5-5-videos | [yihui-dev/awesome-opus5-5-videos](https://github.com/yihui-dev/awesome-opus5-5-videos) | Prompt gallery; reference only. |
+| CLibDT | CommonLib/SKSE developer tool, GPL-3.0-only | Skyrim Forge / bundle. Not catalogued. |
+| nx, turbo, vite, webpack | upstream release pages | JavaScript build tooling. When rebuilding a recovered web or Electron app, use the versions in that project's lockfile. |
 
 No snapshot was vendored wholesale. MIT or Apache-2.0 files can be considered individually when a concrete missing feature warrants reuse, retaining their actual notices and exact revision provenance. The observations above do not grant rights over third-party dependencies, target games or extracted assets. Context Mode remains a separately licensed upstream component. Prefer owner installers and existing installed commands to copying redundant source trees.

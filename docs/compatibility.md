@@ -6,12 +6,12 @@ boundaries below are reviewed.
 
 | Component | Installed / baseline | Catalog policy | Upstream stable | Status | Evidence |
 |---|---|---|---|---|---|
-| Ghidra | 12.2 + JDK 25; isolated 12.1.4 for REA | current official GitHub release | 12.2 | 12.2 remains the kit default; 12.1.4 + JDK 25 passed REA doctor and a read-only `notepad.exe` analysis | `-Doctor`, REA doctor, MCP `binary_overview` |
+| Ghidra | 12.2 + JDK 25 | current official GitHub release | 12.2 | the only Ghidra in the kit; REA 6.9.0 uses it (the hand-installed 12.1.4 side copy was removed 2026-11-13) | `-Doctor`, REA doctor, MCP `binary_overview` |
 | REA (`rea-agents`) | 6.9.0 | exact npm pin + integrity | 6.9.0 | verified build Ghidra 12.1.4; 6.9.0 admits 12.x >= 12.1 and its doctor, a read-only `notepad.exe` analysis (853 procedures) and `rea mcp doctor` (255 tools) pass with both 12.1.4 and 12.2 on JDK 25 | `rea doctor`, real analysis, MCP initialize/tool call |
 | ILSpy GUI | 11.2 self-contained | current GitHub release | 11.2 | verified installed; no GUI launch this pass | catalog/receipts |
 | `ilspycmd` | 11.2.0.10050 | current NuGet tool | 11.2.0.10050 | verified installed; .NET 10 required | catalog/receipts |
 | .NET SDK | 10 (observed SDK list retained) | stable shared prerequisite | 10 | all installed SDK lines are parsed; highest suitable SDK is reported | `tests/test_upstreams.py` |
-| Java/JDK | 25 observed via `JAVA_HOME` | selected JDK, not PATH by default | Ghidra 12.1.4 declares min 21, no max | `within-ghidra-bounds`; verified REA/Ghidra 12.1.4 pairing | `scripts/check_upstreams.py`, `rea doctor` |
+| Java/JDK | 25 observed via `JAVA_HOME` | selected JDK, not PATH by default | Ghidra 12.2 declares min 25 | `within-ghidra-bounds`; REA 6.9.0 + Ghidra 12.2 + JDK 25 verified | `scripts/check_upstreams.py`, `rea doctor` |
 | Capstone | 5.0.9 test baseline | test-only pin in `requirements-test.txt` | 5.0.9 | AOB fixtures pass | `tests/test_aob_gen.py` |
 | GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | current upstream | protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
 | Reverse API Engineer | 0.14.0 pinned PyPI release | stable only; review main separately | 0.14.0 | CLI `--version`, `list --json` and `agent --dry-run` pass; live capture/model call not run | `catalog/tools.json`, `docs/web-api.md`, `tests/test_web_api.py` |
