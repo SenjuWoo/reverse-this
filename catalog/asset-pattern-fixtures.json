@@ -60,13 +60,15 @@
   },
   "die": {
     "assets": [
-      "die_win32_portable_3.21_x86.zip",
-      "die_win64_portable_3.21_x64.zip",
-      "die_winxp_portable_3.21_x86.zip",
-      "die_mac_portable_3.21_x86_64.zip",
-      "die_sourcecode_3.21.tar.gz"
+      "die_win32_4.0.0.zip",
+      "die_win64_4.0.0.zip",
+      "die_win64_qt6_4.0.0.zip",
+      "die_winarm64_qt6_4.0.0.zip",
+      "die_4.0.0_mac_portable_x86_64_qt6.zip",
+      "Detect_It_Easy-4.0.0-x86_64.AppImage",
+      "die_sourcecode_4.0.0.tar.gz"
     ],
-    "expect": "die_win64_portable_3.21_x64.zip"
+    "expect": "die_win64_qt6_4.0.0.zip"
   },
   "x64dbg": {
     "assets": [

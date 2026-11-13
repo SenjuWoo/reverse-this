@@ -1,13 +1,13 @@
 # Compatibility inventory
 
-Last checked: 2026-11-06. This is a dated report, not a promise that a newer
+Last checked: 2026-11-13. This is a dated report, not a promise that a newer
 upstream release works. The catalog remains dynamic; only the compatibility
 boundaries below are reviewed.
 
 | Component | Installed / baseline | Catalog policy | Upstream stable | Status | Evidence |
 |---|---|---|---|---|---|
 | Ghidra | 12.2 + JDK 25; isolated 12.1.4 for REA | current official GitHub release | 12.2 | 12.2 remains the kit default; 12.1.4 + JDK 25 passed REA doctor and a read-only `notepad.exe` analysis | `-Doctor`, REA doctor, MCP `binary_overview` |
-| REA (`rea-agents`) | 6.8.0 | exact npm pin + integrity | 6.8.0 | stable verified with the official Ghidra 12.1.4 line and JDK 25; 12.2/JDK 25 is still not a verified REA pair | `rea doctor`, real analysis, MCP initialize/tool call |
+| REA (`rea-agents`) | 6.9.0 | exact npm pin + integrity | 6.9.0 | verified build Ghidra 12.1.4; 6.9.0 admits 12.x >= 12.1 and its doctor, a read-only `notepad.exe` analysis (853 procedures) and `rea mcp doctor` (255 tools) pass with both 12.1.4 and 12.2 on JDK 25 | `rea doctor`, real analysis, MCP initialize/tool call |
 | ILSpy GUI | 11.2 self-contained | current GitHub release | 11.2 | verified installed; no GUI launch this pass | catalog/receipts |
 | `ilspycmd` | 11.2.0.10050 | current NuGet tool | 11.2.0.10050 | verified installed; .NET 10 required | catalog/receipts |
 | .NET SDK | 10 (observed SDK list retained) | stable shared prerequisite | 10 | all installed SDK lines are parsed; highest suitable SDK is reported | `tests/test_upstreams.py` |
@@ -20,8 +20,8 @@ boundaries below are reviewed.
 
 1. The catalog may resolve newer releases for ordinary tools, but major runtime
    boundaries require a review and a Windows smoke test.
-2. REA stays at the published `6.8.0` pin until a released combination accepts
-   Ghidra 12.2 and passes a real install check.
+2. REA moves only by an exact pin bump after an isolated install plus `rea doctor`,
+   a real analysis and `rea mcp doctor` pass (6.9.0 did on 2026-11-13).
 3. Ghidra, ILSpy and `ilspycmd` are separate components; do not infer one
    component's compatibility from another.
 4. Capstone is test-only. The AOB generator is validated against the pinned

@@ -24,7 +24,7 @@ STATE = ROOT / "sandbox" / "installed.json"
 CATALOG = ROOT / "catalog" / "tools.json"
 TEST_PIN = ROOT / "requirements-test.txt"
 
-BASELINES = {"dotnet": "10", "capstone": "5.0.9", "rea": "6.8.0", "java": "21"}
+BASELINES = {"dotnet": "10", "capstone": "5.0.9", "rea": "6.9.0", "java": "21"}
 ENDPOINTS = {
     "ghidra": "https://api.github.com/repos/NationalSecurityAgency/ghidra/releases/latest",
     "ghidra-mcp": "https://api.github.com/repos/LaurieWired/GhidraMCP/releases/latest",
@@ -35,9 +35,9 @@ ENDPOINTS = {
     "capstone": "https://pypi.org/pypi/capstone/json",
     "java": None,
 }
-# Stable REA 6.8.0 documents Ghidra 12.1.x with JDK 21. Development main may
-# accept more, but an unreleased branch is not a published compatibility claim.
-REA_STABLE = (6, 8, 0)
+# Stable REA 6.9.0 verifies Ghidra 12.1.4 and admits any 12.x >= 12.1 (its
+# doctor reports 12.2 as compatible); JDK 21 is its verified major.
+REA_STABLE = (6, 9, 0)
 REA_GHIDRA_LINE = (12, 1)
 REA_JAVA_MAJOR = 21
 
@@ -82,10 +82,8 @@ def compatibility_status(component: str, observed: dict[str, str | None]) -> str
             return "unknown-version"
         if not ghidra:
             return "missing-ghidra"
-        if ghidra[:2] == REA_GHIDRA_LINE:
-            return "compatible"
-        if ghidra[0] == 12:
-            return "incompatible"
+        if ghidra[0] == REA_GHIDRA_LINE[0]:
+            return "compatible" if ghidra[1:2] >= REA_GHIDRA_LINE[1:2] else "incompatible"
         return "unknown-ghidra"
     baseline = BASELINES.get(component)
     current = observed.get(component)

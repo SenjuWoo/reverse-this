@@ -104,7 +104,7 @@ For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or
 | Hook, new C++ | `sandbox/tools/safetyhook` |
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
-| Agent-driven static/runtime analysis (REA) | `sandbox/bin/rea.cmd` (`rea doctor`, `rea analyze <file>`). When the caller has not set `GHIDRA_INSTALL_DIR`, the shim prefers the isolated `sandbox/tools/ghidra-12.1.4` copy that REA 6.8.0 supports, then falls back to the kit Ghidra. The default Ghidra 12.2 remains available for other tools. MCP registration (`rea mcp add`) is the user's opt-in. |
+| Agent-driven static/runtime analysis (REA) | `sandbox/bin/rea.cmd` (`rea doctor`, `rea analyze <file>`). When the caller has not set `GHIDRA_INSTALL_DIR`, the shim prefers the isolated `sandbox/tools/ghidra-12.1.4` copy that REA verifies, then falls back to the kit Ghidra. REA 6.9.0 also accepts the default Ghidra 12.2 as compatible (doctor healthy, real analysis verified). MCP registration (`rea mcp add`) is the user's opt-in. |
 | Website HTTP API reconstruction | `sandbox/bin/reverse-api-engineer.cmd` (`list`, `show`, `agent --dry-run`, `agent --json-stream`, `engineer`, `run`). Optional catalog-pinned tool; read `docs/web-api.md`. Use only when no official API/SDK covers the task; run from an ignored work directory. |
 | Android / Java decompile | `sandbox/bin/jadx.cmd` or `sandbox/bin/jadx-gui.cmd` |
 | JVM decompile, second opinion | `sandbox/bin/vineflower.cmd` |

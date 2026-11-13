@@ -30,7 +30,7 @@ The folder named sandbox is **not** process isolation.
 
 ## REA CLI
 
-The optional `rea` catalog component pins `rea-agents@6.8.0` and npm integrity;
+The optional `rea` catalog component pins `rea-agents@6.9.0` and npm integrity;
 Node ^22.23.4, ^24.22.1 or >=26.12.1 is required. If needed for the current authorized task,
 install it through this standalone workbench; reuse an existing compatible shared Node runtime:
 
@@ -51,17 +51,17 @@ Do not run `rea setup`, `rea update`, or an upstream skill installer over
 bundle-managed provider trees. No extra REA skill collection is needed.
 Windows native Ghidra support is experimental with specific Ghidra/JDK/format
 requirements; discover the existing kit and check REA's provider doctor before
-using that route. Static JavaScript analysis of an owned fixture was exercised with REA 6.8.0.
+using that route. REA 6.9.0 passed `rea doctor --provider ghidra`, a read-only `notepad.exe` analysis and `rea mcp doctor` (255 tools) with both the isolated Ghidra 12.1.4 and the kit default 12.2.
 
 CLI-first avoids attaching a large MCP inventory to ordinary chats. A needed MCP
 must be scoped and filtered using the current host's supported features. Measure
 the installed version's actual schemas; old inventory sizes are not current
 tool counts or billing measurements.
 
-The official [REA 6.8.0 npm record](https://registry.npmjs.org/rea-agents/6.8.0)
-was verified against the catalog integrity. Its metadata supplied no gitHead;
-the upstream v6.8.0 Git ref was absent, so no invented exact-version Git link is used.
+The official [REA 6.9.0 npm record](https://registry.npmjs.org/rea-agents/6.9.0)
+was verified against the catalog integrity; the matching upstream tag is
+[`rea-agents-6.9.0`](https://github.com/morluto/rea/releases/tag/rea-agents-6.9.0).
 
 Sources: [REA upstream](https://github.com/morluto/rea),
-[published 6.8.0 package](https://www.npmjs.com/package/rea-agents/v/6.8.0),
+[published 6.9.0 package](https://www.npmjs.com/package/rea-agents/v/6.9.0),
 [Reverse THIS!](https://github.com/SenjuWoo/reverse-this).

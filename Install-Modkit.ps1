@@ -939,7 +939,7 @@ function Write-Shim {
     if ($NodeHome) { $lines += 'set "PATH=' + $NodeHome.Replace('%', '%%') + ';%PATH%"' }
     if ($Name -eq 'rea') {
         # REA finds Ghidra only through GHIDRA_INSTALL_DIR. Prefer the isolated
-        # 12.1.x copy that REA 6.8.0 supports; keep the caller's own choice.
+        # 12.1.4 copy that REA verifies (6.9.0 also admits 12.2); keep the caller's own choice.
         # Enter the parent directory, then test a relative no-space marker:
         # paths containing `..\tools` are unreliable in some Windows shells.
         $lines += 'if defined GHIDRA_INSTALL_DIR goto rea_ghidra_done'

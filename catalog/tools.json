@@ -40,7 +40,7 @@
       "job": "Identify compilers, packers and file types. diec is the CLI.",
       "method": "github-release",
       "repo": "horsicq/DIE-engine",
-      "asset_pattern": "^die_win64_portable_.+_x64\\.zip$",
+      "asset_pattern": "^die_win64_qt6_[0-9.]+\\.zip$",
       "shims": [
         {
           "name": "diec",
@@ -1070,8 +1070,8 @@
       "job": "Optional static-analysis CLI; no provider setup or global MCP registration.",
       "method": "npm-tool",
       "package": "rea-agents",
-      "package_version": "6.8.0",
-      "npm_integrity": "sha512-9QDeRnGqEDzABZyr04eLnBXBv/c6I9/TWu/6M0MD4pEfkySI/BIgwTODIbAReX3C1x6hjw9+Jlx4A2yUSPZ9ww==",
+      "package_version": "6.9.0",
+      "npm_integrity": "sha512-KqDn1UR5BMqHoQ3MGAnPuWiSKwgdFaz1L/uUNgrKt+1W8kPtgYP8AWEOXIF1lDIOBVyPuYIIst2iamo1Wf3r8g==",
       "shims": [
         {
           "name": "rea",

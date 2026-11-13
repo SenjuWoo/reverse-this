@@ -1,3 +1,24 @@
+## 1.16.1 (2026-11-13)
+
+- Update REA to 6.9.0 (exact npm pin and integrity). Installed in an isolated
+  root first, then `rea doctor --provider ghidra`, a read-only analysis of
+  `notepad.exe` (853 procedures) and `rea mcp doctor` (255 tools, 6 prompts)
+  passed with both the isolated Ghidra 12.1.4 and the kit default Ghidra 12.2.
+  6.9.0 admits any Ghidra 12.x from 12.1; the shim still prefers the verified
+  12.1.4 copy and keeps a caller's own `GHIDRA_INSTALL_DIR`.
+- Follow Detect It Easy 4.0.0: its Windows asset is now `die_win64_qt6_<version>.zip`,
+  so the old `portable` pattern silently held the kit on 3.21. The Qt6 build was
+  checked against 3.21 on the same PE and .NET files before switching.
+- `scripts/check_upstreams.py` follows the 6.9.0 range: Ghidra 12.1 and 12.2
+  report `compatible`, 12.0 `incompatible`, any other REA version
+  `unknown-version` until it is reviewed.
+- The companion check reads the bundle's `PACKS.json` reverse pack (enable
+  command, owner, floor, `ReverseThis/kit.json` detection) instead of README
+  prose; the bundle 8.41 README rewrite had made the old check report false drift.
+- Refresh the companion snapshot table: each supplied snapshot is compared with
+  its upstream and given an owner (OBS MCP, both Unity MCPs, game-dev skills and
+  Blender belong to the Starter Bundle; none is catalogued here).
+
 ## 1.16.0 (2026-11-12)
 
 - Add `re-triage`: the first command for a target you have not seen. Give it a

@@ -24,6 +24,13 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
+## 1.16.1 currency pass (2026-11-13)
+
+- REA 6.9.0: isolated `-InstallRoot` install, then with Ghidra 12.1.4 and 12.2 (JDK 25): `rea doctor --provider ghidra` healthy, `rea analyze` of a copied `notepad.exe` returned 853 procedures, `rea mcp doctor` 255/255 tools and 6/6 prompts with a `binary_session` round trip.
+- Detect It Easy 4.0.0: `die_win64_4.0.0.zip` and `die_win64_qt6_4.0.0.zip` matched their GitHub digests; both gave the same PE/.NET detections as 3.21; the Qt6 build is now the catalog asset and installed with digest verification.
+- Live kit: `Install-Modkit.ps1` ok=92 failed=0, `-Doctor` exit 0, `-SelfTest` ok.
+- Gates: 10 Python suites (AOB with capstone 5.0.9 in a venv) and 8 PowerShell suites pass under Windows PowerShell 5.1; `check_companions.py` and `check_upstreams.py` pass live.
+
 ## REA + Ghidra + MCP integration (2026-11-06)
 
 - Installed official `Ghidra_12.1.4_build` asset `ghidra_12.1.4_PUBLIC_20260921.zip`

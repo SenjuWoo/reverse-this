@@ -6,7 +6,7 @@ The installer resolves the current official release at install time. This page i
 
 - Ghidra's current public release, with JDK 25. Headless is `analyzeHeadless`.
 - ImHex's Windows portable x64 zip. Not the NoGPU build, not the arm64 build, not the MSI.
-- Detect It Easy's win64 portable zip from `horsicq/DIE-engine`. `diec` is the CLI. `detectiteasy.com` is not an official download.
+- Detect It Easy's win64 Qt6 zip (`die_win64_qt6_<version>.zip`, 4.0.0 from 2026-11-05) from `horsicq/DIE-engine`; 4.0 dropped the old `portable` asset name. `diec` is the CLI; `diec -j` gives JSON. `detectiteasy.com` is not an official download.
 - x64dbg's current snapshot zip, the x64 debugger. Not the symbols zip.
 - PE-bear's Qt 6 x64 Windows zip.
 - dnSpyEx's `dnSpy-net-win64` zip. Not the .NET Framework build.

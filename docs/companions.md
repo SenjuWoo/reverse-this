@@ -6,22 +6,22 @@ Reverse THIS! contributes 7-Zip and DirectXTex; another forge may reference `san
 
 Each installs independently and consumes verified existing installations. The workbench's standalone prerequisites are described in [standalone.md](standalone.md). Companion recommendations do not install a second provider stack, grant trust, register all MCP schemas or run an upstream account setup command.
 
-Run `python scripts/check_companions.py` (source checkout) or the scheduled `companions` workflow to read the published bundle floor, asset template and Forge ownership link. It only reads; it never writes to either repository.
+Run `python scripts/check_companions.py` (source checkout) or the scheduled `companions` workflow to read the published bundle catalog entry (floor, asset template), the bundle `PACKS.json` reverse pack (enable command, owner, floor, `ReverseThis/kit.json` detection) and the Forge ownership link. It only reads; it never writes to either repository.
 
-The supplied `Tools` folder was re-inspected on 2026-11-05. These are observations of those local snapshots, not claims that their folder names identify an upstream revision:
+The supplied upstream snapshots were re-inspected on 2026-11-13 and each snapshot compared with its upstream. These are observations of local copies, not a promise about future upstream revisions. None is vendored; owner decisions are below.
 
-| Snapshot | Verified manifest/license | Task and reuse decision |
+| Snapshot | Local / upstream (2026-11-13) | Owner and decision |
 |---|---|---|
-| `Github/rea-main` | `package.json`: rea-agents 6.8.0; `LICENSE`: MIT | Unreleased upstream main after the `rea-agents-6.8.0` tag (no `.git`, so no exact commit). It already admits Ghidra 12.x >= 12.1, which the published 6.8.0 refuses. The kit keeps installing the integrity-pinned npm 6.8.0 release; bump `package_version`/`npm_integrity` when npm publishes the next release instead of building this snapshot. |
-| `Github/CLI-Anything-main` | `LICENSE`: Apache-2.0 | [CLI-Anything](https://github.com/HKUDS/CLI-Anything) supplies task-specific application CLI harnesses (Blender, Godot, RenderDoc, LLDB and others). Use a harness when it fills the task; it is not another binary analysis toolkit. |
-| `Github/context-mode-main` | `package.json`: context-mode 1.0.169, Node >=22.5.0; `LICENSE`: Elastic License 2.0 | [Context Mode](https://github.com/mksglu/context-mode) is an optional agent-context plugin. Its ELv2 terms differ from MIT; do not merge or relicense its source or replace existing hooks silently. |
-| `Github/CLibDT (Windows)` | `ClibDT.exe` with GPL-3.0-only `LICENSE.txt` and third-party notices | A CommonLib/SKSE developer-tool manager. Skyrim development belongs to Skyrim Forge and the bundle, not this kit. Not catalogued. |
-| `Github/zIDK` | nx 24.0.2, turbo 2.11.10 (binary), vite 8.3.5, webpack 5.112.2 source | JavaScript build tooling, not analysis tools. Use the target project's own lockfile versions when rebuilding a recovered web/Electron app. Not catalogued. |
-| `Ai tools/Risk-Of-Rain-2-Forge` | MIT; WIP CLI/build/package workbench | The companion authoring owner for Risk of Rain 2 mods. Reverse THIS! supplies extraction and conversion tools; use the Forge for project scaffolding, Unity asset authoring, build/package checks and in-game validation. Do not duplicate its templates or mod-manager logic in this catalog. |
-| `Ai tools/Minecraft-Forge`, `RimWorldForge`, `RobloxForge`, `Discord-Forge` | MIT workspaces | Game/platform-specific authoring workbenches. They own their loaders, templates and deployment rules; this kit does not install their toolchains or duplicate their skills. |
-| `Github/Unity-MCP-1`, `Unity-MCP-2` | upstream MCP projects | Unity editor automation bridges, not standalone RE tools. Use one only when the task is Unity authoring or playtesting, and let the owning project manage MCP registration and trust. |
-| `Github/blender` | Blender 5.2.3 Windows x64 | Manual DCC path for mesh/rig/glTF work after extraction. Large application payload; not catalogued or auto-installed. |
-| `Bundle-Splits/img2threejs` | v1.5.1, 489-file tool tree | Separate 3D-generation owner with its own repository; not an RE component. Do not copy it back into this kit. |
-| `Bundle-Splits/uabs-image-stack` (comfy-kit) | v0.4.0, image frontend/model tooling | Separate image-generation owner; outside this kit's scope. Do not add a second copy of its presets or model installer. |
+| `rea-main` | rea-agents 6.9.0 source; npm and tag `rea-agents-6.9.0` | Catalogued here as `rea`, installed from the integrity-pinned npm 6.9.0 release, not built from this source. Verified with Ghidra 12.1.4 and 12.2. |
+| `CLI-Anything-main` | source collection, Apache-2.0; upstream release v0.4.0, main active | Starter Bundle. Per-application CLI harnesses (RenderDoc, LLDB, Blender, Godot and others); use a harness when it fills the task. Not an analysis payload. |
+| `context-mode-main` | 1.0.169, Elastic-2.0; upstream 2.1.10 | Starter Bundle (agent context plugin). The local copy is a major version behind; take upstream 2.x if it is adopted. ELv2: do not merge or relicense its source. |
+| `OBS-MCP-main` | obs-mcp 1.1.1, MIT; upstream 1.1.1 | Starter Bundle (OBS Studio scene/recording MCP). Useful for recording runtime proof, but not an analysis tool. Not catalogued. |
+| `Unity-MCP-1` | CoplayDev MCP for Unity 10.3.0, MIT; upstream 10.3.0 | Starter Bundle (Unity Editor automation). Works on a Unity project, not on a shipped game binary; game-side Unity work uses BepInEx/MelonLoader/UnityExplorer here. |
+| `Unity-MCP-2` | IvanMurzak Unity-MCP server 9.3.2, Apache-2.0; upstream 9.3.2 | Starter Bundle, same scope as above. Pick one Unity MCP per project. |
+| `awesome-gamedev-agent-skills-main` | Apache-2.0 skill collection, 2026-11-07 copy; upstream pushed 2026-11-12 | Starter Bundle skills. Game development, not reverse engineering. |
+| `awesome-opus5-5-videos-main` | MIT prompt gallery | Reference only; no tool. |
+| `blender/blender-5.2.3-windows-x64` | 5.2.3; upstream and the shared PATH install are 5.3.0 | Shared application owned by the bundle; this kit does not install Blender. The 5.2.3 copy is superseded. |
+| `CLibDT (Windows)` | `ClibDT.exe`, GPL-3.0-only | Skyrim Forge / bundle (CommonLib/SKSE developer tools). Not catalogued. |
+| `zIDK` | nx 24.0.2 (upstream 24.0.6), turbo 2.11.10 (2.11.11), vite 8.3.5 (8.3.8), webpack 5.112.2 (current) | JavaScript build tooling. When rebuilding a recovered web/Electron app, use the versions in that project's lockfile, not these copies. |
 
 No snapshot was vendored wholesale. MIT or Apache-2.0 files can be considered individually when a concrete missing feature warrants reuse, retaining their actual notices and exact revision provenance. The observations above do not grant rights over third-party dependencies, target games or extracted assets. Context Mode remains a separately licensed upstream component. Prefer owner installers and existing installed commands to copying redundant source trees.
