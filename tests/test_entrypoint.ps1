@@ -28,7 +28,8 @@ function Invoke-Entrypoint {
         $process.StandardInput.Close()
         $stdout = $process.StandardOutput.ReadToEndAsync()
         $stderr = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit(15000)) {
+        # A hang on closed stdin never ends; 60 s leaves room for a cold hosted runner (15 s timed out once).
+        if (-not $process.WaitForExit(60000)) {
             $process.Kill()
             throw 'Batch entrypoint did not finish with stdin closed.'
         }
