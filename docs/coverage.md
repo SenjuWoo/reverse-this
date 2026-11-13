@@ -34,6 +34,7 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | Live process, handle and module inspection | System Informer | Needs the same privilege as the target; kernel protections can block it. |
 | Obfuscated or runtime strings | FLOSS | Recovered strings can be decoys; emulation may not reach every code path. |
 | Scripted native analysis | Rizin (`rizin`, `rz-bin`, `rz-diff`, `rz-asm`) | Command syntax differs from radare2; check the installed version's help. |
+| First look at an unknown file or game folder | `re-triage` | Identifies from signatures and engine markers; an unrecognised format is reported as unknown, not guessed. |
 | PE fingerprint and proxy planning | `pe-recon` | JSON only; confirm the runtime import set before choosing a proxy DLL. |
 | AOB signature generation | `aob-gen` | Validate uniqueness in two builds; a signature is not a patch. |
 | Ghidra MCP operation | `ghidra-mcp-up` and the Ghidra recipe | 8080 is the Ghidra plugin, 8081 is the MCP bridge; neither is a decompiler by itself. |

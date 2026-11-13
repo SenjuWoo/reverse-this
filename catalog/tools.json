@@ -1110,6 +1110,21 @@
       ]
     },
     {
+      "id": "triage",
+      "name": "Target triage",
+      "job": "Identify a file or game folder from its bytes, list the installed analyzers that read it and the commands to run; --run keeps quick static results.",
+      "method": "local-script",
+      "script": "kit/triage.py",
+      "python": "shared",
+      "shims": [
+        {
+          "name": "re-triage",
+          "exe_glob": "triage.py",
+          "python_script": true
+        }
+      ]
+    },
+    {
       "id": "aob-gen",
       "name": "AOB signature generator",
       "job": "Wildcard AOB signature from a binary RVA or byte pattern; masks relocatable bytes only.",

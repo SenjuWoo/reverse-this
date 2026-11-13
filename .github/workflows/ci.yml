@@ -29,6 +29,7 @@ jobs:
           python tests/test_delivery.py
           python tests/test_aob_gen.py
           python tests/test_pe_recon.py
+          python tests/test_triage.py
           python tests/test_companions.py
           python tests/test_ghidra_mcp_up.py
           python tests/test_upstreams.py
@@ -70,6 +71,8 @@ jobs:
         run: python tests/test_aob_gen.py
       - name: PE parser fixtures
         run: python tests/test_pe_recon.py
+      - name: target triage
+        run: python tests/test_triage.py
       - name: currency report fixtures
         run: python tests/test_upstreams.py
       - name: maintenance retention checks

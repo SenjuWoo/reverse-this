@@ -49,6 +49,10 @@ The user installs once (`install.cmd`) and then asks. Do not hand the user a com
 
 Put the game's decomp and extracts in `sandbox/work`. Do not commit that directory, game files, or `sandbox/tools`.
 
+## Start with triage
+
+For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or-folder>` first. It reads the bytes (or, for a folder, the engine markers), and returns JSON: the format and the evidence for it, which analyzers in this kit read that format and whether each is installed, and the exact commands to run next. Add `--run` to execute the quick read-only static analyzers and keep their output under `sandbox/work/<name>-<hash>/triage`. It never executes the target. A tool listed as not installed is a fact to report or fix with `Install-Modkit.ps1 -Only <id>`, not a reason to stop. The table below is the manual route when you already know the format.
+
 ## Which tool
 
 | Job | Command or folder |
@@ -92,6 +96,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 | Scripted binary analysis | `sandbox/bin/rizin.cmd`, `rz-bin.cmd`, `rz-diff.cmd`, `rz-asm.cmd` |
 | Live process, handle and module view | `sandbox/bin/systeminformer.cmd` |
 | Obfuscated strings | `sandbox/bin/floss.cmd` |
+| Identify an unknown target and route it | `sandbox/bin/re-triage.cmd` |
 | PE fingerprint (JSON) | `sandbox/bin/pe-recon.cmd` |
 | AOB signature | `sandbox/bin/aob-gen.cmd` |
 | Ghidra MCP status (optional) | `sandbox/bin/ghidra-mcp-up.cmd` |

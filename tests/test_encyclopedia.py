@@ -34,6 +34,7 @@ REQUIRED = [
     "encyclopedia/ERROR-REGISTRY.json",
     "kit/README.md",
     "kit/pe_recon.py",
+    "kit/triage.py",
     "kit/aob_gen.py",
     "kit/ghidra_mcp_up.py",
 ]

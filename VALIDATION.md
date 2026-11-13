@@ -8,6 +8,7 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 | Ghidra health/MCP probes | `python tests/test_ghidra_mcp_up.py` |
 | AOB masking, PE bounds, overlap and section fixtures | `python tests/test_aob_gen.py` (Capstone test dependency) |
 | PE parser malformed/valid fixtures | `python tests/test_pe_recon.py` |
+| Target triage: formats, engines, routing, `--run` boundary | `python tests/test_triage.py` |
 | Companion parser fixtures (live checker is scheduled/manual) | `python tests/test_companions.py` |
 | Upstream currency report fixtures | `python tests/test_upstreams.py` |
 | Installer regressions (offline) | `tests/test_installer.ps1` |

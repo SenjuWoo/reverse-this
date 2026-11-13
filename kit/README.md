@@ -6,6 +6,7 @@ the selected script into `sandbox/tools/<id>/` and writes a versionless shim in
 
 | Tool | Shim | Runtime | What it does |
 |---|---|---|---|
+| `triage.py` | `re-triage.cmd` | shared Python, stdlib only | Identify a file or game folder from its bytes; list the installed analyzers that read it and the commands to run; `--run` keeps quick static results |
 | `pe_recon.py` | `pe-recon.cmd` | shared Python, stdlib only | JSON PE fingerprint: bitness, graphics APIs, anti-cheat markers, RTTI strings, proxy DLL candidates |
 | `aob_gen.py` | `aob-gen.cmd` | `capstone` venv | Wildcard AOB signature from an RVA or byte pattern; masks relocatable bytes only |
 | `ghidra_mcp_up.py` | `ghidra-mcp-up.cmd` | shared Python, stdlib only | Probes the Ghidra plugin (8080) and MCP bridge (8081); `--launch` waits only when `GHIDRA_MCP_CMD` or an optional start.cmd exists. MCP is optional; unattended Ghidra uses `analyzeHeadless`. |
@@ -13,7 +14,7 @@ the selected script into `sandbox/tools/<id>/` and writes a versionless shim in
 ## Install
 
 ```powershell
-.\Install-Modkit.ps1 -Only pe-recon,aob-gen,ghidra-mcp-up
+.\Install-Modkit.ps1 -Only triage,pe-recon,aob-gen,ghidra-mcp-up
 ```
 
 `aob-gen` pulls `capstone` automatically. The other two use the kit's shared
@@ -22,6 +23,8 @@ Python; the installer provisions it when missing.
 ## Examples
 
 ```powershell
+re-triage "C:\Games\Target"                 # engine, key files, tools to use
+re-triage "C:\Games\Target\Target.exe" --run  # format, then quick static results kept in sandbox/work
 pe-recon "C:\Games\Target\Target.exe"
 aob-gen "C:\Games\Target\Target.exe" --rva 0x1A2B30 --instructions 24
 ghidra-mcp-up
@@ -31,5 +34,6 @@ ghidra-mcp-up --launch   # waits for both layers when GHIDRA_MCP_CMD or an optio
 ## Rules
 
 - These helpers read files and print JSON; they do not execute the target.
+- `re-triage` identifies and routes. Its `--run` output is a starting point, not an analysis: a detection tool's verdict and a capability rule match both need confirming.
 - `aob-gen` returns a signature, not a patch. Validate uniqueness in two builds.
 - `ghidra-mcp-up` probes; it does not pretend to start a server that is not configured. If no launcher exists, use `analyzeHeadless` and leave MCP off.

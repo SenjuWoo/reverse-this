@@ -1,3 +1,27 @@
+## 1.16.0 (2026-11-12)
+
+- Add `re-triage`: the first command for a target you have not seen. Give it a
+  file or a game folder and it answers in one JSON document: what the target is
+  and the evidence for that, every analyzer in the kit that reads it and whether
+  it is installed, and the commands to run next.
+- Formats are read from the bytes, not the extension: native, .NET, Go, UPX and
+  PyInstaller PE files, ELF, Mach-O, WebAssembly, Java classes, DEX, APK, JAR,
+  asar, common archives, Unity bundles and IL2CPP metadata, Unreal pak, IoStore
+  and packages, Godot packs, GameMaker data, Valve VPK and BSP, REDengine
+  archives, DDS, Switch containers, Lua and Python bytecode.
+- A folder is identified by engine (Unity Mono or IL2CPP, Unreal, Godot,
+  GameMaker, Source, Electron, Ren'Py, RPG Maker, REDengine, Creation Engine,
+  Java) and the report points at the files that matter: for an IL2CPP game, the
+  `GameAssembly.dll` and `global-metadata.dat` pair the dumper needs.
+- `re-triage --run` executes only the quick, read-only static analyzers that are
+  installed (`pe-recon`, `diec`, `rz-bin`, `7z l`, `texdiag`) with a time limit
+  each, and keeps their output with the report under
+  `sandbox/work/<name>-<hash>/triage`. A missing or failing tool is listed and
+  the rest still run. The target is never executed, loaded or modified.
+- Slow or interactive tools (capa, FLOSS, Ghidra, debuggers) are offered as next
+  commands, not run for you.
+- An unrecognised file says so, with its first bytes, instead of guessing.
+
 ## 1.15.2 (2026-11-12)
 
 - Unattended runs no longer stall or abort on an unanswered UAC prompt. A failed
