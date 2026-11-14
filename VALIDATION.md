@@ -24,6 +24,12 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
+## 1.17.2 upgrade-path proof (2026-11-14)
+
+- A real 1.16.1 release ZIP install with a private `sandbox/work` file: its own updater failed (empty `$PSScriptRoot` default under Windows PowerShell 5.1; with `-Destination` it then rejected `skills/`). Nothing was changed by either failure.
+- Fixed in 1.17.2 (body default plus verified-release handoff; regression tests fail without the fix). The published 1.17.2 updater run with `-Destination` upgraded that kit to 1.17.2: `RELEASE.json` 1.17.2, `skills/` present, source backup retained, private file intact, SelfTest ok. The upgraded kit's own updater with no arguments then reported `current or newer`.
+- v1.17.2 published from 6ba5ae5 after green exact-SHA CI; release asset re-downloaded and compared by the release workflow; alerts 0/0/0.
+
 ## 1.17.1 fresh-install proof (2026-11-14)
 
 - Downloaded the published v1.17.0 ZIP; `SHA256SUMS.txt` matched. Extracted into a new folder named with spaces, `!` and parentheses; `install.cmd -SelfTest` and `-Plan` (95 lines) passed.
