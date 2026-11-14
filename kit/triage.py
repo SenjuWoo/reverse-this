@@ -366,11 +366,17 @@ def identify_folder(root: Path) -> dict:
 
 # ----------------------------------------------------------------- kit lookup
 
-def find_kit(explicit: str | None = None) -> Path | None:
-    """The kit root: an explicit one, the owner pointer, or the folder this script is in."""
+def find_kit(explicit: str | None = None, here: Path | None = None) -> Path | None:
+    """The kit root: an explicit one, the kit this script is in, then the owner pointer."""
     candidates = []
     if explicit:
         candidates.append(Path(explicit))
+    # An installed copy (<kit>/sandbox/tools/triage/triage.py) or a source checkout with its own
+    # sandbox serves its own kit; the shared pointer only covers a checkout that has no sandbox.
+    here = (here or Path(__file__)).resolve()
+    if len(here.parents) > 3 and here.parents[1].name.lower() == "tools" and here.parents[2].name.lower() == "sandbox":
+        candidates.append(here.parents[3])
+    candidates.append(here.parents[1])
     base = os.environ.get("LOCALAPPDATA")
     if base:
         pointer = Path(base, *POINTER)
@@ -380,8 +386,6 @@ def find_kit(explicit: str | None = None) -> Path | None:
                 candidates.append(Path(data["kit_root"]))
         except (OSError, ValueError):
             pass
-    here = Path(__file__).resolve()
-    candidates += [here.parents[1], here.parents[3] if len(here.parents) > 3 else here.parent]
     for root in candidates:
         if (root / "sandbox" / "bin").is_dir():
             return root.resolve()
@@ -543,7 +547,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("target", help="file or folder to identify")
     parser.add_argument("--run", action="store_true", help="also run the quick read-only analyzers and keep their output")
     parser.add_argument("--out", help="folder for --run output (default: <kit>/sandbox/work/<name>-<hash>/triage)")
-    parser.add_argument("--kit", help="kit root (default: the owner pointer, then this script's kit)")
+    parser.add_argument("--kit", help="kit root (default: the kit this script is installed in, then the owner pointer)")
     parser.add_argument("--timeout", type=float, default=120, help="seconds allowed per analyzer")
     args = parser.parse_args(argv)
     target = Path(args.target)

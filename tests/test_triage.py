@@ -264,6 +264,31 @@ class Routing(Fixture):
         self.assertEqual(missing, [], "triage routes to shims the catalog does not install")
 
 
+class KitLookup(Fixture):
+    def test_installed_copy_serves_its_own_kit_before_the_owner_pointer(self):
+        owner = self.dir / "owner kit"
+        (owner / "sandbox" / "bin").mkdir(parents=True)
+        isolated = self.dir / "isolated kit !"
+        (isolated / "sandbox" / "bin").mkdir(parents=True)
+        appdata = self.dir / "appdata"
+        (appdata / "ReverseThis").mkdir(parents=True)
+        (appdata / "ReverseThis" / "kit.json").write_text(json.dumps({"kit_root": str(owner)}), encoding="utf-8")
+        old = os.environ.get("LOCALAPPDATA")
+        os.environ["LOCALAPPDATA"] = str(appdata)
+        try:
+            installed = isolated / "sandbox" / "tools" / "triage" / "triage.py"
+            self.assertEqual(triage.find_kit(here=installed), isolated.resolve())
+            # A source checkout without its own sandbox falls back to the owner pointer.
+            checkout = self.dir / "other checkout" / "kit" / "triage.py"
+            self.assertEqual(triage.find_kit(here=checkout), owner.resolve())
+            self.assertEqual(triage.find_kit(str(owner), here=installed), owner.resolve(), "--kit must win")
+        finally:
+            if old is None:
+                os.environ.pop("LOCALAPPDATA", None)
+            else:
+                os.environ["LOCALAPPDATA"] = old
+
+
 class CommandLine(Fixture):
     def run_cli(self, *args):
         return subprocess.run([sys.executable, str(KIT / "triage.py"), *args], capture_output=True, text=True,

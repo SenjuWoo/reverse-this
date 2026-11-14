@@ -1851,11 +1851,14 @@ Initialize-ExternalTools $catalog
 if ($Doctor) {
     $missing = 0
     $unverified = 0
+    $notInstalled = @()
     $state = New-State
     foreach ($tool in $selected) {
         try {
             $proof = ''
             $row = $state.tools.($tool.id)
+            # A tool named with -Only must be installed; an unselected catalog tool is optional, not broken.
+            if (-not $row -and -not $Only) { $notInstalled += $tool.id; continue }
             if (-not $row) { throw 'not installed' }
             foreach ($id in (ConvertTo-Array $tool.requires)) {
                 if (-not $state.tools.$id) { throw "missing dependency: $id" }
@@ -1898,6 +1901,8 @@ if ($Doctor) {
     }
     Write-Host 'Doctor re-hashes the files each install receipt binds (shimmed executables and key files) and checks the rest for presence; run the relevant tool on a lab sample for runtime proof.'
     if ($unverified) { Write-Host "$unverified tool(s) have no file receipt and were not digest-verified." }
+    if ($notInstalled.Count -eq $selected.Count) { Write-Host 'FAIL: no catalog tool is installed in this kit; run install.cmd'; $missing++ }
+    elseif ($notInstalled.Count) { Write-Host "NOT INSTALLED (optional) $($notInstalled.Count): $($notInstalled -join ', '). Add one with -Only <id>." }
     if ($missing) { exit 1 }
     exit 0
 }

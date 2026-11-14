@@ -31,7 +31,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1 -Doctor
 ```
 
-The first run installs the catalog into `sandbox/tools` and writes stable shims to `sandbox/bin`. It reuses a configured shared Python (including `UABS_PYTHON`), Node, Java and .NET runtime instead of creating parallel copies. `-Only <id>` installs one tool; `-Plan` shows the catalog; `-Offline` and `-Doctor` inspect without downloading; `-InstallRoot <dir>` creates an isolated test kit.
+The first run installs the catalog into `sandbox/tools` and writes stable shims to `sandbox/bin`. It reuses a configured shared Python (including `UABS_PYTHON`), Node, Java and .NET runtime instead of creating parallel copies. `-Only <id>` installs one tool; `-Plan` shows the catalog; `-Offline` and `-Doctor` inspect without downloading; `-Doctor` re-hashes every installed tool and lists catalog tools you have not installed as optional, so a kit built with `-Only` passes (a tool named with `-Only` must be present). `-InstallRoot <dir>` creates an isolated test kit whose shims and `re-triage` use that kit, not the shared owner.
 
 ## What it covers
 

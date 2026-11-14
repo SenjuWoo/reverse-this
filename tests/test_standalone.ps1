@@ -83,6 +83,17 @@ try {
     $doctor=Invoke-Doctor
     Assert-True ($doctor.Code -eq 0 -and $doctor.Text -match 'UNVERIFIED repak') "A missing receipt was not reported as unverified: $($doctor.Text)"
 
+    # A partial kit (installed with -Only) passes plain -Doctor; unselected tools are optional, an empty kit still fails.
+    Write-DoctorState @{'repak.exe'=(Get-FileHash -LiteralPath $doctorExe -Algorithm SHA256).Hash.ToLowerInvariant()}
+    $prior=$ErrorActionPreference
+    try { $ErrorActionPreference='Continue'; $partial=(& $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Install-Modkit.ps1') -Doctor -InstallRoot $doctorKit 2>&1 | Out-String); $partialCode=$LASTEXITCODE }
+    finally { $ErrorActionPreference=$prior }
+    Assert-True ($partialCode -eq 0 -and $partial -match 'OK repak v0\.0\.1' -and $partial -match 'NOT INSTALLED \(optional\)') "A partial kit failed plain -Doctor: $partial"
+    $emptyRoot=Join-Path $testRoot 'empty-doctor'
+    try { $ErrorActionPreference='Continue'; $empty=(& $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Install-Modkit.ps1') -Doctor -InstallRoot $emptyRoot 2>&1 | Out-String); $emptyCode=$LASTEXITCODE }
+    finally { $ErrorActionPreference=$prior }
+    Assert-True ($emptyCode -eq 1 -and $empty -match 'no catalog tool is installed' -and -not (Test-Path -LiteralPath $emptyRoot)) "An empty kit passed -Doctor or created state: $empty"
+
     # Reusing a Java/.NET payload must still bind its known runtime into the regenerated shim.
     $productionJdk=${function:Install-Jdk}; $productionDotnet=${function:Initialize-DotNet10}; $productionRelease=${function:Get-GitHubRelease}
     function Install-Jdk { param([int]$Major) return (Join-Path $testRoot 'known-jdk') }

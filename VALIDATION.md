@@ -24,6 +24,13 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
+## 1.17.1 fresh-install proof (2026-11-14)
+
+- Downloaded the published v1.17.0 ZIP; `SHA256SUMS.txt` matched. Extracted into a new folder named with spaces, `!` and parentheses; `install.cmd -SelfTest` and `-Plan` (95 lines) passed.
+- `-InstallRoot` install of one tool per method (die, ilspycmd, pyinstxtractor-ng, capstone, aob-gen, triage, r2api, asar): ok=8 failed=0, GitHub digests verified, shared owner pointer unchanged; every shim ran (diec, ilspycmd 11.2.0.10050, asar v4.3.2, pyinstxtractor-ng, aob-gen, re-triage).
+- Defects found and fixed in 1.17.1: `re-triage` in the isolated kit reported the owner kit; plain `-Doctor` failed a healthy `-Only` kit. After the fix the isolated kit reports its own root and workspace, and plain Doctor exits 0 with an optional-tools line.
+- An agent shell with `NoDefaultCurrentDirectoryInExePath=1` cannot run a bare `install.cmd` through `cmd /c`; `.\install.cmd` or a double-click works. Environment, not a kit defect.
+
 ## 1.16.1 currency pass (2026-11-13)
 
 - REA 6.9.0: isolated `-InstallRoot` install, then with Ghidra 12.1.4 and 12.2 (JDK 25): `rea doctor --provider ghidra` healthy, `rea analyze` of a copied `notepad.exe` returned 853 procedures, `rea mcp doctor` 255/255 tools and 6/6 prompts with a `binary_session` round trip.

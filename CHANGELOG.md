@@ -1,3 +1,18 @@
+## 1.17.1 (2026-11-14)
+
+- `re-triage` uses the kit it is installed in. It read the shared owner pointer
+  first, so a second or `-InstallRoot` kit listed the owner's analyzers (tools it
+  did not have) and wrote its workspace into the owner's `sandbox/work`. Order is
+  now: `--kit`, the script's own kit, then the owner pointer for a source checkout
+  without a sandbox.
+- `-Doctor` without `-Only` verifies every installed tool and lists unselected
+  catalog tools as optional instead of failing, so a kit built with `-Only` passes.
+  A tool named with `-Only` must still be installed, and a kit with nothing
+  installed still fails.
+- Found by installing the published 1.17.0 ZIP into a fresh folder (spaces, `!`,
+  parentheses) with one tool per install method: all eight installed with
+  verified digests and every shim ran.
+
 ## 1.17.0 (2026-11-13)
 
 - Update `reverse-api-engineer` to 0.15.0 (MIT, PyPI). Checked in an isolated
