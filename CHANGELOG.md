@@ -1,3 +1,18 @@
+## 1.17.0 (2026-11-13)
+
+- Update `reverse-api-engineer` to 0.15.0 (MIT, PyPI). Checked in an isolated
+  venv and then in the kit: `--version`, `list --json`, and `agent --dry-run`
+  with `--headless` and with the `auto` provider all pass. 0.15.0 keeps Claude
+  runs away from the user's Claude Code settings, hooks and MCP servers, and
+  reports `status: error` when no client was written.
+- Ship the upstream agent skill for the same tag in
+  `skills/reverse-api-engineer/` (unmodified, with its MIT licence and an
+  `UPSTREAM.md` naming the commit and the kit-specific differences). Release
+  ZIPs include `skills/`, and the source updater accepts it.
+- `docs/web-api.md` covers the new `chrome-mcp` default (no HAR; use
+  `--headless` or `agent_provider: auto` for a reusable capture) and why the
+  shim is called from PowerShell rather than Git Bash.
+
 ## 1.16.1 (2026-11-13)
 
 - Update REA to 6.9.0 (exact npm pin and integrity). Installed in an isolated

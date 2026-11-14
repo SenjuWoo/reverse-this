@@ -7,11 +7,30 @@ website and no official API or maintained SDK covers the task.
 
 The catalog pins the published MIT release from PyPI; `catalog/tools.json` is
 the single source of truth for the version. Do not install the unreleased
-`main` branch or mix its skill instructions with the stable CLI. Upstream
-`main` includes later OpenCode and skill changes; review them and publish a new
-pin before adopting them.
+`main` branch or mix its skill instructions with the stable CLI.
+
+The upstream agent skill for the same release ships in
+`skills/reverse-api-engineer/` (unmodified; provenance and kit differences in
+its `UPSTREAM.md`). Read its `SKILL.md` for the step-by-step run: reuse an
+earlier capture, preflight, capture in the background, verify, iterate.
+
+What changed in 0.15.0 that matters here:
+
+- New configs default to `agent_provider: chrome-mcp` (the user's own Chrome,
+  no HAR). A headed run needs Chrome remote debugging; `agent --dry-run`
+  reports `chrome-mcp:auto-connect` as an error until it is enabled. For public
+  data add `--headless`; for a reusable HAR set `"agent_provider": "auto"`.
+- Claude sessions no longer load the user's Claude Code settings, `CLAUDE.md`,
+  hooks, plugins or MCP servers. A normal Claude Code login still
+  authenticates; set `claude_setting_sources` only when authentication lives in
+  a settings file.
+- `--json` and `--json-stream` report `status: error` (`engine_failure`) when
+  no client was written, so `status: ok` now means a client exists.
 
 ## Install and check
+
+Call the shim from PowerShell. Git Bash hands a `.cmd` to `cmd /c`, which
+strips the outer quotes when the kit path has spaces and an argument is quoted.
 
 ```powershell
 .\Install-Modkit.ps1 -Only reverse-api-engineer

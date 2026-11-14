@@ -105,7 +105,7 @@ For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or
 | Hook, C | `sandbox/tools/minhook` |
 | Dynamic trace | `sandbox/bin/frida.cmd` |
 | Agent-driven static/runtime analysis (REA) | `sandbox/bin/rea.cmd` (`rea doctor`, `rea analyze <file>`). When the caller has not set `GHIDRA_INSTALL_DIR`, the shim uses the kit Ghidra (12.2), which REA 6.9.0 accepts as compatible: doctor healthy, real analysis and MCP verified. REA's own tested build is 12.1.4; drop an official 12.1.4 into `sandbox/tools/ghidra-12.1.4` and the shim prefers it. MCP registration (`rea mcp add`) is the user's opt-in. |
-| Website HTTP API reconstruction | `sandbox/bin/reverse-api-engineer.cmd` (`list`, `show`, `agent --dry-run`, `agent --json-stream`, `engineer`, `run`). Optional catalog-pinned tool; read `docs/web-api.md`. Use only when no official API/SDK covers the task; run from an ignored work directory. |
+| Website HTTP API reconstruction | `sandbox/bin/reverse-api-engineer.cmd` (`list`, `show`, `agent --dry-run`, `agent --json-stream`, `engineer`, `run`). Optional catalog-pinned tool; read `docs/web-api.md`, then the vendored upstream skill `skills/reverse-api-engineer/SKILL.md`. Use only when no official API/SDK covers the task; run from an ignored work directory. |
 | Android / Java decompile | `sandbox/bin/jadx.cmd` or `sandbox/bin/jadx-gui.cmd` |
 | JVM decompile, second opinion | `sandbox/bin/vineflower.cmd` |
 | APK signing | `sandbox/bin/uber-apk-signer.cmd` |

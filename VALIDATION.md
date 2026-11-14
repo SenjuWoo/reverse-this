@@ -96,3 +96,14 @@ published `Reverse-This-1.15.0.zip` was re-downloaded and its SHA-256 verified
 against `SHA256SUMS.txt`; the extracted product reports
 `packaged checks ok: 1.15.0, 93 tools`. The local kit is 1.15.0 and Doctor
 exits 0.
+
+## Web API reconstruction 0.15.0 (2026-11-13)
+
+- Isolated venv (uv, Python 3.14): `reverse-api-engineer==0.15.0` installed;
+  `--version` 0.15.0, `list --json` `[]`. With an empty home, `agent --dry-run`
+  failed only on `chrome-mcp:auto-connect` (the new default provider); with
+  `--headless`, and with `"agent_provider": "auto"`, it returned `status: ok`.
+- Kit: `Install-Modkit.ps1 -Only reverse-api-engineer` `ok=1 failed=0`; the
+  shim reports 0.15.0 and the headless dry run returns `status: ok`, 0 errors.
+- Upstream skill fetched from commit `276e37667de5e290487c97c351c09ea53b11b468`
+  (tag v0.15.0) with its MIT licence; no live capture or model call was run.

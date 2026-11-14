@@ -1086,7 +1086,7 @@
       "job": "Optional website HTTP API reconstruction into a typed client. No browser or MCP service is started at install time.",
       "method": "pip-venv",
       "package": "reverse-api-engineer",
-      "package_version": "0.14.0",
+      "package_version": "0.15.0",
       "shims": [
         {
           "name": "reverse-api-engineer",

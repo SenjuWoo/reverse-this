@@ -15,7 +15,7 @@ class WebApiTests(unittest.TestCase):
     def test_catalog_pins_the_published_release_and_uses_a_private_venv(self):
         self.assertEqual(self.tool["method"], "pip-venv")
         self.assertEqual(self.tool["package"], "reverse-api-engineer")
-        self.assertEqual(self.tool["package_version"], "0.14.0")
+        self.assertEqual(self.tool["package_version"], "0.15.0")
         self.assertEqual([s["name"] for s in self.tool["shims"]], ["reverse-api-engineer"])
 
     def test_shim_does_not_shadow_rea(self):
@@ -33,6 +33,18 @@ class WebApiTests(unittest.TestCase):
         self.assertIn("chrome-mcp", guide)
         self.assertIn("HAR", guide)
         self.assertIn("never paste", guide.lower())
+
+    def test_vendored_skill_matches_the_pin_and_keeps_its_licence(self):
+        skill = ROOT / "skills" / "reverse-api-engineer"
+        upstream = (skill / "UPSTREAM.md").read_text(encoding="utf-8")
+        self.assertIn(f"v{self.tool['package_version']}", upstream)
+        self.assertIn("MIT License", (skill / "LICENSE").read_text(encoding="utf-8"))
+        text = (skill / "SKILL.md").read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("---\nname: reverse-api-engineer\n"))
+        for ref in ("sessions.md", "setup.md", "troubleshooting.md"):
+            self.assertIn(f"references/{ref}", text)
+            self.assertTrue((skill / "references" / ref).is_file())
+        self.assertIn("skills/reverse-api-engineer", (ROOT / "docs" / "web-api.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

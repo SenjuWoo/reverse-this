@@ -8,7 +8,8 @@ PRODUCT_FILES = {'VERSION','LICENSE','README.md','AGENTS.md','CLAUDE.md','Instal
                  'maintain.cmd','Register-Maintenance.ps1','Update-ReverseThis.ps1','Start-IsolatedLab.ps1','install.cmd','catalog/asset-pattern-fixtures.json',
                  'context7.json','kit/README.md','kit/pe_recon.py','kit/triage.py','kit/aob_gen.py','kit/ghidra_mcp_up.py','scripts/check_upstreams.py'}
 # The encyclopedia ships with the kit so the local Context7 fallback works offline.
-ENCYCLOPEDIA_REQUIRED = {'encyclopedia/README.md','encyclopedia/ROUTING.md','encyclopedia/ERROR-REGISTRY.json'}
+ENCYCLOPEDIA_REQUIRED = {'encyclopedia/README.md','encyclopedia/ROUTING.md','encyclopedia/ERROR-REGISTRY.json',
+                         'skills/reverse-api-engineer/SKILL.md','skills/reverse-api-engineer/LICENSE'}
 
 
 def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:
@@ -19,7 +20,7 @@ def build(root: Path, output: Path, commit: str = 'HEAD') -> dict:
     with zipfile.ZipFile(io.BytesIO(raw)) as source:
         for entry in source.infolist():
             name = entry.filename
-            if entry.is_dir() or not (name in PRODUCT_FILES or name.startswith(('catalog/','docs/','encyclopedia/'))):
+            if entry.is_dir() or not (name in PRODUCT_FILES or name.startswith(('catalog/','docs/','encyclopedia/','skills/'))):
                 continue
             rel = PurePosixPath(name)
             if rel.is_absolute() or '..' in rel.parts or '\\' in name or ':' in name or ((entry.external_attr >> 16) & 0o170000) == 0o120000:
