@@ -31,7 +31,15 @@ For an already owned tool outside the canonical sandbox, supply its directory wi
 
 A compatible same-major REA already on PATH is reused as unowned with its observed version and launcher hash. Unknown, older or incompatible unowned REA is preserved and reported for its owner's update/verification, rather than duplicated. `-Force` is the explicit choice to install an isolated owned copy. Automatic in-place updates apply only where ownership is known; an arbitrary external file never grants update authority.
 
-For a released ZIP installation, run `Update-ReverseThis.ps1`. It selects the official current source ZIP, requires its GitHub SHA-256 asset digest, validates the extracted release receipt and updates only public source paths. It verifies the previous `RELEASE.json` before replacement, refuses locally changed public files or new-path collisions, and retains prior source files under `sandbox/backups/source-*`. Private sandbox work/tools/state stay in place. Git development roots and linked write destinations are refused; review and fast-forward those through Git instead.
+For a released ZIP installation, run `Update-ReverseThis.ps1`. It selects the official current source ZIP, requires its GitHub SHA-256 asset digest, hands the verified archive to that release's own updater (so a newer release's layout is judged by its own rules), validates the extracted release receipt and updates only public source paths. It verifies the previous `RELEASE.json` before replacement, refuses locally changed public files or new-path collisions, and retains prior source files under `sandbox/backups/source-*`. Private sandbox work/tools/state stay in place. Git development roots and linked write destinations are refused; review and fast-forward those through Git instead.
+
+Updating from 1.17.1 or older: those updaters cannot hand off, need an explicit `-Destination` under Windows PowerShell 5.1, and 1.16 or older also rejects the `skills/` folder added in 1.17. Download the latest release ZIP, extract it anywhere, and run that copy against your kit once:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File <extracted>\Update-ReverseThis.ps1 -Destination <your kit folder>
+```
+
+Private tools, work and state are preserved; later updates run from the kit itself.
 
 `-Destination <absolute directory>` (alias `-KitRoot`) selects an existing released kit or a missing/empty fresh source destination. A nonempty directory without a valid existing release is preserved. `-Archive <zip> -Sha256 <expected digest>` handles an independently verified local artifact, including bootstrapping 1.3 with the updater extracted from a verified 1.4 archive. `-Plan`, `-NoUpdate` and `-Offline` disable source updates without downloads or writes. Logs are `sandbox/log/source-update.log`; `-DebugLog` adds the selected release/commit/path details. Invalid fresh archives fail before creating the destination. A failed fresh deployment can leave its diagnostic sandbox; preserve those logs and select a clean destination for retry.
 

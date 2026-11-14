@@ -4,8 +4,10 @@
    Git checkouts use their normal reviewed Git workflow instead. Plan/Offline/NoUpdate write and download nothing. #>
 [CmdletBinding()]
 param([switch]$Plan, [switch]$Offline, [switch]$NoUpdate, [switch]$DebugLog, [string]$Archive, [string]$Sha256,
-    [Alias('KitRoot')][string]$Destination = $PSScriptRoot)
+    [Alias('KitRoot')][string]$Destination)
 $ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1 leaves $PSScriptRoot empty in an advanced script's param() defaults.
+if (-not $Destination) { $Destination = $PSScriptRoot }
 
 # Failures and version transitions remain local; detailed paths are opt-in.
 function Write-SourceUpdateLog {
@@ -114,6 +116,21 @@ try {
         $children = @(Get-ChildItem -LiteralPath $unpack -Directory)
         if ($children.Count -ne 1) { throw 'Expected one source release root.' }
         $unpack = $children[0].FullName
+    }
+    # The verified release applies itself: its own updater knows paths this older copy may reject
+    # (1.16 refused the skills/ folder added in 1.17). One hop only, guarded against recursion.
+    $incomingUpdater = Join-Path $unpack 'Update-ReverseThis.ps1'
+    if (-not $env:REVERSE_THIS_UPDATER_HANDOFF -and $PSCommandPath -and (Test-Path -LiteralPath $incomingUpdater -PathType Leaf) -and
+        (Get-FileHash -LiteralPath $incomingUpdater -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash) {
+        Write-SourceUpdateLog 'handing off to the incoming release updater'
+        $env:REVERSE_THIS_UPDATER_HANDOFF = '1'
+        try {
+            $handoff = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $incomingUpdater, '-Destination', $updateRoot, '-Archive', $Archive, '-Sha256', $Sha256)
+            if ($DebugLog) { $handoff += '-DebugLog' }
+            & (Get-Process -Id $PID).Path @handoff
+            $handoffExit = $LASTEXITCODE
+        } finally { Remove-Item Env:\REVERSE_THIS_UPDATER_HANDOFF -ErrorAction SilentlyContinue }
+        exit $handoffExit
     }
     $manifest = Read-SourceRelease $unpack
     if ([version]$manifest.version -le [version]$currentVersion) { Write-Host 'Workbench source is current or newer.'; exit 0 }

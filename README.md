@@ -71,6 +71,8 @@ maintain.cmd -Test        # packaged catalog/version checks; source catalog/ency
 maintain.cmd -All         # cleanup + update + tests
 ```
 
+A ZIP install updates its own source with `powershell -NoProfile -ExecutionPolicy Bypass -File .\Update-ReverseThis.ps1`; from 1.17.1 or older, run the latest release's copy once with `-Destination <your kit folder>` ([details](docs/standalone.md)).
+
 `Maintain.ps1` keeps the newest recovery copies, removes generated junk only under explicitly owned paths (`sandbox/tmp`, `sandbox/backups`, one smoke-run subtree, source `__pycache__`), validates the owner pointer and `installed.json` independently and repairs either record after a move, and never touches target work, tools outside the kit, or system temp. `-Test` in a released ZIP verifies the packaged catalog/version contract; in a source checkout it runs only the catalog and encyclopedia checks. It does not run the installer, isolation, scheduled-task, AOB or Windows delivery suites; use `tests/` for those. A weekly `maintenance` workflow checks the catalog, encyclopedia and bundle contract without writing to any owner. `Register-Maintenance.ps1` optionally registers a user-scoped weekly task; it is not enabled automatically. It refuses unrecognized tasks, honors `-WhatIf` for run/remove/register, and escapes the scheduled command. Its output is appended to `%LOCALAPPDATA%\ReverseThis\maintenance.log`; remove the task with `Register-Maintenance.ps1 -Remove`. The task records an absolute owner path: after moving the kit, re-register from the new root. The old task then fails visibly if its path is gone; it does not run stale source.
 
 ## Working with an agent

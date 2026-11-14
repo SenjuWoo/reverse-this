@@ -1,3 +1,17 @@
+## 1.17.2 (2026-11-14)
+
+- Fix `Update-ReverseThis.ps1` with no arguments under Windows PowerShell 5.1:
+  `$PSScriptRoot` is empty in an advanced script's `param()` defaults, so the
+  updater had no destination and stopped with "The path is not of a legal
+  form". The default is now set in the script body.
+- The updater hands a digest-verified release to that release's own updater
+  (once, guarded). A 1.16.1 ZIP install could not reach 1.17 because its
+  updater rejected the new `skills/` folder; future layout changes are judged
+  by the release that introduces them.
+- Installs from 1.17.1 or older: run the latest release's updater once with
+  `-Destination <kit>` (documented in `docs/standalone.md`). Found by updating a
+  real 1.16.1 ZIP install; its private work files were preserved.
+
 ## 1.17.1 (2026-11-14)
 
 - `re-triage` uses the kit it is installed in. It read the shared owner pointer

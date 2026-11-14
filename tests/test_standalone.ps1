@@ -35,6 +35,23 @@ try {
     $guard=$updaterAst.Find({param($n) $n -is [Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Assert-SourceWritePath'},$true)
     Invoke-Expression $guard.Extent.Text
     Assert-SourceWritePath (Join-Path $hiddenParent 'new-tool')
+    # Without -Destination the updater must update its own folder (PowerShell 5.1 leaves $PSScriptRoot empty in param defaults).
+    $selfUpdate=Join-Path $testRoot 'zip install !'
+    New-Item -ItemType Directory -Path $selfUpdate | Out-Null
+    Copy-Item -LiteralPath (Join-Path $root 'Update-ReverseThis.ps1') -Destination $selfUpdate
+    $planText=(& (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File (Join-Path $selfUpdate 'Update-ReverseThis.ps1') -Plan 2>&1 | Out-String)
+    Assert-True ($planText.Contains("Owner: $selfUpdate;")) "The updater did not default to its own folder: $planText"
+    # A verified archive is applied by its own updater, once: an older copy never judges paths it does not know.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $handoffSource=Join-Path $testRoot 'handoff-src\Reverse-This-9.9.9'; New-Item -ItemType Directory -Path $handoffSource -Force | Out-Null
+    $marker=Join-Path $testRoot 'handoff-marker.txt'
+    Write-TestFile (Join-Path $handoffSource 'Update-ReverseThis.ps1') ("param(`$Destination,`$Archive,`$Sha256,[switch]`$DebugLog)`r`nSet-Content -LiteralPath '" + $marker + "' -Value (`"dest=`$Destination guard=`$env:REVERSE_THIS_UPDATER_HANDOFF`")`r`nexit 7`r`n")
+    $handoffZip=Join-Path $testRoot 'handoff.zip'; [IO.Compression.ZipFile]::CreateFromDirectory((Split-Path -Parent $handoffSource),$handoffZip)
+    $handoffDest=Join-Path $testRoot 'handoff dest !'
+    & (Get-Process -Id $PID).Path -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Update-ReverseThis.ps1') -Destination $handoffDest -Archive $handoffZip -Sha256 (Get-FileHash -LiteralPath $handoffZip -Algorithm SHA256).Hash 2>&1 | Out-Null
+    $handoffCode=$LASTEXITCODE
+    Assert-True ($handoffCode -eq 7 -and (Get-Content -LiteralPath $marker -Raw).Trim() -eq "dest=$handoffDest guard=1") "The updater did not hand off to the verified release updater: code=$handoffCode $(if (Test-Path -LiteralPath $marker) { Get-Content -LiteralPath $marker -Raw })"
+    Assert-True (-not $env:REVERSE_THIS_UPDATER_HANDOFF) 'The handoff guard leaked into the caller'
     $KitRoot=Join-Path $testRoot 'owner'; $Sandbox=Join-Path $KitRoot 'sandbox'; $ToolsDir=Join-Path $Sandbox 'tools'; $BinDir=Join-Path $Sandbox 'bin'
     New-Item -ItemType Directory -Path $ToolsDir,$BinDir -Force | Out-Null
     $statePath=Join-Path $Sandbox 'installed.json'; $pointer=Join-Path $testRoot 'kit.json'
