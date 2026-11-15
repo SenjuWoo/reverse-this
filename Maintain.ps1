@@ -119,7 +119,10 @@ function Repair-Owner {
             if ($state.schema -ne 1 -or -not $state.tools -or -not @($state.tools.PSObject.Properties).Count) { throw 'installed state is not a usable owner manifest' }
         } catch { throw "owner repair refused: $($_.Exception.Message)" }
     } else {
-        throw "owner repair refused: no installed manifest at $statePath"
+        # A fresh clone or a removed sandbox owns no tools here, so there is nothing to repair.
+        # The installer replaces a pointer to a deleted kit; a live owner elsewhere stays registered.
+        Write-Host "no installed manifest at $statePath; owner records left unchanged"
+        return
     }
 
     if ($pointerExists -and (Test-ReparsePoint $PointerPath)) {

@@ -117,6 +117,18 @@ try {
     if (Test-Path -LiteralPath (Join-Path $root 'ran.txt')) { throw '-All ran the installer after an ownership refusal' }
     Remove-Item -LiteralPath $fakeInstaller -Force
 
+    # A checkout with no installed manifest (fresh clone, deleted sandbox) has nothing to repair:
+    # -Apply succeeds and leaves a pointer to a deleted kit for the next install to replace.
+    $freshRoot = Join-Path $root 'fresh clone'
+    New-Item -ItemType Directory -Force -Path (Join-Path $freshRoot 'sandbox\work') | Out-Null
+    $gone = Join-Path $root 'deleted kit'
+    $stalePointer = (@{ kit_root = $gone; installed_json = (Join-Path $gone 'sandbox\installed.json'); bin = (Join-Path $gone 'sandbox\bin') } | ConvertTo-Json)
+    Set-Content -LiteralPath $pointer -Value $stalePointer -Encoding ASCII
+    $before = (Get-FileHash -LiteralPath $pointer).Hash
+    & $hostExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot '../Maintain.ps1') -Root $freshRoot -PointerPath $pointer -Apply
+    if ($LASTEXITCODE -ne 0) { throw 'maintenance failed in a checkout without an installed manifest' }
+    if ((Get-FileHash -LiteralPath $pointer).Hash -ne $before) { throw 'maintenance rewrote the pointer without an installed manifest' }
+
     Write-Output 'maintenance checks ok'
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
