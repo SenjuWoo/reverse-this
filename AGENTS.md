@@ -9,7 +9,7 @@ The `sandbox` directory is not process isolation. Tools and targets inherit the 
 1. Read `%LOCALAPPDATA%\ReverseThis\kit.json` when present. Its validated `kit_root`, `installed_json` and `bin` identify the canonical owner; a different source checkout reuses it.
 2. Read that owner's `sandbox/installed.json`. Call the shims it names under `sandbox/bin`.
 3. If no owner pointer exists, this source directory is the initial kit root. Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Modkit.ps1` when installation is needed.
-4. Tests use an explicit `-InstallRoot` and isolated state. That override never rewrites the shared pointer. An invalid owner receipt is a repair issue, not permission to create a duplicate kit.
+4. Tests use an explicit `-InstallRoot` and isolated state. That override never rewrites the shared pointer. An invalid owner receipt for another existing folder is a repair issue, not permission to create a duplicate kit. A pointer whose kit folder no longer exists (or that names this checkout after its `sandbox` was removed) is not an owner: the installer installs here and backs the old pointer up.
 5. Stop if none of those exist. Ask for the kit root. Do not scan `Program Files`, Downloads, or a personal tools dump.
 
 `Install-Modkit.ps1 -Plan` prints the catalog without network or writes. Normal runs update old owned release/pip/npm/NuGet tools while preserving pins, newer valid versions and rollback backups. `-NoUpdate` retains installed versions; missing selections can install. `-Doctor`/`-Offline` check receipts/files without network, setup or writes, not runtime behavior. Add `-DebugLog` for detailed diagnostics. The workbench provisions its own missing shared prerequisites; the bundle is optional. Read `docs/standalone.md` before changing ownership or using external tool receipts, and `docs/companions.md` for task routing and snapshot provenance.
@@ -51,7 +51,7 @@ Put the game's decomp and extracts in `sandbox/work`. Do not commit that directo
 
 ## Start with triage
 
-For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or-folder>` first. It reads the bytes (or, for a folder, the engine markers), and returns JSON: the format and the evidence for it, which analyzers in this kit read that format and whether each is installed, and the exact commands to run next. Add `--run` to execute the quick read-only static analyzers and keep their output under `sandbox/work/<name>-<hash>/triage`. It never executes the target. A tool listed as not installed is a fact to report or fix with `Install-Modkit.ps1 -Only <id>`, not a reason to stop. The table below is the manual route when you already know the format.
+For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or-folder>` first. It reads the bytes (or, for a folder, the engine markers), and returns JSON: the format and the evidence for it, which analyzers in this kit read that format and whether each is installed, and the exact commands to run next. Add `--run` to execute the quick read-only static analyzers and keep their output under `sandbox/work/<name>-<hash>/triage`. It never executes the target. `--timeout` (default 120 s per analyzer) ends the whole process tree a shim started. A tool listed as not installed is a fact to report or fix with `Install-Modkit.ps1 -Only <id>`, not a reason to stop. The table below is the manual route when you already know the format.
 
 ## Which tool
 

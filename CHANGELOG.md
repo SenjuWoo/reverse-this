@@ -1,3 +1,24 @@
+## 1.18.1 (2026-11-15)
+
+- Reinstalling after deleting the kit works. A `kit.json` pointer left by a
+  deleted kit folder, or naming this checkout after its `sandbox` was removed,
+  stopped every later install with "Invalid owner pointer" and nothing could
+  repair it. The installer now installs here, backs the old pointer up and
+  registers this checkout. A pointer to another existing folder with a broken
+  receipt still fails. `maintain.cmd -Apply` in a checkout with no installed
+  manifest no longer fails.
+- `re-triage --timeout` really stops a hung analyzer. Killing `cmd.exe` left the
+  tool behind a `.cmd` shim running with the output pipes open, so triage waited
+  for it anyway; a 1-second timeout waited 19 seconds in the reproducer. The
+  whole process tree is now ended.
+- FLOSS, UnityPy and Capstone update again. The 1.4.0 update list was never
+  extended when they were added, so they stayed at their first installed
+  version. Every catalog package without a pin now follows its registry; capa
+  stays locked to its release tag.
+- Downloads give up on a stalled connection (30 s connect timeout, 2-minute
+  stall limit, retried) instead of hanging the install.
+- New uninstall section in `docs/standalone.md`.
+
 ## 1.18.0 (2026-11-15)
 
 - New optional tool `fmodel-mcp` (FModel MCP 1.2.0): a stdio MCP server on
