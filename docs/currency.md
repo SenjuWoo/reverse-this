@@ -14,6 +14,7 @@ The installer resolves the current official release at install time. This page i
 - AssetRipper's Windows x64 zip.
 - Il2CppDumper's Windows zip (`Il2CppDumper-win-`), not the net6 or net7 framework-dependent zips.
 - FModel's current zip.
+- [FModel MCP](https://github.com/MayankS-Code/fmodel-mcp)'s self-contained `fmodel-mcp-<version>-win-x64.zip` (CI-built, GitHub SHA-256 digest): a stdio MCP server on CUE4Parse that lets an agent open, search, inspect and export Unreal archives without the FModel GUI. The kit does not run its `Install-Mcp.ps1` or register it with any client. GPL-3.0; kit route in [unreal-mcp.md](unreal-mcp.md).
 - repak and retoc Windows x64 CLI zips. repak is `.pak`. retoc is IoStore. Neither replaces the other.
 - UAssetGUI's published exe, and the current DirectXTex `texconv`, `texassemble` and `texdiag` exes. Not the arm64 exes.
 - UABEA's Windows zip. That is the Unity asset editor that still publishes a binary.

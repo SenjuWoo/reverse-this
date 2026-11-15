@@ -15,7 +15,7 @@ class WebApiTests(unittest.TestCase):
     def test_catalog_pins_the_published_release_and_uses_a_private_venv(self):
         self.assertEqual(self.tool["method"], "pip-venv")
         self.assertEqual(self.tool["package"], "reverse-api-engineer")
-        self.assertEqual(self.tool["package_version"], "0.15.0")
+        self.assertEqual(self.tool["package_version"], "0.16.0")
         self.assertEqual([s["name"] for s in self.tool["shims"]], ["reverse-api-engineer"])
 
     def test_shim_does_not_shadow_rea(self):

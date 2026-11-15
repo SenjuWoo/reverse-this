@@ -34,6 +34,7 @@ jobs:
           python tests/test_ghidra_mcp_up.py
           python tests/test_upstreams.py
           python tests/test_web_api.py
+          python tests/test_unreal_mcp.py
 
   installer-tests:
     name: installer (${{ matrix.shell }})

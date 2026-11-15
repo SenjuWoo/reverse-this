@@ -8,7 +8,7 @@
 | Cooked data | `.upk`, `.u`, `CookedPC*` | `.pak`, `.utoc` + `.ucas` (IoStore) |
 | Project files | `.ini`, `.int` | `.uproject` (editor/source), `.ini` |
 | Scripting | UnrealScript (cooked) | Blueprints (cooked), C++ |
-| Loader | UE4SS (UE4/5), SDK dumpers | UE4SS (experimental), FModel, repak, retoc |
+| Loader | UE4SS (UE4/5), SDK dumpers | UE4SS (experimental), FModel / FModel MCP, repak, retoc |
 | Physics | PhysX | PhysX (UE4) / Chaos (UE5) |
 
 UE3 packages and UE4/5 packages are not interchangeable. A `.upk` is not a `.pak`.

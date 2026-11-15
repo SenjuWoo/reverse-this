@@ -126,6 +126,15 @@
     ],
     "expect": "FModel.zip"
   },
+  "fmodel-mcp": {
+    "assets": [
+      "fmodel-mcp-1.2.0-source.zip",
+      "fmodel-mcp-1.2.0-source.zip.sha256",
+      "fmodel-mcp-1.2.0-win-x64.zip",
+      "fmodel-mcp-1.2.0-win-x64.zip.sha256"
+    ],
+    "expect": "fmodel-mcp-1.2.0-win-x64.zip"
+  },
   "repak": {
     "assets": [
       "repak_cli-x86_64-pc-windows-msvc.msi",

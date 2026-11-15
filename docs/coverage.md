@@ -24,7 +24,7 @@ The catalog is an install plan; `sandbox/installed.json` records what a run inst
 | League of Legends WAD archives | wadtools | Lists and extracts `.wad.client` chunks; path recovery scans `.bin` files and may update its hash-table cache. Read-only extraction does not install a client mod. |
 | League model/data conversion | ritobin-tools, lol2gltf, vgmstream | BIN→JSON, SKN/SKL/ANM→glTF, and WEM→WAV. Texture and Wwise bank extraction remain manual where licences are undeclared. |
 | NeoX engine NPK/NXPK archives | neoxtractor, QuickBMS | NeoXtractor is the GUI route; QuickBMS is the scriptable route with a game-specific BMS script. Some titles still need an XOR key/config. |
-| Unreal, Godot, Frostbite | FModel, repak, retoc, UAssetGUI, UE4SS; GDRE and Godot; Frosty tools | Check engine/game versions. A source archive or loader is not a supported executable for every game. |
+| Unreal, Godot, Frostbite | FModel, FModel MCP (headless, for agents), repak, retoc, UAssetGUI, UE4SS; GDRE and Godot; Frosty tools | Check engine/game versions. A source archive or loader is not a supported executable for every game. |
 | Graphics and textures | RenderDoc, DirectXTex | API/driver support and capture compatibility vary; this is not every vendor's profiling suite. |
 | Binary comparison | Ghidra Version Tracking, ImHex, `rz-diff` | Compare the same architecture and record target hashes; generated names are not stable identifiers. |
 | Packed executables | UPX | Only UPX-packed files unpack cleanly; other packers need their own unpacker. |

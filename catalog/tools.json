@@ -162,6 +162,20 @@
       ]
     },
     {
+      "id": "fmodel-mcp",
+      "name": "FModel MCP",
+      "job": "Optional headless Unreal pak/IoStore browser and exporter for agents (stdio MCP on CUE4Parse); run with --config <json>. No client registration at install time.",
+      "method": "github-release",
+      "repo": "MayankS-Code/fmodel-mcp",
+      "asset_pattern": "^fmodel-mcp-[0-9.]+-win-x64\\.zip$",
+      "shims": [
+        {
+          "name": "fmodel-mcp",
+          "exe_glob": "FModel.Mcp.exe"
+        }
+      ]
+    },
+    {
       "id": "repak",
       "name": "repak",
       "job": "Unreal .pak CLI.",
@@ -1086,7 +1100,7 @@
       "job": "Optional website HTTP API reconstruction into a typed client. No browser or MCP service is started at install time.",
       "method": "pip-venv",
       "package": "reverse-api-engineer",
-      "package_version": "0.15.0",
+      "package_version": "0.16.0",
       "shims": [
         {
           "name": "reverse-api-engineer",

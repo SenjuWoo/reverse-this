@@ -11,6 +11,7 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 | Target triage: formats, engines, routing, `--run` boundary | `python tests/test_triage.py` |
 | Companion parser fixtures (live checker is scheduled/manual) | `python tests/test_companions.py` |
 | Upstream currency report fixtures | `python tests/test_upstreams.py` |
+| Optional adapters: web API pin/skill, FModel MCP route | `python tests/test_web_api.py`, `python tests/test_unreal_mcp.py` |
 | Installer regressions (offline) | `tests/test_installer.ps1` |
 | Isolation, entrypoint, .NET, standalone | `tests/test_isolation.ps1`, `test_entrypoint.ps1`, `test_dotnet_prerequisite.ps1`, `test_standalone.ps1` |
 | Maintenance ownership, retention and scheduled previews | `tests/test_maintain.ps1`, `tests/test_register_maintenance.ps1` |
@@ -23,6 +24,13 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 ## Comparing a local build with a release
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
+
+## 1.18.0 currency sweep (2026-11-15)
+
+- All 95 catalog tools compared with their upstream release, PyPI, npm or NuGet latest and asset patterns: every tool is current except `reverse-api-engineer` (0.15.0 pinned, 0.16.0 published the same day). GhidraMCP 2.0 source still serves `/health` (8080) and streamable-HTTP `/mcp` (8081).
+- `reverse-api-engineer` 0.16.0: dependency diff reviewed (collector extra removed, codex extra added); upstream skill at tag `v0.16.0` (commit e3aae74) differs only in `references/setup.md` and was copied unmodified. Installed through the kit: `--version` 0.16.0, `list --json` and `agent --dry-run --headless` exit 0.
+- `fmodel-mcp` 1.2.0: CI-built release, digest verified by the installer. Through `sandbox/bin/fmodel-mcp.cmd`: `--help`; `initialize` at 2025-11-25 (2026-07-28 is refused with the supported list), `tools/list` 34 tools, `fmodel_capabilities` returns version 1.2.0 / CUE4Parse 1.2.2. No real game archive opened.
+- Gates: 12 Python suites and 8 PowerShell suites pass under Windows PowerShell 5.1; `check_companions.py` and `check_upstreams.py` pass live; Doctor 95 OK.
 
 ## 1.17.2 upgrade-path proof (2026-11-14)
 

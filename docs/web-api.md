@@ -14,7 +14,17 @@ The upstream agent skill for the same release ships in
 its `UPSTREAM.md`). Read its `SKILL.md` for the step-by-step run: reuse an
 earlier capture, preflight, capture in the background, verify, iterate.
 
-What changed in 0.15.0 that matters here:
+What changed in 0.16.0 that matters here:
+
+- New `hermes` backend for `engineer` (see [Model provider](#model-provider)).
+- New `codex` backend through the `[codex]` extra, which this catalog entry
+  does not install; it runs in its own `~/.reverse-api/codex` home.
+- Collector mode is gone (`collector` command and `collector_model`); old
+  configs and histories still load.
+- `--model` takes the configured SDK's own model id; a slow page no longer
+  ends a chrome-mcp run; re-engineered runs keep their full cost.
+
+Still true from 0.15.0:
 
 - New configs default to `agent_provider: chrome-mcp` (the user's own Chrome,
   no HAR). A headed run needs Chrome remote debugging; `agent --dry-run`
@@ -61,9 +71,14 @@ with a DeepSeek model. OpenCode owns that authentication; select a pair from the
 tool's settings rather than inventing model IDs. Node.js and `npx` must be on
 PATH when RAE starts its managed OpenCode server.
 
-Hermes is not an RAE SDK: this Hermes/DeepSeek session does not authenticate the
-tool's model calls. Do not point RAE at Hermes credentials or change existing
-model defaults unless the user explicitly chooses that setup.
+`sdk: "hermes"` engineers a saved capture through the local `hermes` CLI, so
+the model, provider and authentication are the user's own Hermes configuration
+and RAE holds no API key. It covers `engineer` only: capture with another SDK
+(claude, opencode, copilot or cursor), then engineer that run with Hermes.
+`agent` with `sdk: "hermes"` stops before browser setup, and `agent --dry-run`
+reports the same error. RAE finds the CLI on `PATH` or through
+`RAE_HERMES_BIN`. Change the SDK only when the user chooses it; never copy
+Hermes credentials into RAE's config.
 
 ## Workflow
 

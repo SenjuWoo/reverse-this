@@ -8,11 +8,16 @@ Each installs independently and consumes verified existing installations. The wo
 
 Run `python scripts/check_companions.py` (source checkout) or the scheduled `companions` workflow to read the published bundle catalog entry (floor, asset template), the bundle `PACKS.json` reverse pack (enable command, owner, floor, `ReverseThis/kit.json` detection) and the Forge ownership link. It only reads; it never writes to either repository.
 
-Upstream snapshots supplied alongside this kit were reviewed on 2026-11-13. Local copies are refreshed outside this repository, so this table records ownership decisions, not local versions; check the upstream before relying on a copy.
+Upstream snapshots supplied alongside this kit were reviewed on 2026-11-15. Local copies are refreshed outside this repository, so this table records ownership decisions, not local versions; check the upstream before relying on a copy.
 
 | Snapshot | Upstream | Owner and decision |
 |---|---|---|
 | REA source | [morluto/rea](https://github.com/morluto/rea) | Catalogued here as `rea`, installed from the integrity-pinned npm release (6.9.0), never built from a source snapshot. |
+| FModel MCP | [MayankS-Code/fmodel-mcp](https://github.com/MayankS-Code/fmodel-mcp) | Catalogued here as `fmodel-mcp` (release zip, digest-checked; no client registration). Route in [unreal-mcp.md](unreal-mcp.md). |
+| FModel | [4sval/FModel](https://github.com/4sval/FModel) | Catalogued here as `fmodel`; a loose `FModel.exe` copy is not a second install. |
+| UEFormat | [h4lfheart/UEFormat](https://github.com/h4lfheart/UEFormat) | Blender add-on and Unreal plugin that import FModel's UEFormat exports. DCC side; documented in [unreal-mcp.md](unreal-mcp.md), not installed. |
+| repak-rivals (`repak-gui`, `retoc-rivals-cli`), UAssetToolRivals, KawaiiPhysics for Marvel Rivals | Marvel Rivals community releases | Game-specific: a Marvel Rivals forge owns them. This kit keeps the general `repak`, `retoc` and `uassetgui`. |
+| Roqer | [S4US/Roqer](https://github.com/S4US/Roqer) | Roblox Studio agent (AGPL-3.0): Roblox Forge / Starter Bundle, not catalogued. |
 | CLI-Anything | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Starter Bundle. Per-application CLI harnesses (RenderDoc, LLDB, Blender, Godot and others); use one when it fills the task. |
 | Context Mode | [mksglu/context-mode](https://github.com/mksglu/context-mode) | Starter Bundle (agent context plugin). Elastic License 2.0: do not merge or relicense its source. |
 | OBS MCP | [Tom-R-Main/OBS-MCP](https://github.com/Tom-R-Main/OBS-MCP) | Starter Bundle. Scene and recording control, handy for recording runtime proof; not an analysis tool. |

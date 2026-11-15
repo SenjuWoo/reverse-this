@@ -1,6 +1,6 @@
 # Compatibility inventory
 
-Last checked: 2026-11-13. This is a dated report, not a promise that a newer
+Last checked: 2026-11-15. This is a dated report, not a promise that a newer
 upstream release works. The catalog remains dynamic; only the compatibility
 boundaries below are reviewed.
 
@@ -13,8 +13,9 @@ boundaries below are reviewed.
 | .NET SDK | 10 (observed SDK list retained) | stable shared prerequisite | 10 | all installed SDK lines are parsed; highest suitable SDK is reported | `tests/test_upstreams.py` |
 | Java/JDK | 25 observed via `JAVA_HOME` | selected JDK, not PATH by default | Ghidra 12.2 declares min 25 | `within-ghidra-bounds`; REA 6.9.0 + Ghidra 12.2 + JDK 25 verified | `scripts/check_upstreams.py`, `rea doctor` |
 | Capstone | 5.0.9 test baseline | test-only pin in `requirements-test.txt` | 5.0.9 | AOB fixtures pass | `tests/test_aob_gen.py` |
-| GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | current upstream | protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
-| Reverse API Engineer | 0.15.0 pinned PyPI release (agent skill vendored from the same tag) | stable only; review main separately | 0.15.0 | CLI `--version`, `list --json` and `agent --dry-run` (headless, and `auto` provider) pass; live capture/model call not run | `catalog/tools.json`, `docs/web-api.md`, `tests/test_web_api.py` |
+| GhidraMCP plugin/bridge | `/health` + MCP initialize | optional local bridge | 2.0 (2026-10-10, built for Ghidra 12.1.4) | 2.0 source keeps `GET /health` on 8080 and the streamable-HTTP `/mcp` on 8081 that `ghidra-mcp-up` probes; protocol probes mocked only; real bridge not handshaken on Windows | `tests/test_ghidra_mcp_up.py` |
+| Reverse API Engineer | 0.16.0 pinned PyPI release (agent skill vendored from the same tag) | stable only; review main separately | 0.16.0 | CLI `--version`, `list --json` and `agent --dry-run --headless` pass; live capture/model call and the new `hermes`/`codex` backends not run | `catalog/tools.json`, `docs/web-api.md`, `tests/test_web_api.py` |
+| FModel MCP | 1.2.0 (CUE4Parse 1.2.2) | current GitHub release, digest-checked | 1.2.0 | installed through the kit; `initialize` (2025-11-25), `tools/list` (34 tools) and `fmodel_capabilities` pass through the shim; no real game archive opened | `tests/test_unreal_mcp.py`, `docs/unreal-mcp.md` |
 
 ## Policy
 

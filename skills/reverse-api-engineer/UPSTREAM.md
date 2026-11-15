@@ -1,9 +1,9 @@
 # Upstream agent skill (vendored, unmodified)
 
 - Source: https://github.com/kalil0321/reverse-api-engineer, `skills/reverse-api-engineer`
-- Tag `v0.15.0`, commit `276e37667de5e290487c97c351c09ea53b11b468`
+- Tag `v0.16.0`, commit `e3aae749746f076f78f9642d83eeb3c7af9bac44`
 - Licence: MIT, copied as `LICENSE` in this folder
-- Matches the CLI pin in `catalog/tools.json` (`reverse-api-engineer` 0.15.0)
+- Matches the CLI pin in `catalog/tools.json` (`reverse-api-engineer` 0.16.0)
 
 `SKILL.md` and `references/` are byte-for-byte upstream so a later pin can be
 diffed directly. Kit-specific differences:

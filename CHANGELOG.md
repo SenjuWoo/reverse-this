@@ -1,3 +1,20 @@
+## 1.18.0 (2026-11-15)
+
+- New optional tool `fmodel-mcp` (FModel MCP 1.2.0): a stdio MCP server on
+  CUE4Parse that lets an agent open, search, inspect and export Unreal
+  `.pak`/IoStore archives without the FModel GUI. Installed from the
+  self-contained release zip after its GitHub SHA-256 check; the kit does not
+  run its installer or register it with a client. Route, config and key
+  handling in `docs/unreal-mcp.md`, which also points to UEFormat for bringing
+  exports into Blender or Unreal.
+- `reverse-api-engineer` 0.15.0 -> 0.16.0, with the upstream agent skill from
+  the same tag. 0.16.0 adds an engineer-only `hermes` backend (your own Hermes
+  model and sign-in) and an optional `codex` extra, removes collector mode and
+  fixes `--model` for non-Claude SDKs and slow pages in chrome-mcp runs.
+- Currency sweep of all 95 catalog tools: every other tool is at its upstream
+  latest release. Supplied snapshots reviewed and their owners recorded in
+  `docs/companions.md`; Marvel Rivals-specific tools are left to a Rivals forge.
+
 ## 1.17.2 (2026-11-14)
 
 - Fix `Update-ReverseThis.ps1` with no arguments under Windows PowerShell 5.1:

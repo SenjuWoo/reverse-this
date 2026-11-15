@@ -67,6 +67,7 @@ For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or
 | Unity live inspector | the matching folder under `sandbox/tools/unityexplorer-*` |
 | Unity asset scripting | `sandbox/tools/unitypy/Scripts/python.exe` with `import UnityPy` |
 | Unreal browse | `sandbox/bin/fmodel.cmd` |
+| Unreal browse/export for an agent (MCP) | `sandbox/bin/fmodel-mcp.cmd --config <json>`; see `docs/unreal-mcp.md` |
 | Unreal pak | `sandbox/bin/repak.cmd` |
 | Unreal IoStore | `sandbox/bin/retoc.cmd` |
 | Unreal assets | `sandbox/bin/uassetgui.cmd` |
