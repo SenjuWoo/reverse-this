@@ -264,6 +264,16 @@ try {
     $pin=[pscustomobject]@{id='rea';method='npm-tool';package='rea-agents';package_version='6.8.0'}
     Resolve-PackageVersion $pin
     Assert-True ($script:RegistryCalls -eq 3 -and $pin.package_version -eq '6.8.0') 'Intentional REA pin was replaced by registry latest.'
+    # Every unpinned package tool in the catalog follows its registry; capa follows its GitHub tag instead.
+    $catalogTools=@((Get-Content -LiteralPath (Join-Path $root 'catalog\tools.json') -Raw -Encoding UTF8 | ConvertFrom-Json).tools | Where-Object { $_.method -in @('pip-venv','npm-tool','dotnet-tool') })
+    foreach ($entry in $catalogTools) {
+        $copy=$entry | ConvertTo-Json -Depth 8 | ConvertFrom-Json
+        $calls=$script:RegistryCalls
+        Resolve-PackageVersion $copy
+        if ($entry.id -eq 'capa' -or $entry.package_version) { Assert-True ($script:RegistryCalls -eq $calls) "Registry was queried for tag-locked or pinned $($entry.id)." }
+        else { Assert-True ($script:RegistryCalls -eq $calls + 1 -and $copy.package_version) "Unpinned $($entry.id) never resolves a newer registry version." }
+    }
+    $script:RegistryCalls=3
     $NoUpdate=$true
     Resolve-PackageVersion ([pscustomobject]@{id='frida';method='pip-venv';package='frida-tools'})
     Assert-True ($script:RegistryCalls -eq 3) 'NoUpdate queried package metadata.'

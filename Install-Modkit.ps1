@@ -257,7 +257,9 @@ function Initialize-SharedNode {
 # Registry metadata resolves only packages this catalog owns; pins remain authoritative.
 function Resolve-PackageVersion {
     param($Tool)
-    if ($NoUpdate -or $Tool.package_version -or $Tool.id -notin @('frida','lief','asar','ilspycmd','rea')) { return }
+    # Every unpinned package tool follows its registry. capa is excluded: Install-One locks it to the
+    # mandiant/capa release tag so the package matches its rules and signatures.
+    if ($NoUpdate -or $Tool.package_version -or -not $Tool.package -or $Tool.id -eq 'capa') { return }
     if ($Tool.method -eq 'pip-venv') {
         $metadata = Invoke-RestMethod -Uri ('https://pypi.org/pypi/' + $Tool.package + '/json') -UseBasicParsing
         $version = [string]$metadata.info.version

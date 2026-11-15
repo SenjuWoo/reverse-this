@@ -13,6 +13,9 @@ foreach ($definition in $ast.FindAll({
 }, $false)) {
     Invoke-Expression $definition.Extent.Text
 }
+# Offline suite: fixture package tools are unpinned, so the registry lookup is stubbed here.
+# tests/test_standalone.ps1 covers Resolve-PackageVersion against a mocked registry.
+function Resolve-PackageVersion { param($Tool) }
 
 function Assert-True {
     param([bool]$Condition, [string]$Message)
