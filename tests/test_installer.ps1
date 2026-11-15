@@ -16,6 +16,11 @@ foreach ($definition in $ast.FindAll({
 # Offline suite: fixture package tools are unpinned, so the registry lookup is stubbed here.
 # tests/test_standalone.ps1 covers Resolve-PackageVersion against a mocked registry.
 function Resolve-PackageVersion { param($Tool) }
+# Downloads must give up on a stalled connection instead of hanging the run.
+$saveUrl = $ast.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Save-Url' }, $false).Extent.Text
+foreach ($flag in @('--connect-timeout', '--speed-limit', '--speed-time', '--retry', '--fail')) {
+    if ($saveUrl -notmatch [regex]::Escape($flag)) { throw "Save-Url lost $flag" }
+}
 
 function Assert-True {
     param([bool]$Condition, [string]$Message)

@@ -595,7 +595,9 @@ function Save-Url {
     if (-not (Test-Path -LiteralPath $curl)) { throw 'curl.exe is not in System32' }
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    & $curl -sS -L --proto '=https' --proto-redir '=https' --fail --retry 3 --retry-delay 2 -A 'reverse-this' -o $Dest $Url
+    # Without these a stalled connection hangs the whole run. A stall (under 1 byte/s for 2 minutes)
+    # or a 30 s connect failure is a transient error that --retry repeats; slow links still finish.
+    & $curl -sS -L --proto '=https' --proto-redir '=https' --fail --retry 3 --retry-delay 2 --connect-timeout 30 --speed-limit 1 --speed-time 120 -A 'reverse-this' -o $Dest $Url
     $code = $LASTEXITCODE
     $ErrorActionPreference = $prev
     if ($code -ne 0 -or -not (Test-Path -LiteralPath $Dest)) {
