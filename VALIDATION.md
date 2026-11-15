@@ -25,6 +25,15 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 
 `build_release.py` pins `core.autocrlf=false` and `core.eol=lf`, so a Windows build has the same file contents (and `RELEASE.json`) as the CI build. Zip bytes can still differ across hosts because Python builds ship different deflate libraries; compare extracted contents or `RELEASE.json`, not the zip hash. CI compares two builds on the same runner byte for byte.
 
+## 1.18.1 audit fixes (2026-11-15)
+
+- Baseline before changes: 12 Python and 9 PowerShell suites green under Windows PowerShell 5.1; Doctor 95 OK in 123 s.
+- Stale pointer: reproducer with an isolated LOCALAPPDATA and a pointer to a deleted kit made a fresh clone's installer stop with "Invalid Reverse THIS! owner pointer" and `Maintain -Apply` fail. After the fix the same clone: `Maintain -Apply` exit 0 (records unchanged), `-Only pe-recon` ok=1, `-Doctor` exit 0, pointer re-registered with `kit.json.pre-1.18.0` kept. New cases in `test_standalone.ps1` and `test_maintain.ps1` failed before the fix.
+- Triage timeout: `launch()` on a `.cmd` shim whose tool sleeps took 19.2 s with a 1 s timeout (60.1 s in the new test with 2 s); after the fix the test passes in about 2 s and no stub process is left.
+- Package updates: the new catalog-driven case in `test_standalone.ps1` failed on `floss` before the fix; capa and pinned tools never query a registry.
+- Downloads: curl flags checked by `test_installer.ps1`; the same flags fetched a real GitHub release asset (HTTP 200).
+- Gates: 12 Python and 9 PowerShell suites pass under Windows PowerShell 5.1 (`test_delivery.py` after committing VERSION). PowerShell 7 is covered by CI only (not installed here).
+
 ## 1.18.0 currency sweep (2026-11-15)
 
 - All 95 catalog tools compared with their upstream release, PyPI, npm or NuGet latest and asset patterns: every tool is current except `reverse-api-engineer` (0.15.0 pinned, 0.16.0 published the same day). GhidraMCP 2.0 source still serves `/health` (8080) and streamable-HTTP `/mcp` (8081).
