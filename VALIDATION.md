@@ -33,6 +33,9 @@ Run before every release; CI runs the same on both Windows PowerShell 5.1 and Po
 - Package updates: the new catalog-driven case in `test_standalone.ps1` failed on `floss` before the fix; capa and pinned tools never query a registry.
 - Downloads: curl flags checked by `test_installer.ps1`; the same flags fetched a real GitHub release asset (HTTP 200).
 - Gates: 12 Python and 9 PowerShell suites pass under Windows PowerShell 5.1 (`test_delivery.py` after committing VERSION). PowerShell 7 is covered by CI only (not installed here).
+- Release: v1.18.1 published from 93157ba after all 8 checks on that SHA passed (catalog, installer 5.1 and 7, CodeQL x3, Publish release). `Reverse-This-1.18.1.zip` 194,330 bytes, SHA-256 `5dd7137c27dd72737ed05532c19407637c3042327f233d87289ab00aec76605c`; open alerts 0/0/0.
+- Fresh install from the published ZIP into a folder with spaces, `!` and parentheses: checksum match, `-SelfTest` ok, `-InstallRoot` install of die, upx, triage, floss ok=4 failed=0 (die and upx downloaded with the new curl flags, GitHub digests verified), Doctor exit 0, shared pointer unchanged, `re-triage --run notepad.exe` from that kit reported its own root, `upx --version` 5.3.0, `floss --version` 3.2.0.
+- Live kit: `-Only triage,pe-recon,aob-gen,ghidra-mcp-up,floss,unitypy,capstone` ok=7 failed=0 (local scripts now 1.18.1; the three PyPI tools resolved to their current latest); Doctor 95 OK, exit 0.
 
 ## 1.18.0 currency sweep (2026-11-15)
 
