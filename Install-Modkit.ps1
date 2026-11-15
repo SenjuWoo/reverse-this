@@ -62,6 +62,17 @@ function Resolve-OwnerRoot {
     $receipt = Get-Content -LiteralPath $Pointer -Raw -Encoding UTF8 | ConvertFrom-Json
     if (-not $receipt.kit_root -or -not [IO.Path]::IsPathRooted($receipt.kit_root)) { throw 'Invalid Reverse THIS! owner pointer: kit_root must be absolute.' }
     $owner = [IO.Path]::GetFullPath($receipt.kit_root).TrimEnd('\')
+    # A deleted kit, or this checkout before its sandbox existed again, leaves a pointer that names
+    # no other owner. Install here; Save-State backs the old pointer up before rewriting it.
+    # Another existing folder with a broken receipt stays ambiguous and still fails below.
+    $sourceFull = [IO.Path]::GetFullPath($Source).TrimEnd('\')
+    if ($owner -eq $sourceFull -or -not (Test-Path -LiteralPath $owner -PathType Container)) {
+        $expectedState = Join-Path $owner 'sandbox\installed.json'
+        if (-not (Test-Path -LiteralPath $expectedState -PathType Leaf)) {
+            if ($owner -ne $sourceFull) { Write-Host "Owner pointer names a kit that no longer exists ($owner); this checkout becomes the owner." }
+            return $sourceFull
+        }
+    }
     $expectedState = Join-Path $owner 'sandbox\installed.json'
     $expectedBin = Join-Path $owner 'sandbox\bin'
     if ($receipt.installed_json -ne $expectedState -or $receipt.bin -ne $expectedBin -or

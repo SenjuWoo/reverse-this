@@ -58,6 +58,18 @@ try {
     Write-TestFile $statePath ([pscustomobject]@{schema=1;kit_root=$KitRoot;tools=[pscustomobject]@{fixture=@{id='fixture'}}} | ConvertTo-Json -Depth 5)
     Write-TestFile $pointer ([pscustomobject]@{kit_root=$KitRoot;installed_json=$statePath;bin=$BinDir;extension=@{personal='retained'}} | ConvertTo-Json -Depth 5)
     Assert-True ((Resolve-OwnerRoot 'new checkout' '' $pointer) -eq $KitRoot) 'A checkout did not reuse its registered owner.'
+    # A pointer left behind by a deleted kit, or by this checkout before its sandbox was removed, is not another owner.
+    $goneKit=Join-Path $testRoot 'deleted kit !'
+    Write-TestFile $pointer ([pscustomobject]@{kit_root=$goneKit;installed_json=(Join-Path $goneKit 'sandbox\installed.json');bin=(Join-Path $goneKit 'sandbox\bin')} | ConvertTo-Json)
+    $fresh=Join-Path $testRoot 'fresh clone'
+    Assert-True ((Resolve-OwnerRoot $fresh '' $pointer) -eq $fresh) 'A pointer to a deleted kit blocked a fresh install.'
+    $self=Join-Path $testRoot 'self owner'; New-Item -ItemType Directory -Path $self | Out-Null
+    Write-TestFile $pointer ([pscustomobject]@{kit_root=$self;installed_json=(Join-Path $self 'sandbox\installed.json');bin=(Join-Path $self 'sandbox\bin')} | ConvertTo-Json)
+    Assert-True ((Resolve-OwnerRoot $self '' $pointer) -eq $self) 'A pointer to this checkout without its sandbox blocked reinstalling here.'
+    # Another existing folder with a broken receipt is still ambiguous, never silently replaced.
+    $other=Join-Path $testRoot 'other existing'; New-Item -ItemType Directory -Path $other | Out-Null
+    Write-TestFile $pointer ([pscustomobject]@{kit_root=$other;installed_json=(Join-Path $other 'sandbox\installed.json');bin=(Join-Path $other 'sandbox\bin')} | ConvertTo-Json)
+    Assert-Throws { Resolve-OwnerRoot $fresh '' $pointer } 'Invalid.*pointer'
     Write-TestFile $pointer '{"kit_root":"relative"}'
     Assert-Throws { Resolve-OwnerRoot 'new checkout' '' $pointer } 'Invalid.*pointer'
     Assert-True ((Resolve-OwnerRoot 'checkout' (Join-Path $testRoot 'isolated') $pointer) -eq (Join-Path $testRoot 'isolated')) 'Explicit isolated root did not bypass the pointer.'
