@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -66,9 +67,10 @@ class Fixture(unittest.TestCase):
         (root / "sandbox" / "installed.json").write_text(json.dumps({"kit_version": "9.9.9"}), encoding="utf-8")
         stub = root / "stub.py"
         stub.write_text(
-            "import json, os, sys\n"
+            "import json, os, sys, time\n"
             "name = os.environ.get('STUB_NAME', '')\n"
             "if name == 'diec': sys.stderr.write('boom'); sys.exit(4)\n"
+            "if name == 'hang': print('started', flush=True); time.sleep(60)\n"
             "print(json.dumps({'stub': name, 'args': sys.argv[1:], 'exists': os.path.isfile(sys.argv[-1])}))\n",
             encoding="utf-8")
         for name in shims:
@@ -231,6 +233,18 @@ class Routing(Fixture):
         saved = json.loads((workspace / "triage.json").read_text(encoding="utf-8"))
         self.assertEqual(saved["target"]["sha256"], report["target"]["sha256"])
         self.assertTrue(any(step["command"][0].endswith(("capa.cmd", "capa")) for step in report["next"]))
+
+    def test_timeout_stops_the_tool_behind_a_batch_shim(self):
+        # cmd.exe is only the parent; the timeout must also end the tool it started,
+        # which otherwise holds the output pipes and keeps triage waiting.
+        kit = self.kit(["hang"])
+        shim = triage.shim_path(kit, "hang")
+        started = time.monotonic()
+        result = triage.launch(shim, [], 2)
+        elapsed = time.monotonic() - started
+        self.assertIn("timed out", result["error"] or "")
+        self.assertIsNone(result["exit"])
+        self.assertLess(elapsed, 20, "the timeout waited %.1fs for the tool to finish" % elapsed)
 
     def test_no_kit_still_identifies_and_says_what_is_missing(self):
         report = triage.triage(self.write("lib.so", b"\x7fELF\x02\x01" + b"\x00" * 64), None)

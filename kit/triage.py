@@ -423,14 +423,42 @@ def launch(shim: Path, arguments: list[str], timeout: float) -> dict:
     else:
         command = [str(shim)] + arguments
     try:
-        done = subprocess.run(command, capture_output=True, timeout=timeout, stdin=subprocess.DEVNULL)
-        return {"exit": done.returncode, "stdout": done.stdout, "stderr": done.stderr,
-                "seconds": round(time.monotonic() - started, 2), "error": None}
-    except subprocess.TimeoutExpired as exc:
-        return {"exit": None, "stdout": exc.stdout or b"", "stderr": exc.stderr or b"",
-                "seconds": round(time.monotonic() - started, 2), "error": "timed out after %gs" % timeout}
+        # A new process group/session lets a timeout end the tool cmd.exe or sh started,
+        # not just the wrapper: an orphaned tool keeps the pipes open and the wait never ends.
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
+                                   **({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt"
+                                      else {"start_new_session": True}))
     except OSError as exc:
         return {"exit": None, "stdout": b"", "stderr": b"", "seconds": 0.0, "error": str(exc)}
+    try:
+        stdout, stderr = process.communicate(timeout=timeout)
+        return {"exit": process.returncode, "stdout": stdout, "stderr": stderr,
+                "seconds": round(time.monotonic() - started, 2), "error": None}
+    except subprocess.TimeoutExpired:
+        _kill_tree(process)
+        try:
+            stdout, stderr = process.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            stdout, stderr = b"", b""
+        return {"exit": None, "stdout": stdout or b"", "stderr": stderr or b"",
+                "seconds": round(time.monotonic() - started, 2), "error": "timed out after %gs" % timeout}
+
+
+def _kill_tree(process: subprocess.Popen) -> None:
+    """End a launched shim and everything it started."""
+    if os.name == "nt":
+        taskkill = Path(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "taskkill.exe")
+        try:
+            subprocess.run([str(taskkill), "/T", "/F", "/PID", str(process.pid)], capture_output=True, timeout=30)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    else:
+        try:
+            os.killpg(process.pid, 9)
+        except OSError:
+            pass
+    if process.poll() is None:
+        process.kill()
 
 
 def sha256_of(path: Path) -> str:
