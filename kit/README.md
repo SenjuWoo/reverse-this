@@ -17,7 +17,7 @@ the selected script into `sandbox/tools/<id>/` and writes a versionless shim in
 .\Install-Modkit.ps1 -Only triage,pe-recon,aob-gen,ghidra-mcp-up
 ```
 
-`aob-gen` pulls `capstone` automatically. The other two use the kit's shared
+`aob-gen` pulls `capstone` automatically. The other three use the kit's shared
 Python; the installer provisions it when missing.
 
 ## Examples

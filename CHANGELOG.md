@@ -1,3 +1,20 @@
+## Unreleased
+
+Documentation only; no version change and no new release.
+
+- README follows the house layout: cover image, badges, anchor nav, a "What
+  you get" summary, an installer options table, a "Start with triage"
+  section and a how-it-works diagram. Proof images in `assets/presentation/`
+  come from real runs of `re-triage` on copies of `notepad.exe` and a .NET
+  framework assembly, and of `Install-Modkit.ps1 -Plan` / `-Doctor`. They
+  live outside `docs/`, so release ZIPs do not carry them.
+- The download-check claim now says what the installer does: a release
+  download is checked against the publisher's SHA-256 when the release
+  carries one.
+- `docs/coverage.md`: the CUE4Parse link pointed at a deleted repository; it
+  now points at the upstream project.
+- `kit/README.md`: "the other two" helpers on the shared Python are three.
+
 ## 1.18.1 (2026-11-15)
 
 - Reinstalling after deleting the kit works. A `kit.json` pointer left by a
