@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/SenjuWoo/reverse-this/actions/workflows/ci.yml/badge.svg)](https://github.com/SenjuWoo/reverse-this/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/SenjuWoo/reverse-this?label=release&color=33566E&labelColor=0d1117)](https://github.com/SenjuWoo/reverse-this/releases/latest)
-[![Windows](https://img.shields.io/badge/Windows%2010%2F11-PowerShell%205.1%2B-33566E?labelColor=0d1117)](Install-Modkit.ps1)
+[![Windows](https://img.shields.io/badge/Windows-PowerShell%205.1%2B-33566E?labelColor=0d1117)](Install-Modkit.ps1)
 [![Catalog](https://img.shields.io/badge/catalog-95%20tools-33566E?labelColor=0d1117)](catalog/tools.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-33566E?labelColor=0d1117)](LICENSE)
 
@@ -50,20 +50,21 @@ The first run installs the catalog into `sandbox/tools` and writes stable shims 
 |---|---|
 | `-Only <id>[,<id>]` | install just those tools |
 | `-Plan` | print the catalog; no network, no writes |
-| `-Doctor` / `-Offline` | inspect without downloading: re-hash every installed tool and list catalog tools you have not installed as optional, so a kit built with `-Only` passes (a tool named with `-Only` must be present) |
+| `-Doctor` | inspect without downloading or writing: re-hash every installed tool and list catalog tools you have not installed as optional, so a kit built with `-Only` passes (a tool named with `-Only` must be present) |
+| `-Offline` | check receipts and files without network, setup or writes |
 | `-NoUpdate` | keep installed versions; missing selections can still install |
 | `-InstallRoot <dir>` | an isolated test kit whose shims and `re-triage` use that kit, not the shared owner |
 | `-DebugLog` | detailed diagnostics in `sandbox/log/modkit.log` |
 
 ## Start with triage
 
-For a target you have not looked at yet, run `sandbox/bin/re-triage.cmd <file-or-folder>` first. It returns one JSON document: the format and the evidence for it, which analyzers in this kit read that format and whether each is installed, and the exact commands to run next.
+For a target you have not looked at yet, run `sandboxine-triage.cmd <file-or-folder>` first (the kit adds nothing to PATH; with the Starter Bundle installed, plain `re-triage` works too, which is how the shots below were taken). It returns one JSON document: the format and the evidence for it, which analyzers in this kit read that format and whether each is installed, and the exact commands to run next.
 
 ```text
-re-triage <file-or-folder>                 # identify and route
-re-triage <file> --run                     # also run the quick static analyzers
-re-triage <file> --run --out <dir>         # keep their output somewhere else
-re-triage <file> --run --timeout 60        # seconds per analyzer (default 120)
+sandboxine-triage.cmd <file-or-folder>              # identify and route
+sandboxine-triage.cmd <file> --run                  # also run the quick static analyzers
+sandboxine-triage.cmd <file> --run --out <dir>      # keep their output somewhere else
+sandboxine-triage.cmd <file> --run --timeout 60     # seconds per analyzer (default 120)
 ```
 
 `--run` keeps results under `sandbox/work/<name>-<hash>/triage` unless you pass `--out`. `--timeout` ends the whole process tree a shim started. A tool listed as not installed is a fact to report or fix with `Install-Modkit.ps1 -Only <id>`, not a reason to stop.
@@ -101,7 +102,7 @@ Reverse THIS! installs **no Skyrim tools** and no game-authoring stack; Skyrim F
 ## Self-maintaining by default
 
 ```text
-maintain.cmd              # report stale kit-owned files
+maintain.cmd              # report stale kit-owned files (exit 1 when it finds any)
 maintain.cmd -Apply       # remove old temp, cache and rollback leftovers
 maintain.cmd -UpdateTools # refresh the catalog + run Doctor
 maintain.cmd -Test        # packaged catalog/version checks; source catalog/encyclopedia only
@@ -144,12 +145,12 @@ The first command prints the configuration without launching or writing files. T
 flowchart TD
   CAT[("catalog/tools.json<br/>95 tools, pins and asset patterns")] --> INST["Install-Modkit.ps1"]
   RT["shared Python · Node · Java · .NET"] --> INST
-  INST --> TOOLS["sandbox/tools/&lt;id&gt;<br/>+ SHA-256 receipts"]
+  INST --> TOOLS["sandbox/tools/tool-id<br/>+ SHA-256 receipts"]
   INST --> BIN["sandbox/bin/*.cmd<br/>stable shims"]
   INST --> PTR[("installed.json + kit.json<br/>owner pointer")]
   TARGET["your target (read-only)"] --> TRI["re-triage"]
   BIN --> TRI
-  TRI -->|"--run"| WORK["sandbox/work/&lt;name&gt;-&lt;hash&gt;"]
+  TRI -->|"--run"| WORK["sandbox/work/name-hash"]
   ENC[("encyclopedia/ + docs/<br/>routes and recipes")] --> AGENT["you or your agent"]
   TRI --> AGENT
   AGENT --> BIN
@@ -168,7 +169,7 @@ Tools run with your account’s permissions. This kit does not grant rights to g
 ## Development and releases
 
 - Source lives in this Git checkout; installed payloads live under `sandbox/` and are ignored.
-- Version and changelog are updated together; CI runs catalog, encyclopedia, installer, isolation, entrypoint, runtime, standalone, maintenance and delivery checks under Windows PowerShell 5.1 and PowerShell 7.
+- Version and changelog are updated together; CI runs catalog, encyclopedia, installer, isolation, entrypoint, runtime, standalone, maintenance and delivery checks; the Windows suites run under both Windows PowerShell 5.1 and PowerShell 7.
 - The release workflow builds twice from the exact green commit, requires identical bytes, attests the artifact, publishes it, and re-downloads it to compare.
 - Manual maintenance and recovery commands are in [docs/standalone.md](docs/standalone.md); release history is in [CHANGELOG.md](CHANGELOG.md).
 
